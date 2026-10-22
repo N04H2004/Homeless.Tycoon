@@ -1342,15 +1342,20 @@ const MG={
  lavage:{},
  karaoke:{songs:['Les pigeons de Paris','Roucoule-moi encore','Highway to Poubelle','Je veux du pain (rémix)','Bohemian Pigeondy','Sous le soleil du trottoir']},
 };
+// tirage sans répétition pendant un service : chaque valeur sort une fois avant de revenir, et jamais deux fois de suite
+function bagPick(J,key,vals){const B=J.bags||(J.bags={});let b=B[key];
+  if(!b||!b.q.length){const q=[...vals].sort(()=>Math.random()-.5);if(b&&q.length>1&&q[q.length-1]===b.last)q.unshift(q.pop());b=B[key]={q,last:b&&b.last}}
+  const v=b.q.pop();b.last=v;return v}
+function bagTake(J,key,vals,n){const out=[];for(let t=0;out.length<Math.min(n,vals.length)&&t<n*4;t++){const v=bagPick(J,key,vals);if(!out.includes(v))out.push(v)}return out}
 function mgCust(J,name,wt){const k=J.k;
-  if(k==='brico'||k==='meca'){const D=MG[k],r=pick(D.req);return {name,line:r[0],ans:r[1],pat:Math.max(8,13-J.served*.4),pm:Math.max(8,13-J.served*.4),wait:wt}}
-  if(k==='laverie'){const D=MG.laverie,n=4+Math.min(3,Math.floor(J.served/2)),its=[...D.items].sort(()=>Math.random()-.5).slice(0,n);const pm=Math.max(10,16-J.served*.4);
+  if(k==='brico'||k==='meca'){const D=MG[k],a=bagPick(J,'ans',[...new Set(D.req.map(x=>x[1]))]),r=pick(D.req.filter(x=>x[1]===a));return {name,line:r[0],ans:r[1],pat:Math.max(8,13-J.served*.4),pm:Math.max(8,13-J.served*.4),wait:wt}}
+  if(k==='laverie'){const D=MG.laverie,n=4+Math.min(3,Math.floor(J.served/2)),its=bagTake(J,'items',D.items,n);const pm=Math.max(10,16-J.served*.4);
     return {name,line:pick(['Vous pouvez me laver tout ça ? Sans rien faire déteindre !','Mon panier de la semaine, attention aux couleurs.','Si ma chemise devient rose, je porte plainte.']),items:its,i:0,pat:pm,pm,wait:wt}}
-  if(k==='style'){const LK=MG.style.looks,L=pick(LK),pm=Math.max(10,16-J.served*.4),others=LK.filter(x=>x!==L).sort(()=>Math.random()-.5);return {name,line:pick(L[1]),want:L[2],sel:[null,null,null],opts:[0,1,2].map(s=>[L[2][s],...others.slice(0,3).map(x=>x[2][s])].sort(()=>Math.random()-.5)),pat:pm,pm,wait:wt}}
-  if(k==='coupe'){const O=MG.coupe.opts,want=O.map(o=>pick(o)),pm=Math.max(10,16-J.served*.4);return {name,line:pick(['Comme sur la photo, s\'il vous plaît.','Je veux exactement ça. EXACTEMENT.','Faites-moi la même que mon idole.']),want,sel:[null,null,null],pat:pm,pm,wait:wt}}
+  if(k==='style'){const LK=MG.style.looks,L=bagPick(J,'look',LK),pm=Math.max(10,16-J.served*.4),others=LK.filter(x=>x!==L).sort(()=>Math.random()-.5);return {name,line:pick(L[1]),want:L[2],sel:[null,null,null],opts:[0,1,2].map(s=>[L[2][s],...others.slice(0,3).map(x=>x[2][s])].sort(()=>Math.random()-.5)),pat:pm,pm,wait:wt}}
+  if(k==='coupe'){const O=MG.coupe.opts;let want;do want=O.map(o=>pick(o));while(J.lastCut===want.join());J.lastCut=want.join();const pm=Math.max(10,16-J.served*.4);return {name,line:pick(['Comme sur la photo, s\'il vous plaît.','Je veux exactement ça. EXACTEMENT.','Faites-moi la même que mon idole.']),want,sel:[null,null,null],pat:pm,pm,wait:wt}}
   if(k==='lavage'){const n=5+Math.min(4,J.served),sp=[];for(let i=0;i<n;i++)sp.push({x:rnd(8,88),y:rnd(18,70),r:rnd(14,24),ok:false});const pm=Math.max(7,11-J.served*.3);
     return {name,line:pick(['Elle sort d\'un rallye dans la boue, faites-la briller !','Un pigeon s\'est vengé sur ma voiture...','Lavage complet, je la revends demain.']),spots:sp,pat:pm,pm,wait:wt}}
-  if(k==='karaoke'){const pm=Math.max(12,18-J.served*.5),w=Math.max(14,24-J.served*1.5);return {name,line:'Ce soir je chante '+pick(MG.karaoke.songs)+' !',hit:0,need:5,miss:0,zone:rnd(10,90-w),zw:w,ph:0,spd:Math.min(1.6,.75+J.served*.08),pat:pm,pm,wait:wt}}
+  if(k==='karaoke'){const pm=Math.max(12,18-J.served*.5),w=Math.max(14,24-J.served*1.5);return {name,line:'Ce soir je chante '+bagPick(J,'song',MG.karaoke.songs)+' !',hit:0,need:5,miss:0,zone:rnd(10,90-w),zw:w,ph:0,spd:Math.min(1.6,.75+J.served*.08),pat:pm,pm,wait:wt}}
 }
 function kPos(c){const t=c.ph%2;return (t<1?t:2-t)*100}
 function mgRender(J,c){const k=J.k,btn=(act,lab,extra='')=>`<button class="ing" type="button" style="background:#fff;${extra}" data-act="${act}">${lab}</button>`;
@@ -1420,10 +1425,11 @@ function newCust(){const J=JOB,name=pick(CNAMES),wt=J.served+J.fail>0?(J.k==='ba
   if(J.k==='kebab'){const veg=['salade','tomate','oignon'].filter(()=>Math.random()<.6),sauce=pick(Object.keys(SAUCE)),miss=['salade','tomate','oignon'].filter(v=>!veg.includes(v));
     const F=FSK(),vn=v=>F.veg[v];let d=veg.length===3?veg.map(vn).join(', '):veg.length===0?F.solo:veg.map(vn).join(', ')+', sans '+miss.map(vn).join(' ni ');
     d+=', '+SAUCE[sauce];const pm=Math.max(9,18-J.served*.8);
+    if(J.lastKb===veg.join()+sauce)return newCust();J.lastKb=veg.join()+sauce;
     J.cust={name,want:['pain','viande',...veg,sauce],line:pick(KB_LINES).replace('{k}',d),pat:pm,pm,build:[],wait:wt}}
-  else if(J.k==='bar'){const d=pick(DRINKS),pm=Math.max(10,18-J.served*.6);
+  else if(J.k==='bar'){const d=bagPick(J,'drink',DRINKS),pm=Math.max(10,18-J.served*.6);
     J.cust={name,line:d[0],lo:d[1]-2,hi:d[2]+2,lvl:0,pouring:false,wait:wt,spd:Math.min(80,50+J.served*3)*(.9+Math.random()*.25),pat:pm,pm}}
-  else{const n=2+Math.floor(Math.random()*3),its=[...GROCERY].sort(()=>Math.random()-.5).slice(0,n),tot=its.reduce((a,i)=>a+i[1],0);
+  else{const n=2+Math.floor(Math.random()*3),its=bagTake(J,'items',GROCERY,n),tot=its.reduce((a,i)=>a+i[1],0);
     let paid;const bills=[500,1000,2000,5000,10000];
     if(tot%100&&Math.random()<.35){const base=tot-tot%100,b=bills.find(b=>b>base);paid=b+tot%100}else paid=bills.find(b=>b>tot);
     const pm=Math.max(14,28-J.served);

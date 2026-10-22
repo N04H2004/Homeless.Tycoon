@@ -259,6 +259,9 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #boot .prof{display:flex;flex-wrap:wrap;align-items:center;gap:12px;width:min(960px,100%);background:#fff6df;color:var(--ink);border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);padding:10px 14px;margin-top:0!important}
 #boot .av{width:54px;height:54px;border-radius:50%;background:#ffd23f;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:30px;flex:none}
 #boot .pn{display:flex;flex-direction:column;gap:3px;flex:1;min-width:150px}
+#boot .pacc{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#boot .pacc b{font-family:var(--display);font-size:22px;font-weight:400}
+#boot .pacc .chunky{font-size:14px;padding:4px 10px}
 #boot .pn input{font-family:var(--display);font-size:22px;border:none;border-bottom:2px dashed rgba(42,31,61,.35);background:transparent;color:var(--ink);width:100%;max-width:260px;padding:0}
 #boot .lv{display:flex;align-items:center;gap:8px;font-size:12px}#boot .lv b{font-family:var(--display);font-size:14px;background:var(--ink);color:#ffd23f;border-radius:8px;padding:1px 8px}
 #boot .xp{flex:1;max-width:200px;height:10px;border:2px solid var(--ink);border-radius:6px;background:#fff;overflow:hidden}#boot .xp i{display:block;height:100%;background:#06d6a0}
@@ -292,6 +295,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #boot .aus button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 #boot .aus button.off{background:#e4dccb}
 #boot .aus button.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:4px;margin-top:-2px;background:#d62839;border-radius:2px;transform:rotate(-45deg)}
+#boot:not([hidden])~#toast{z-index:70}
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
@@ -580,7 +584,8 @@ try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw),om=o.met
   if(!Array.isArray(S.staff))S.staff=[];S.staff=S.staff.slice(0,S.emp);for(const st of S.staff){if(!st.sh)st.sh='jour';if(!TRAITS[st.tr])st.tr='rapide'}
   {const seen=new Set();for(const st of S.staff){if(seen.has(st.n)){const free=NAMES.filter(n=>!seen.has(n)&&!S.staff.some(x=>x.n===n));st.n=free.length?free[0]:st.n+' bis'}seen.add(st.n)}}if(!Array.isArray(S.hist))S.hist=[];
   m.life=Math.max(m.life,S.total);if(S.heist&&(S.heist.st==='go'||S.heist.st==='inside'))S.heist.st='plan';if(S.frigo)m.her.frigo=1;if(S.manager)m.her.manager=1;if(S.veh.trott)m.her.trott=1;}}catch(e){}
-function save(){const R0=VISIT?VISIT.saved:S;if(R0.meta)R0.meta.ride=R0.ride;if(!VISIT)R0.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(R0))}catch(e){}}
+let NOSAVE=false;
+function save(){if(NOSAVE)return;const R0=VISIT?VISIT.saved:S;if(R0.meta)R0.meta.ride=R0.ride;if(!VISIT)R0.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(R0))}catch(e){}}
 
 // ================= Économie =================
 let frenzy=0,ev=null;
@@ -2692,7 +2697,7 @@ function wmapSVG(sel){const m=S.meta,cur=CURI();
 function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot');el.hidden=false;if(WSEL==null)WSEL=cur;
   const lv=plLevel(),M=m,pcv=M.pgc*M.pc.p*fx(CI()),i=WSEL,c=CITIES[i],w=m.worlds.find(x=>x.i===i),isCur=i===cur,open=cityOpen(i)||isCur,exists=isCur||!!w;
   const st=isCur?'Ta ville actuelle · '+fmt2(netRate())+'/s':!open?'🔒 Mets '+CITIES[i-1].n+' en gérance pour débloquer':w?'En gérance · '+(w.rate>0?String(Math.round(w.rate*100)/100).replace('.',',')+' '+c.cur+'/s':'rien de construit'):'Ouvre-la depuis '+CITIES[i-1].n+' (Menu › Prestige)';
-  const prof=`<div class="prof"><div class="av">🐦</div><div class="pn"><input id="pname" maxlength="18" value="${(M.name||'Patron').replace(/"/g,'&quot;')}" aria-label="Ton nom" title="Clique pour changer ton nom"><div class="lv"><b>Niv. ${lv.l}</b><span>${lv.a} / ${ACH.length} succès · ${lv.g} ville${lv.g>1?'s':''} en gérance</span></div></div>`+
+  const prof=`<div class="prof"><div class="av">🐦</div><div class="pn"><div class="pacc" id="pacc">${paccHTML()}</div><div class="lv"><b>Niv. ${lv.l}</b><span>${lv.a} / ${ACH.length} succès · ${lv.g} ville${lv.g>1?'s':''} en gérance</span></div></div>`+
     `<div class="wal"><div>Portefeuille crypto<b>🪙 ${fpc(M.pgc)}</b></div><div>Pigeons d'Or<b>🐦 ${M.gold}</b></div></div><div class="aus" id="aus">${ausHTML()}</div></div>`;
   const card=`<div class="car"><button class="arr" type="button" data-wm="-1" aria-label="Ville précédente">‹</button>`+
     `<div class="wc${open&&exists?'':' lock'}" style="background:${c.sky}"><span class="tag">${isCur?'Ici':!open?'Verrouillée':c.cur}</span><span class="em">${WEM[c.k]}</span><b>${c.n}</b><small>${WTAG[c.k]} · gains x${String(c.m).replace('.',',')}</small><small>${st}</small>`+
@@ -2702,16 +2707,16 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
   for(const b of el.querySelectorAll('[data-wm]'))b.addEventListener('click',()=>wsMove(+b.dataset.wm));
   for(const b of el.querySelectorAll('[data-wgo]'))b.addEventListener('click',()=>enterWorld(+b.dataset.wgo));
   if(Date.now()-LB.at>30000)lbLoad();
-  const ni=$('pname');ni.addEventListener('change',()=>{S.meta.name=ni.value.trim().slice(0,18)||'Patron';save()});ni.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ni.blur()})}
+}
 function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSelect()}
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
-function enterWorld(i){auInit();if(VISIT||JOB)return;const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
+function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready){LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
   BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!BOOT)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
 let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
-const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,at:0,busy:false,msg:'',err:false,sent:0};
+const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,at:0,ready:false,busy:false,msg:'',err:false,sent:0};
 // pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit
 const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
 const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
@@ -2725,7 +2730,25 @@ function lbErr(e){const m=String(e&&e.message||e||'');
   if(/rate limit|too many/i.test(m))return "Trop d'essais, réessaie dans une minute";
   if(/fetch|network|Failed/i.test(m))return 'Pas de connexion au serveur, réessaie plus tard';
   return m||'Erreur inconnue'}
-function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel();const w=$('lbw');if(w)w.innerHTML=lbMini()}
+function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel();const w=$('lbw');if(w)w.innerHTML=lbMini();const a=$('pacc');if(a)a.innerHTML=paccHTML()}
+function paccHTML(){if(!SB)return '<b>Hors ligne</b>';
+  return LB.user?`<b>${lbEsc(LB.pseudo)}</b><button class="chunky alt" type="button" data-lbo>Mon compte</button>`:'<b>Invité</b><button class="chunky" type="button" data-lbo>Se connecter</button>'}
+// ---- Sauvegarde en ligne : la partie stockée dans le navigateur appartient au dernier compte synchronisé
+const OWNER='poubelle-tycoon-owner';
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v);return localStorage.getItem(k)===v}catch(e){return false}};
+async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);if(!raw)return;
+  try{await SB.from('saves').upsert({user_id:LB.user.id,data:JSON.parse(raw),updated_at:new Date().toISOString()})}catch(e){}}
+async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;let cloud;
+  try{const {data,error}=await SB.from('saves').select('data').eq('user_id',uid).maybeSingle();if(error)throw error;cloud=data&&data.data}
+  catch(e){LB.msg='Sauvegarde en ligne injoignable, réessaie dans un instant';LB.err=true;lbRedraw();return false}
+  const owner=lsGet(OWNER);let local=null;try{local=JSON.parse(lsGet(KEY)||'null')}catch(e){}
+  let next;// undefined : on garde la partie du navigateur
+  if(cloud&&(owner!==uid||!local||(cloud.last||0)>(local.last||0)+1000))next=JSON.stringify(cloud);
+  else if(!cloud&&owner&&owner!==uid)next=null;// partie d'un autre compte : celui-ci repart de zéro
+  if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
+    NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
+  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);lbRedraw();return true}
 function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
   if(!SB)return h+'<small>Classement indisponible hors connexion</small>';
@@ -2741,7 +2764,7 @@ function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" cl
   `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
-async function lbSend(force){if(!SB||!LB.user)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
+async function lbSend(force){if(!SB||!LB.ready)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
 async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
   if(!/^[A-Za-z0-9_-]{3,16}$/.test(p))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
@@ -2752,20 +2775,20 @@ async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up
   if(r.error)return bad(lbErr(r.error));
   if(!r.data||!r.data.session)return bad(lbErr('not confirmed'));
   LB.f={p:'',m:''};lbSetUser(r.data.session.user);LB.msg=(up?'Compte créé, bienvenue ':'Content de te revoir, ')+LB.pseudo+' !';LB.err=false;snd('coin');
-  await lbSend(true);lbLoad()}
+  if(await cloudSync()&&BOOT){closePanel();toast('Connecté ! Choisis ta ville pour jouer')}lbLoad()}
 async function lbAct(v,w){
   if(v==='mode'){LB.mode=w;LB.msg='';return lbRedraw()}
   if(v==='go')return lbAuth();
-  if(v==='out'){try{await SB.auth.signOut()}catch(e){}lbSetUser(null);LB.msg='Tu es déconnecté';LB.err=false;return lbLoad()}
-  if(v==='refresh'){LB.msg='';await lbSend();return lbLoad()}}
+  if(v==='out'){LB.busy=true;lbRedraw();await cloudPush();try{await SB.auth.signOut()}catch(e){}NOSAVE=true;location.reload();return}
+  if(v==='refresh'){LB.msg='';if(LB.user&&!LB.ready)await cloudSync();await lbSend();return lbLoad()}}
 function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';
   let h='';
-  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b><small>Ton total gagné à vie (${lbf(lbLife())}) est envoyé tout seul chaque minute.</small></div><button class="buy sm red" type="button" data-act="lb:out">Déconnexion</button></div>`;
+  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b><small>${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div><button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button></div>`;
   else{const up=LB.mode==='signup';
     h+=tabs(LB.mode,[['login','Connexion'],['signup','Créer un compte']],'lb:mode')+
     `<div class="row lbf"><label>Pseudo<input class="lbin" data-f="p" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.p)}"></label>`+
     `<label>Mot de passe<input class="lbin" data-f="m" type="password" autocomplete="${up?'new-password':'current-password'}" value="${lbEsc(LB.f.m)}"></label>`+
-    `<small>${up?"Pas besoin d'e-mail. Note bien ton mot de passe : sans e-mail, il ne peut pas être récupéré.":'Connecte-toi pour apparaître dans le classement.'}</small></div>`+
+    `<small>${up?"Pas besoin d'e-mail. Note bien ton mot de passe : sans e-mail, il ne peut pas être récupéré.":'Connecte-toi pour jouer, sauvegarder ta partie et apparaître dans le classement.'}</small></div>`+
     `<button class="chunky" type="button" data-act="lb:go" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':up?'Créer mon compte':'Me connecter'}</button>`}
   if(LB.msg)h+=`<div class="jmsg ${LB.err?'ko':'ok'}">${lbEsc(LB.msg)}</div>`;
   h+='<div class="sec">Top 50 · total gagné à vie</div>';
@@ -2776,10 +2799,10 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
 $('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
-if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);lbSend(true)}).catch(()=>{});
-  SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);lbRedraw()})}
-setInterval(()=>lbSend(),60000);
-addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')lbSend(true)});
+if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
+  SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
+setInterval(()=>{lbSend();cloudPush()},60000);
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
 bootLoading();
 updHud();
 if(!S.total&&!tutoOn())setTimeout(()=>toast('Bienvenue dans la rue ! Ramasse les déchets et vide ton sac dans les poubelles vertes.'),400);

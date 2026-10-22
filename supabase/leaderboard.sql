@@ -1,5 +1,5 @@
--- Poubelle Tycoon : comptes pseudo + mot de passe et classement.
--- À coller une seule fois dans Supabase : SQL Editor > New query > Run.
+-- Homeless Tycoon : comptes pseudo + mot de passe, classement et sauvegarde en ligne.
+-- À coller dans Supabase : SQL Editor > New query > Run. On peut le relancer sans risque après une mise à jour.
 -- Pense aussi à désactiver "Confirm email" (Authentication > Sign In / Providers > Email).
 
 -- ============ Tables ============
@@ -92,3 +92,18 @@ grant execute on function public.submit_score(double precision) to authenticated
 revoke all on function public.get_leaderboard(int) from public;
 grant execute on function public.get_leaderboard(int) to anon, authenticated;
 revoke all on function public.handle_new_user() from public, anon, authenticated;
+
+-- ============ Sauvegarde de la partie dans le compte ============
+-- Chaque joueur ne peut lire et écrire que sa propre sauvegarde.
+create table if not exists public.saves (
+  user_id uuid primary key references public.profiles (id) on delete cascade,
+  data jsonb not null check (pg_column_size(data) < 1000000),
+  updated_at timestamptz not null default now()
+);
+alter table public.saves enable row level security;
+drop policy if exists "ma sauvegarde : lire" on public.saves;
+create policy "ma sauvegarde : lire" on public.saves for select to authenticated using (user_id = auth.uid());
+drop policy if exists "ma sauvegarde : créer" on public.saves;
+create policy "ma sauvegarde : créer" on public.saves for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "ma sauvegarde : modifier" on public.saves;
+create policy "ma sauvegarde : modifier" on public.saves for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());

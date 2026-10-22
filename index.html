@@ -2883,7 +2883,7 @@ async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);
   else if(!bad&&LB.msg.startsWith(m)){LB.msg='';LB.err=false;lbRedraw()}}
 async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;let cloud;
   let ep;try{ep=await SB.rpc('ensure_profile')}catch(e){ep={error:e}}// compte créé avant le script SQL : on lui crée son profil
-  const dbOld=ep&&ep.error||ep&&ep.data===null?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':ep&&ep.data!=='ok'?'Profil impossible à créer : '+ep.data:'';
+  const dbOld=ep&&(ep.error||ep.data===null)?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql ('+(ep.error?ep.error.message||ep.error:'ensure_profile ancienne version')+')':ep&&ep.data!=='ok'?'Profil impossible à créer : '+ep.data:'';
   try{const {data,error}=await SB.from('saves').select('data').eq('user_id',uid).maybeSingle();if(error)throw error;cloud=data&&data.data}
   catch(e){LB.msg='Sauvegarde en ligne injoignable, réessaie dans un instant';LB.err=true;lbRedraw();return false}
   const owner=lsGet(OWNER);let local=null;try{local=JSON.parse(lsGet(KEY)||'null')}catch(e){}
@@ -2938,7 +2938,7 @@ async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim()
   LB.busy=true;lbRedraw();let r;try{r=await SB.rpc('set_pseudo',{p_pseudo:n})}catch(e){r={error:e}}
   if(!r.error&&r.data==='ok'){try{const u=await SB.auth.updateUser({data:{pseudo:n}});if(u.data&&u.data.user)lbSetUser(u.data.user)}catch(e){}LB.pseudo=n;S.meta.name=n;save()}
   LB.busy=false;
-  if(r.error)return bad(/set_pseudo|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error));
+  if(r.error)return bad(/set_pseudo|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql ('+r.error.message+')':lbErr(r.error));
   if(r.data!=='ok')return bad(r.data);
   LB.edit=false;LB.f.n='';LB.msg='Tu t\'appelles maintenant '+n+' !';LB.err=false;snd('coin');lbLoad()}
 function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';

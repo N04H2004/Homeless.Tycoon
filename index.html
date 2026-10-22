@@ -2804,7 +2804,8 @@ const lsSet=(k,v)=>{try{if(v==null)localStorage.removeItem(k);else localStorage.
 async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);if(!raw)return;
   try{await SB.from('saves').upsert({user_id:LB.user.id,data:JSON.parse(raw),updated_at:new Date().toISOString()})}catch(e){}}
 async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;let cloud;
-  try{await SB.rpc('ensure_profile')}catch(e){}// compte créé avant le script SQL : on lui crée son profil
+  let ep;try{ep=await SB.rpc('ensure_profile')}catch(e){ep={error:e}}// compte créé avant le script SQL : on lui crée son profil
+  const dbOld=ep&&ep.error?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':'';
   try{const {data,error}=await SB.from('saves').select('data').eq('user_id',uid).maybeSingle();if(error)throw error;cloud=data&&data.data}
   catch(e){LB.msg='Sauvegarde en ligne injoignable, réessaie dans un instant';LB.err=true;lbRedraw();return false}
   const owner=lsGet(OWNER);let local=null;try{local=JSON.parse(lsGet(KEY)||'null')}catch(e){}
@@ -2813,7 +2814,7 @@ async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;le
   else if(!cloud&&owner&&owner!==uid)next=null;// partie d'un autre compte : celui-ci repart de zéro
   if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
     NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
-  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);lbRedraw();return true}
+  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
 function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
   if(!SB)return h+'<small>Classement indisponible hors connexion</small>';

@@ -273,9 +273,19 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #boot .arr{flex:none;width:54px;height:54px;border-radius:50%;border:4px solid var(--ink);background:#ffd23f;font-family:var(--display);font-size:34px;line-height:1;color:var(--ink);cursor:pointer;box-shadow:0 5px 0 var(--ink);padding:0 0 4px}
 #boot .arr:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
 #boot .dots{display:flex;gap:8px;justify-content:center}#boot .dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,246,223,.5);border:2px solid var(--ink)}#boot .dots i.on{background:#ffd23f;transform:scale(1.25)}
+.lbf{display:flex;flex-direction:column;gap:8px}
+.lbf label{display:flex;flex-direction:column;gap:3px;font-weight:700;font-size:13px}
+.lbin{font-family:var(--body);font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
+.lbin:focus{outline:3px solid #4cc9f0;outline-offset:1px}
+.lbt{display:flex;flex-direction:column;gap:4px}
+.lbr{display:grid;grid-template-columns:3.2em 1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;font-weight:600}
+.lbr .rk{font-family:var(--display);font-size:16px}.lbr .sc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--cash)}
+.lbr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbr:nth-child(1) .rk{color:#b8860b}.lbr.me{background:#fff3b0}
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <div id="game">
   <canvas id="cv" tabindex="-1" aria-label="La rue : ton personnage, les passants, les déchets, les poubelles et les magasins"></canvas>
   <div id="hud">
@@ -290,6 +300,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
     <div class="btns">
       <button class="chunky danger" id="pay" type="button" hidden>Payer</button>
       <button class="chunky alt" id="snd" type="button">Son</button>
+      <button class="chunky alt" id="btnLb" type="button">Classement</button>
       <button class="chunky alt" id="btnObj" type="button">Objectifs</button>
       <button class="chunky" id="back" type="button" hidden>Retour</button>
       <button class="chunky" id="btnBiz" type="button">Business</button>
@@ -1593,7 +1604,7 @@ $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
-for(const id of ['btnBiz','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
+for(const id of ['btnBiz','btnLb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
 function updSnd(){$('snd').textContent=S.meta.snd?'Son : oui':'Son : non';$('snd').classList.toggle('off',!S.meta.snd)}
 updSnd();
 function payNow(){
@@ -1934,6 +1945,7 @@ function renderPanel(){
     h=`<p class="lead">Ta rue de ${CITY().n} passe en gérance (+${fmt2(netRate()*.2)}/s vers ta holding) et tu démarres une nouvelle vie à ${nx.n}, en ${nx.cur}, avec ${g} Pigeons d'Or en plus.</p><div class="bets"><button class="chunky alt" type="button" data-act="ptab:prestige">Annuler</button><button class="chunky" type="button" data-act="prestige2">Ouvrir la filiale</button></div>`;}
   else if(pid==='ko'){t='K.O. !';hd='#ef476f';
     h=`<p class="lead">Tu t'es évanoui sur le trottoir. Pendant ta sieste, les pigeons t'ont piqué ${fmt(parg||0)}.</p><p class="lead">Pense à manger et à passer à la pharmacie quand ta vie baisse.</p><button class="chunky" type="button" data-act="close">Je me relève</button>`;}
+  if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='casino'&&casTab==='rou'&&S.secu)drawWheel();
   if(pid==='plus'&&ptab==='stats')drawStats();
@@ -1950,6 +1962,7 @@ function drawStats(){const c=$('sc');if(!c)return;const g=c.getContext('2d'),w=9
 $('pbody').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled||spinning)return;
   const [a,v,w]=b.dataset.act.split(':');
+  if(a==='lb'){lbAct(v,w);return}
   if(a==='visit'){startVisit(+v);return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){endVisit();return}
@@ -2684,6 +2697,65 @@ function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Ob
 function enterWorld(i){auInit();if(VISIT||JOB)return;const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
   BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!BOOT)update(dt);draw();requestAnimationFrame(loop)}
+// ================= Classement en ligne (Supabase) =================
+const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
+let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
+const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,busy:false,msg:'',err:false,sent:0};
+// pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit
+const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
+const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const lbLife=()=>Math.floor(((VISIT?VISIT.saved:S).meta||S.meta).life||0);
+const lbf=n=>{n=Math.floor(n);const d=(v,u)=>v.toFixed(2).replace('.',',')+' '+u;if(n>=1e12)return d(n/1e12,'T');if(n>=1e9)return d(n/1e9,'Md');if(n>=1e6)return d(n/1e6,'M');if(n>=1e4)return (n/1e3).toFixed(1).replace('.',',')+' k';return n.toLocaleString('fr-FR')};
+function lbErr(e){const m=String(e&&e.message||e||'');
+  if(/already registered|already exists|Database error saving/i.test(m))return 'Ce pseudo est déjà pris';
+  if(/Invalid login/i.test(m))return 'Pseudo ou mot de passe incorrect';
+  if(/not confirmed/i.test(m))return 'Compte bloqué : le propriétaire du jeu doit désactiver « Confirm email » dans Supabase';
+  if(/Password should|weak/i.test(m))return 'Mot de passe trop faible (6 caractères minimum)';
+  if(/rate limit|too many/i.test(m))return "Trop d'essais, réessaie dans une minute";
+  if(/fetch|network|Failed/i.test(m))return 'Pas de connexion au serveur, réessaie plus tard';
+  return m||'Erreur inconnue'}
+function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel()}
+function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
+async function lbLoad(){if(!SB)return;try{const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
+async function lbSend(force){if(!SB||!LB.user)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
+async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
+  const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
+  if(!/^[A-Za-z0-9_-]{3,16}$/.test(p))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
+  if(m.length<6)return bad('Mot de passe : 6 caractères minimum');
+  LB.busy=true;LB.msg='';lbRedraw();let r;
+  try{r=up?await SB.auth.signUp({email:lbMail(p),password:m,options:{data:{pseudo:p}}}):await SB.auth.signInWithPassword({email:lbMail(p),password:m})}catch(e){r={error:e}}
+  LB.busy=false;
+  if(r.error)return bad(lbErr(r.error));
+  if(!r.data||!r.data.session)return bad(lbErr('not confirmed'));
+  LB.f={p:'',m:''};lbSetUser(r.data.session.user);LB.msg=(up?'Compte créé, bienvenue ':'Content de te revoir, ')+LB.pseudo+' !';LB.err=false;snd('coin');
+  await lbSend(true);lbLoad()}
+async function lbAct(v,w){
+  if(v==='mode'){LB.mode=w;LB.msg='';return lbRedraw()}
+  if(v==='go')return lbAuth();
+  if(v==='out'){try{await SB.auth.signOut()}catch(e){}lbSetUser(null);LB.msg='Tu es déconnecté';LB.err=false;return lbLoad()}
+  if(v==='refresh'){LB.msg='';await lbSend();return lbLoad()}}
+function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';
+  let h='';
+  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b><small>Ton total gagné à vie (${lbf(lbLife())}) est envoyé tout seul chaque minute.</small></div><button class="buy sm red" type="button" data-act="lb:out">Déconnexion</button></div>`;
+  else{const up=LB.mode==='signup';
+    h+=tabs(LB.mode,[['login','Connexion'],['signup','Créer un compte']],'lb:mode')+
+    `<div class="row lbf"><label>Pseudo<input class="lbin" data-f="p" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.p)}"></label>`+
+    `<label>Mot de passe<input class="lbin" data-f="m" type="password" autocomplete="${up?'new-password':'current-password'}" value="${lbEsc(LB.f.m)}"></label>`+
+    `<small>${up?"Pas besoin d'e-mail. Note bien ton mot de passe : sans e-mail, il ne peut pas être récupéré.":'Connecte-toi pour apparaître dans le classement.'}</small></div>`+
+    `<button class="chunky" type="button" data-act="lb:go" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':up?'Créer mon compte':'Me connecter'}</button>`}
+  if(LB.msg)h+=`<div class="jmsg ${LB.err?'ko':'ok'}">${lbEsc(LB.msg)}</div>`;
+  h+='<div class="sec">Top 50 · total gagné à vie</div>';
+  if(!LB.rows)h+='<p class="lead">Chargement...</p>';
+  else if(!LB.rows.length)h+='<p class="lead">Personne au classement pour l\'instant. Sois le premier !</p>';
+  else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
+  return h+'<button class="chunky alt" type="button" data-act="lb:refresh">Actualiser</button>'}
+$('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
+$('pbody').addEventListener('keydown',e=>{if(e.target.classList.contains('lbin')&&e.key==='Enter'){e.preventDefault();lbAuth()}});
+$('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
+if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);lbSend(true)}).catch(()=>{});
+  SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);lbRedraw()})}
+setInterval(()=>lbSend(),60000);
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')lbSend(true)});
 bootLoading();
 updHud();
 if(!S.total&&!tutoOn())setTimeout(()=>toast('Bienvenue dans la rue ! Ramasse les déchets et vide ton sac dans les poubelles vertes.'),400);

@@ -287,6 +287,11 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbw .chunky{font-size:14px;padding:5px 10px}
 .lbw .lbr{padding:4px 10px}
 .lbw small{font-size:12px;opacity:.75}
+#boot .aus{display:flex;gap:8px}
+#boot .aus button{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);background:#ffd23f;box-shadow:0 4px 0 var(--ink);font-size:22px;line-height:1;cursor:pointer;padding:0}
+#boot .aus button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+#boot .aus button.off{background:#e4dccb}
+#boot .aus button.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:4px;margin-top:-2px;background:#d62839;border-radius:2px;transform:rotate(-45deg)}
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
@@ -319,7 +324,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
   <div id="tuto" class="card" hidden></div>
-  <div id="boot"><div class="pig">🐦</div><div class="logo">Poubelle Tycoon</div><div class="sub">Des poubelles à l'empire mondial</div><div class="load"><i></i></div><div class="ltip" id="ltip"></div></div>
+  <div id="boot"><div class="pig">🐦</div><div class="logo">Homeless Tycoon</div><div class="sub">Des poubelles à l'empire mondial</div><div class="load"><i></i></div><div class="ltip" id="ltip"></div></div>
   <div id="toast" class="card" style="opacity:0"></div>
   <div id="panel" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ptitle">
@@ -2688,7 +2693,7 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
   const lv=plLevel(),M=m,pcv=M.pgc*M.pc.p*fx(CI()),i=WSEL,c=CITIES[i],w=m.worlds.find(x=>x.i===i),isCur=i===cur,open=cityOpen(i)||isCur,exists=isCur||!!w;
   const st=isCur?'Ta ville actuelle · '+fmt2(netRate())+'/s':!open?'🔒 Mets '+CITIES[i-1].n+' en gérance pour débloquer':w?'En gérance · '+(w.rate>0?String(Math.round(w.rate*100)/100).replace('.',',')+' '+c.cur+'/s':'rien de construit'):'Ouvre-la depuis '+CITIES[i-1].n+' (Menu › Prestige)';
   const prof=`<div class="prof"><div class="av">🐦</div><div class="pn"><input id="pname" maxlength="18" value="${(M.name||'Patron').replace(/"/g,'&quot;')}" aria-label="Ton nom" title="Clique pour changer ton nom"><div class="lv"><b>Niv. ${lv.l}</b><span>${lv.a} / ${ACH.length} succès · ${lv.g} ville${lv.g>1?'s':''} en gérance</span></div></div>`+
-    `<div class="wal"><div>Portefeuille crypto<b>🪙 ${fpc(M.pgc)}</b></div><div>Pigeons d'Or<b>🐦 ${M.gold}</b></div></div></div>`;
+    `<div class="wal"><div>Portefeuille crypto<b>🪙 ${fpc(M.pgc)}</b></div><div>Pigeons d'Or<b>🐦 ${M.gold}</b></div></div><div class="aus" id="aus">${ausHTML()}</div></div>`;
   const card=`<div class="car"><button class="arr" type="button" data-wm="-1" aria-label="Ville précédente">‹</button>`+
     `<div class="wc${open&&exists?'':' lock'}" style="background:${c.sky}"><span class="tag">${isCur?'Ici':!open?'Verrouillée':c.cur}</span><span class="em">${WEM[c.k]}</span><b>${c.n}</b><small>${WTAG[c.k]} · gains x${String(c.m).replace('.',',')}</small><small>${st}</small>`+
     `<button class="chunky" type="button" data-wgo="${i}" ${open&&exists?'':'disabled'}>${!open?'🔒 Verrouillée':!exists?'Pas encore ouverte':isCur?'Reprendre ›':'Y aller ›'}</button></div>`+
@@ -2730,7 +2735,10 @@ function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   if(me&&!top.includes(me))h+=`<div class="lbr me"><span class="rk">#${me.rank}</span><span class="nm">${lbEsc(me.pseudo)}</span><span class="sc">${lbf(me.score)}</span></div>`;
   else if(!LB.user)h+='<small>Connecte-toi pour apparaître dans le classement</small>';
   return h}
-$('boot').addEventListener('click',e=>{if(e.target.closest('[data-lbo]')){openPanel('lb');lbSend().finally(lbLoad)}});
+$('boot').addEventListener('click',e=>{if(e.target.closest('[data-lbo]')){openPanel('lb');lbSend().finally(lbLoad)}
+  const a=e.target.closest('[data-au]');if(a){if(a.dataset.au==='snd'){S.meta.snd=!S.meta.snd;updSnd()}else S.meta.mus=!S.meta.mus;auInit();if(S.meta.snd)snd('tick');save();$('aus').innerHTML=ausHTML()}});
+function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" class="${m.snd?'':'off'}" aria-pressed="${!m.snd}" aria-label="${m.snd?'Couper le son':'Remettre le son'}" title="${m.snd?'Couper le son':'Remettre le son'}">🔊</button>`+
+  `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.user)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}

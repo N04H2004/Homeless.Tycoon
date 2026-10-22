@@ -2783,7 +2783,7 @@ function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!BOOT)upda
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
 let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
-const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,at:0,ready:false,busy:false,msg:'',err:false,sent:0};
+const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:'',n:''},edit:false,rows:null,at:0,ready:false,busy:false,msg:'',err:false,sent:0};
 // pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit
 const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
 const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
@@ -2849,16 +2849,31 @@ async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up
   LB.busy=false;
   if(r.error)return bad(lbErr(r.error));
   if(!r.data||!r.data.session)return bad(lbErr('not confirmed'));
-  LB.f={p:'',m:''};lbSetUser(r.data.session.user);LB.msg=(up?'Compte créé, bienvenue ':'Content de te revoir, ')+LB.pseudo+' !';LB.err=false;snd('coin');
+  LB.f={p:'',m:'',n:''};lbSetUser(r.data.session.user);LB.msg=(up?'Compte créé, bienvenue ':'Content de te revoir, ')+LB.pseudo+' !';LB.err=false;snd('coin');
   if(await cloudSync()&&BOOT){closePanel();toast('Connecté ! Choisis ta ville pour jouer')}lbLoad()}
 async function lbAct(v,w){
   if(v==='mode'){LB.mode=w;LB.msg='';return lbRedraw()}
   if(v==='go')return lbAuth();
   if(v==='out'){LB.busy=true;lbRedraw();await cloudPush();try{await SB.auth.signOut()}catch(e){}NOSAVE=true;location.reload();return}
-  if(v==='refresh'){LB.msg='';if(LB.user&&!LB.ready)await cloudSync();await lbSend();return lbLoad()}}
+  if(v==='refresh'){LB.msg='';if(LB.user&&!LB.ready)await cloudSync();await lbSend();return lbLoad()}
+  if(v==='edit'){LB.edit=w==='1';LB.f.n=LB.edit?LB.pseudo:'';LB.msg='';return lbRedraw()}
+  if(v==='ren')return lbRename()}
+// le pseudo affiché change, l'identifiant de connexion (lié à l'adresse factice) reste le même
+const lbLogin=()=>LB.user&&LB.user.email?LB.user.email.split('@')[0]:'';
+async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim();
+  const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
+  if(n===LB.pseudo){LB.edit=false;return lbRedraw()}
+  if(!/^[A-Za-z0-9_-]{3,16}$/.test(n))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
+  LB.busy=true;lbRedraw();let r;try{r=await SB.rpc('set_pseudo',{p_pseudo:n})}catch(e){r={error:e}}
+  if(!r.error&&r.data==='ok'){try{const u=await SB.auth.updateUser({data:{pseudo:n}});if(u.data&&u.data.user)lbSetUser(u.data.user)}catch(e){}LB.pseudo=n;S.meta.name=n;save()}
+  LB.busy=false;
+  if(r.error)return bad(/set_pseudo|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error));
+  if(r.data!=='ok')return bad(r.data);
+  LB.edit=false;LB.f.n='';LB.msg='Tu t\'appelles maintenant '+n+' !';LB.err=false;snd('coin');lbLoad()}
 function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';
   let h='';
-  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b><small>${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div><button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button></div>`;
+  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b>${LB.edit?'':` <button class="buy sm" type="button" data-act="lb:edit:1">Changer de pseudo</button>`}<small>${lbLogin()&&lbLogin()!==LB.pseudo.toLowerCase()?`Pour te connecter, utilise toujours ton identifiant : <b>${lbEsc(lbLogin())}</b>. `:''}${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div><button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button></div>`+
+    (LB.edit?`<div class="row lbf"><label>Nouveau pseudo<input class="lbin" data-f="n" maxlength="16" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.n)}"></label><small>C'est le nom affiché dans le classement. Pour te connecter, ton identifiant reste ${lbEsc(lbLogin())}.</small><div class="bets"><button class="chunky alt" type="button" data-act="lb:edit:0">Annuler</button><button class="chunky" type="button" data-act="lb:ren" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':'Valider'}</button></div></div>`:'');
   else{const up=LB.mode==='signup';
     h+=tabs(LB.mode,[['login','Connexion'],['signup','Créer un compte']],'lb:mode')+
     `<div class="row lbf"><label>Pseudo<input class="lbin" data-f="p" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.p)}"></label>`+
@@ -2872,7 +2887,7 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
   else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
   return h+'<button class="chunky alt" type="button" data-act="lb:refresh">Actualiser</button>'}
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
-$('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();lbAuth()}});
+$('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();e.target.dataset.f==='n'?lbRename():lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}

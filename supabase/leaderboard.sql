@@ -137,3 +137,27 @@ exception when others then return sqlerrm;
 end $$;
 revoke all on function public.ensure_profile() from public, anon;
 grant execute on function public.ensure_profile() to authenticated;
+
+-- ============ Changer de pseudo ============
+-- Change le nom affiché au classement. L'identifiant de connexion (pseudo choisi à l'inscription) ne change pas,
+-- donc un pseudo ne peut pas reprendre l'identifiant de connexion d'un autre joueur.
+create or replace function public.set_pseudo(p_pseudo text)
+returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return 'Tu n''es pas connecté'; end if;
+  if p_pseudo is null or p_pseudo !~ '^[A-Za-z0-9_-]{3,16}$' then return 'Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _'; end if;
+  if exists (select 1 from public.profiles where lower(pseudo) = lower(p_pseudo) and id <> uid)
+     or exists (select 1 from auth.users where lower(email) = lower(p_pseudo) || '@joueurs.poubelletycoon.app' and id <> uid)
+  then return 'Ce pseudo est déjà pris'; end if;
+  update public.profiles set pseudo = p_pseudo where id = uid;
+  if not found then return 'Profil introuvable : reconnecte-toi'; end if;
+  begin -- le jeu met aussi à jour ce champ de son côté : un refus ici n'annule pas le changement
+    update auth.users set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('pseudo', p_pseudo) where id = uid;
+  exception when others then null;
+  end;
+  return 'ok';
+exception when unique_violation then return 'Ce pseudo est déjà pris';
+end $$;
+revoke all on function public.set_pseudo(text) from public, anon;
+grant execute on function public.set_pseudo(text) to authenticated;

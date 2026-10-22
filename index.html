@@ -2702,6 +2702,7 @@ const TUTO=[
  {t:()=>'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
+ {t:()=>`Un objet cassé traîne près de toi (il fait des étincelles). <b>Reste juste à côté</b> : tu le répares tout seul, puis tu le revends !`,tg:()=>{const b=tutoBroken();return b&&[b.x,b.y-20]},bar:()=>{const b=tutoBroken();return b?b.prog:0}},
  {t:()=>'Ta faim baisse ! Va au <b>distributeur de snacks</b> et appuie sur <b>E</b> (ou le bouton Action).',tg:()=>[SNACK.x,SNACK.y-62],ui:()=>$('act').hidden?null:$('act')},
  {t:()=>{const L=tutoJobs(),n=L.filter(j=>j.ok).length,nx=tutoNextJob();if(JOB)return `Mini-jeu en cours : sers un maximum de clients ! <b>${n} / ${L.length}</b>`;
    const btn=tutoJobBtn(),k=btn?btn.dataset.act.split(':')[1]:nx&&nx.k;
@@ -2711,7 +2712,11 @@ const TUTO=[
  {t:()=>'Tu as assez ! Ouvre le menu <b>Business</b>.',ui:()=>$('btnBiz')},
  {t:()=>'Achète ton <b>distributeur de boissons</b> : clique sur le bouton vert.',ui:()=>document.querySelector('#pbody [data-act="biz:distrib"]')},
 ];
-const TUT={sx:0,sy:0,n:0,tx:''};
+const TUT={sx:0,sy:0,n:0,tx:'',rep:0};
+// l'étape réparation fait apparaître un objet cassé près du joueur s'il n'y en a aucun à l'écran
+function tutoBroken(){let b=null,bd=1e9;for(const o of broken){const d=dist(P.x,P.y,o.x,o.y);if(d<bd){bd=d;b=o}}
+  if(b&&bd<viewW*.6)return b;const k=Math.floor(Math.random()*BROKEN.length),o=Math.min(180,viewW*.3),x=Math.max(80,Math.min(W-80,P.x+(P.x+200<W?o:-o)));
+  b={x,y:P.y<380?262:540,b:BROKEN[k],prog:0,k};broken.push(b);return b}
 function tutoOn(){return S.meta.tutoDone===false&&!VISIT}
 function tutoSet(i){if(S.meta.tuto===i&&!$('tuto').hidden)return;S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;if(i<=1)TUT.n=0;snd('tick');renderTuto()}
 function tutoEnd(done){S.meta.tutoDone=true;$('tuto').hidden=true;tutoUI();save();setTimeout(()=>{if(!S.meta.tips.welcome){S.meta.tips.welcome=Date.now()}},10);
@@ -2725,13 +2730,14 @@ function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=dist
   if(S.distrib>=1)return tutoEnd(true);
   if(i===0&&(dist(P.x,P.y,TUT.sx,TUT.sy)>80||TUT.n>0))tutoSet(1);
   else if(i===1&&(TUT.n>=3||S.bag>=cap()))tutoSet(2);
-  else if(i===2&&S.bag===0&&S.stats.trash>0)tutoSet(S.stats.ate>=1?4:3);
-  else if(i===3&&S.stats.ate>=1)tutoSet(4);
-  else if(i===4&&!JOB&&$('panel').hidden&&!tutoNextJob())tutoSet(ok?6:5);
-  else if(i===5&&ok)tutoSet(biz?7:6);
-  else if(i===6&&biz)tutoSet(7);
-  else if(i===7&&!biz)tutoSet(ok?6:5);
-  else if(i===6&&!ok)tutoSet(5);
+  else if(i===2&&S.bag===0&&S.stats.trash>0){TUT.rep=S.stats.repairs;tutoSet(3)}
+  else if(i===3&&S.stats.repairs>TUT.rep)tutoSet(S.stats.ate>=1?5:4);
+  else if(i===4&&S.stats.ate>=1)tutoSet(5);
+  else if(i===5&&!JOB&&$('panel').hidden&&!tutoNextJob())tutoSet(ok?7:6);
+  else if(i===6&&ok)tutoSet(biz?8:7);
+  else if(i===7&&biz)tutoSet(8);
+  else if(i===8&&!biz)tutoSet(ok?7:6);
+  else if(i===7&&!ok)tutoSet(6);
   tutoText()}
 // flèche HTML au-dessus des boutons (Business, achat...) avec un halo sur la cible
 let tutoTgt=null;

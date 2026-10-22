@@ -2804,6 +2804,7 @@ const lsSet=(k,v)=>{try{if(v==null)localStorage.removeItem(k);else localStorage.
 async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);if(!raw)return;
   try{await SB.from('saves').upsert({user_id:LB.user.id,data:JSON.parse(raw),updated_at:new Date().toISOString()})}catch(e){}}
 async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;let cloud;
+  try{await SB.rpc('ensure_profile')}catch(e){}// compte créé avant le script SQL : on lui crée son profil
   try{const {data,error}=await SB.from('saves').select('data').eq('user_id',uid).maybeSingle();if(error)throw error;cloud=data&&data.data}
   catch(e){LB.msg='Sauvegarde en ligne injoignable, réessaie dans un instant';LB.err=true;lbRedraw();return false}
   const owner=lsGet(OWNER);let local=null;try{local=JSON.parse(lsGet(KEY)||'null')}catch(e){}

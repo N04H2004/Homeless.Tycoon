@@ -107,3 +107,28 @@ drop policy if exists "ma sauvegarde : créer" on public.saves;
 create policy "ma sauvegarde : créer" on public.saves for insert to authenticated with check (user_id = auth.uid());
 drop policy if exists "ma sauvegarde : modifier" on public.saves;
 create policy "ma sauvegarde : modifier" on public.saves for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ============ Comptes créés avant ce script ============
+-- Un compte inscrit avant la création du déclencheur n'a ni profil ni score : il n'apparaît pas au classement
+-- et sa sauvegarde est refusée. On les rattrape ici, puis le jeu appelle ensure_profile() à chaque connexion.
+insert into public.profiles (id, pseudo)
+  select u.id, u.raw_user_meta_data ->> 'pseudo' from auth.users u
+  where (u.raw_user_meta_data ->> 'pseudo') ~ '^[A-Za-z0-9_-]{3,16}$'
+    and not exists (select 1 from public.profiles p where p.id = u.id)
+    and not exists (select 1 from public.profiles p where lower(p.pseudo) = lower(u.raw_user_meta_data ->> 'pseudo'))
+  on conflict do nothing;
+insert into public.scores (user_id) select id from public.profiles on conflict do nothing;
+
+create or replace function public.ensure_profile()
+returns void language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then return; end if;
+  insert into public.profiles (id, pseudo)
+    select u.id, u.raw_user_meta_data ->> 'pseudo' from auth.users u where u.id = uid
+    on conflict do nothing;
+  insert into public.scores (user_id) values (uid) on conflict do nothing;
+exception when others then null; -- pseudo invalide ou déjà pris : on laisse le compte tel quel
+end $$;
+revoke all on function public.ensure_profile() from public, anon;
+grant execute on function public.ensure_profile() to authenticated;

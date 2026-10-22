@@ -119,16 +119,21 @@ insert into public.profiles (id, pseudo)
   on conflict do nothing;
 insert into public.scores (user_id) select id from public.profiles on conflict do nothing;
 
-create or replace function public.ensure_profile()
-returns void language plpgsql security definer set search_path = '' as $$
-declare uid uuid := auth.uid();
+drop function if exists public.ensure_profile();
+create function public.ensure_profile()
+returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); ps text;
 begin
-  if uid is null then return; end if;
-  insert into public.profiles (id, pseudo)
-    select u.id, u.raw_user_meta_data ->> 'pseudo' from auth.users u where u.id = uid
-    on conflict do nothing;
+  if uid is null then return 'non connecté'; end if;
+  if not exists (select 1 from public.profiles where id = uid) then
+    select u.raw_user_meta_data ->> 'pseudo' into ps from auth.users u where u.id = uid;
+    if ps is null or ps !~ '^[A-Za-z0-9_-]{3,16}$' then return 'pseudo invalide (' || coalesce(ps, 'vide') || ')'; end if;
+    if exists (select 1 from public.profiles where lower(pseudo) = lower(ps)) then return 'le pseudo ' || ps || ' est déjà pris par un autre compte'; end if;
+    insert into public.profiles (id, pseudo) values (uid, ps);
+  end if;
   insert into public.scores (user_id) values (uid) on conflict do nothing;
-exception when others then null; -- pseudo invalide ou déjà pris : on laisse le compte tel quel
+  return 'ok';
+exception when others then return sqlerrm;
 end $$;
 revoke all on function public.ensure_profile() from public, anon;
 grant execute on function public.ensure_profile() to authenticated;

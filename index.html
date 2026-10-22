@@ -2804,17 +2804,23 @@ function paccHTML(){if(!SB)return '<b>Hors ligne</b>';
 const OWNER='poubelle-tycoon-owner';
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v);return localStorage.getItem(k)===v}catch(e){return false}};
-async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);if(!raw)return;
-  try{await SB.from('saves').upsert({user_id:LB.user.id,data:JSON.parse(raw),updated_at:new Date().toISOString()})}catch(e){}}
+// copie locale de la partie de chaque compte : un changement de compte n'efface jamais une partie
+const BAK=k=>KEY+'@'+(k||'sans-compte');
+async function cloudPush(){if(!SB||!LB.ready)return;save();const raw=lsGet(KEY);if(!raw)return;lsSet(BAK(LB.user.id),raw);let r;
+  try{r=await SB.from('saves').upsert({user_id:LB.user.id,data:JSON.parse(raw),updated_at:new Date().toISOString()})}catch(e){r={error:e}}
+  const m='Sauvegarde en ligne refusée',bad=r&&r.error;if(bad&&!LB.err){LB.msg=m+' : '+lbErr(r.error)+'. Ta partie reste gardée dans ce navigateur.';LB.err=true;lbRedraw()}
+  else if(!bad&&LB.msg.startsWith(m)){LB.msg='';LB.err=false;lbRedraw()}}
 async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;let cloud;
   let ep;try{ep=await SB.rpc('ensure_profile')}catch(e){ep={error:e}}// compte créé avant le script SQL : on lui crée son profil
-  const dbOld=ep&&ep.error?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':'';
+  const dbOld=ep&&ep.error||ep&&ep.data===null?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':ep&&ep.data!=='ok'?'Profil impossible à créer : '+ep.data:'';
   try{const {data,error}=await SB.from('saves').select('data').eq('user_id',uid).maybeSingle();if(error)throw error;cloud=data&&data.data}
   catch(e){LB.msg='Sauvegarde en ligne injoignable, réessaie dans un instant';LB.err=true;lbRedraw();return false}
   const owner=lsGet(OWNER);let local=null;try{local=JSON.parse(lsGet(KEY)||'null')}catch(e){}
   let next;// undefined : on garde la partie du navigateur
   if(cloud&&(owner!==uid||!local||(cloud.last||0)>(local.last||0)+1000))next=JSON.stringify(cloud);
   else if(!cloud&&owner&&owner!==uid)next=null;// partie d'un autre compte : celui-ci repart de zéro
+  if(next===null)next=lsGet(BAK(uid));// pas de sauvegarde en ligne : on reprend la copie locale de ce compte, sinon il repart de zéro
+  if(next!==undefined&&local&&!lsSet(BAK(owner),lsGet(KEY))){LB.msg='Impossible de mettre de côté la partie actuelle : stockage du navigateur plein';LB.err=true;lbRedraw();return false}// la partie actuelle est d'abord mise de côté pour son compte
   if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
     NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
   lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}

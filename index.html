@@ -34,7 +34,10 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .bars{display:grid;grid-template-columns:auto 120px auto;gap:3px 8px;align-items:center;font-size:12px;font-weight:700}
 .bar{height:12px;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
 .bar>i{display:block;height:100%;width:50%;border-radius:4px;transition:width .2s}
-#hpb{background:var(--hp)}#fdb{background:var(--food)}#htb{background:#9d4edd}#htb.hot{background:#d62839}
+#hpb{background:var(--hp)}
+.bar.low{animation:lowb .7s ease-in-out infinite}.bar.low>i{background:#d62839!important}
+@keyframes lowb{50%{background:#ffd6dc;box-shadow:0 0 0 4px rgba(214,40,57,.45)}}
+@media (prefers-reduced-motion:reduce){.bar.low{animation:none;box-shadow:0 0 0 3px rgba(214,40,57,.6)}}#fdb{background:var(--food)}#htb{background:#9d4edd}#htb.hot{background:#d62839}
 .num{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
 .btns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 @media (min-width:760px){.btns{margin-top:44px}}
@@ -1178,7 +1181,7 @@ function update(dt){
   if(JOB){JOB.t-=dt;if(!JOB.cust.pouring&&!(JOB.cust.wait>0))JOB.cust.pat-=dt;
     if(JOB.cust.pat<=0&&JOB.t>0){jobFail('Le client en a eu marre et s\'en va.');if(pid==='job')renderPanel()}
     if(JOB.t<=0)endJob(false)}
-  S.food=Math.max(0,S.food-dt*.7*(JOB?.5:1));
+  S.food=Math.max(0,S.food-dt*.7*(JOB?.2:1));// pendant un mini-jeu, la faim baisse 5 fois moins vite
   if(S.food<=0)S.hp-=dt*3;
   if(S.frigo&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
   if(FA){FA.t+=dt;if(FA.t>=.95&&!FA.ate){FA.ate=1;S.food=Math.min(100,S.food+45);float(P.x,P.y-95,'MIAM !','#ff9f1c');snd('eat')}if(FA.t>1.6)FA=null}
@@ -1712,7 +1715,7 @@ function updHud(){
   {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT}
   if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent='Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
     $('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.';
-    $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
+    $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';$('fdb').parentNode.classList.toggle('low',S.food<25);$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
   $('cash').textContent=fmt(S.cash);
   const r=autoRate();$('rate').textContent=r>0?'+'+(r<100?r.toFixed(1).replace('.',',')+' '+CUR():fmt(r))+'/s en automatique':'aucun revenu auto';
   const pl=$('payline');
@@ -1722,7 +1725,7 @@ function updHud(){
     else{pl.textContent='Paie de '+fmt(wages())+' dans '+Math.ceil(S.pay.timer)+' s'+(S.manager?' (manager)':'');pl.className=''}
   }else pl.textContent='';
   const pb=$('pay');const show=S.pay.due>0&&!S.manager;if(pb.hidden===show)pb.hidden=!show;if(show)pb.textContent='Payer '+fmt(S.pay.due);
-  $('hpb').style.width=Math.max(0,S.hp)+'%';$('fdb').style.width=S.food+'%';
+  $('hpb').style.width=Math.max(0,S.hp)+'%';$('fdb').style.width=S.food+'%';$('fdb').parentNode.classList.toggle('low',S.food<25);
   $('hpn').textContent=Math.max(0,Math.ceil(S.hp));$('fdn').textContent=Math.ceil(S.food);
   {const hs=S.band>0||S.heat>0.5;for(const id of ['hl','hbar','htn'])if($(id).hidden===hs)$(id).hidden=!hs;
    {const ds=(S.dirty||0)>=1||S.band>0;for(const id of ['dl','dn'])if($(id).hidden===ds)$(id).hidden=!ds;const t=fmt(S.dirty||0)+(launderR()>0&&S.dirty>=1?' · lavage':'');if($('dn').textContent!==t)$('dn').textContent=t}

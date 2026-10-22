@@ -133,7 +133,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .guide .lock{opacity:.55;font-size:13px;padding:6px 10px;border:2px dashed var(--ink);border-radius:12px}
 #toast{position:absolute;left:50%;top:calc(185px + env(safe-area-inset-top,0px));transform:translateX(-50%) rotate(-1deg);font-family:var(--display);font-size:18px;
   background:var(--sun);text-align:center;max-width:calc(100% - 32px);transition:opacity .3s;pointer-events:none}
-#panel{position:absolute;inset:0;background:rgba(42,31,61,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#panel{position:absolute;inset:0;z-index:60;background:rgba(42,31,61,.55);display:flex;align-items:center;justify-content:center;padding:16px}
 .sheet{background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);width:100%;max-width:500px;max-height:90%;display:flex;flex-direction:column;overflow:hidden}
 .sheet header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:3px solid var(--ink);background:var(--hd,#ffd23f)}
 .sheet h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;flex:1;text-wrap:balance}
@@ -282,6 +282,11 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbr .rk{font-family:var(--display);font-size:16px}.lbr .sc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--cash)}
 .lbr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lbr:nth-child(1) .rk{color:#b8860b}.lbr.me{background:#fff3b0}
+.lbw{width:min(560px,100%);background:#fff6df;color:var(--ink);border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink),0 10px 30px rgba(0,0,0,.35);padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.lbw .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--display);font-size:18px}
+.lbw .chunky{font-size:14px;padding:5px 10px}
+.lbw .lbr{padding:4px 10px}
+.lbw small{font-size:12px;opacity:.75}
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
@@ -300,11 +305,11 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
     <div class="btns">
       <button class="chunky danger" id="pay" type="button" hidden>Payer</button>
       <button class="chunky alt" id="snd" type="button">Son</button>
-      <button class="chunky alt" id="btnLb" type="button">Classement</button>
       <button class="chunky alt" id="btnObj" type="button">Objectifs</button>
       <button class="chunky" id="back" type="button" hidden>Retour</button>
       <button class="chunky" id="btnBiz" type="button">Business</button>
       <button class="chunky alt" id="btnMenu" type="button">Menu</button>
+      <button class="chunky alt" id="btnLb" type="button">Classement</button>
     </div>
   </div>
   <div id="evb" class="card" hidden></div>
@@ -804,7 +809,7 @@ catchUp(Math.min(7200,(Date.now()-(S.last||Date.now()))/1000),false);
 // ================= Entrées =================
 const keys={};
 addEventListener('keydown',e=>{
-  if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&document.activeElement.id!=='pname'){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
+  if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&document.activeElement.tagName!=='INPUT'){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
   if(e.key==='Escape'&&!$('panel').hidden){closePanel();return}
   if(!$('panel').hidden){if(e.key===' '&&JOB&&JOB.k==='karaoke'&&pid==='job'){e.preventDefault();if(!(JOB.cust.wait>0)){mgAct('ksing');if(JOB)renderPanel()}}return}
   if(document.activeElement&&document.activeElement!==cv&&document.activeElement.tagName==='BUTTON'&&e.key.startsWith('Arrow'))document.activeElement.blur();
@@ -2688,9 +2693,10 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
     `<div class="wc${open&&exists?'':' lock'}" style="background:${c.sky}"><span class="tag">${isCur?'Ici':!open?'Verrouillée':c.cur}</span><span class="em">${WEM[c.k]}</span><b>${c.n}</b><small>${WTAG[c.k]} · gains x${String(c.m).replace('.',',')}</small><small>${st}</small>`+
     `<button class="chunky" type="button" data-wgo="${i}" ${open&&exists?'':'disabled'}>${!open?'🔒 Verrouillée':!exists?'Pas encore ouverte':isCur?'Reprendre ›':'Y aller ›'}</button></div>`+
     `<button class="arr" type="button" data-wm="1" aria-label="Ville suivante">›</button></div><div class="dots">${CITIES.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>`;
-  el.classList.add('map');el.innerHTML=wmapSVG(i)+prof+card;
+  el.classList.add('map');el.innerHTML=wmapSVG(i)+prof+card+'<div class="lbw" id="lbw">'+lbMini()+'</div>';
   for(const b of el.querySelectorAll('[data-wm]'))b.addEventListener('click',()=>wsMove(+b.dataset.wm));
   for(const b of el.querySelectorAll('[data-wgo]'))b.addEventListener('click',()=>enterWorld(+b.dataset.wgo));
+  if(Date.now()-LB.at>30000)lbLoad();
   const ni=$('pname');ni.addEventListener('change',()=>{S.meta.name=ni.value.trim().slice(0,18)||'Patron';save()});ni.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')ni.blur()})}
 function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSelect()}
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
@@ -2700,7 +2706,7 @@ function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!BOOT)upda
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
 let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
-const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,busy:false,msg:'',err:false,sent:0};
+const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:''},rows:null,at:0,busy:false,msg:'',err:false,sent:0};
 // pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit
 const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
 const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
@@ -2714,9 +2720,19 @@ function lbErr(e){const m=String(e&&e.message||e||'');
   if(/rate limit|too many/i.test(m))return "Trop d'essais, réessaie dans une minute";
   if(/fetch|network|Failed/i.test(m))return 'Pas de connexion au serveur, réessaie plus tard';
   return m||'Erreur inconnue'}
-function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel()}
+function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel();const w=$('lbw');if(w)w.innerHTML=lbMini()}
+function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
+  let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
+  if(!SB)return h+'<small>Classement indisponible hors connexion</small>';
+  if(!LB.rows)return h+'<small>Chargement...</small>';
+  if(!R.length)return h+"<small>Personne au classement pour l'instant. Sois le premier !</small>";
+  h+='<div class="lbt">'+top.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
+  if(me&&!top.includes(me))h+=`<div class="lbr me"><span class="rk">#${me.rank}</span><span class="nm">${lbEsc(me.pseudo)}</span><span class="sc">${lbf(me.score)}</span></div>`;
+  else if(!LB.user)h+='<small>Connecte-toi pour apparaître dans le classement</small>';
+  return h}
+$('boot').addEventListener('click',e=>{if(e.target.closest('[data-lbo]')){openPanel('lb');lbSend().finally(lbLoad)}});
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
-async function lbLoad(){if(!SB)return;try{const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
+async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.user)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
 async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
@@ -2750,7 +2766,7 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
   else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
   return h+'<button class="chunky alt" type="button" data-act="lb:refresh">Actualiser</button>'}
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
-$('pbody').addEventListener('keydown',e=>{if(e.target.classList.contains('lbin')&&e.key==='Enter'){e.preventDefault();lbAuth()}});
+$('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);lbSend(true)}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);lbRedraw()})}

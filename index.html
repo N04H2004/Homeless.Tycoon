@@ -35,7 +35,15 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .bar{height:12px;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
 .bar>i{display:block;height:100%;width:50%;border-radius:4px;transition:width .2s}
 #hpb{background:var(--hp)}
-.bar.low{animation:lowb .7s ease-in-out infinite}.bar.low>i{background:#d62839!important}
+.bar.low{animation:lowb .7s ease-in-out infinite}
+#dmg{position:absolute;inset:0;z-index:58;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(214,40,57,.15) 30%,rgba(214,40,57,.75) 100%)}
+#dmg.on{animation:dmgf .6s ease-out}@keyframes dmgf{0%{opacity:1}100%{opacity:0}}
+#alert{position:absolute;left:50%;top:44%;z-index:57;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(320px,calc(100% - 32px))}
+#alert div{background:#d62839;color:#fff;border:4px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:5px 12px;text-align:center;opacity:.92;animation:alertp .7s ease-in-out infinite alternate}
+#alert b{display:block;font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.03em;-webkit-text-stroke:1px var(--ink)}
+#alert span{display:block;font-size:12px;font-weight:600}
+@keyframes alertp{from{transform:scale(1);opacity:1}to{transform:scale(1.06);opacity:.8}}
+@media (prefers-reduced-motion:reduce){#alert div,#dmg.on{animation:none}}.bar.low>i{background:#d62839!important}
 @keyframes lowb{50%{background:#ffd6dc;box-shadow:0 0 0 4px rgba(214,40,57,.45)}}
 @media (prefers-reduced-motion:reduce){.bar.low{animation:none;box-shadow:0 0 0 3px rgba(214,40,57,.6)}}#fdb{background:var(--food)}#htb{background:#9d4edd}#htb.hot{background:#d62839}
 .num{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
@@ -381,6 +389,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="steal" class="chunky" type="button" hidden>Faire les poches</button>
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
+  <div id="dmg" aria-hidden="true"></div>
+  <div id="alert" hidden role="alert"></div>
   <div id="tuto" class="card" hidden></div>
   <div id="tarrow" hidden aria-hidden="true"><svg viewBox="0 0 60 70"><path d="M18 4h24v30h14L30 66 4 34h14z" fill="#ffd23f" stroke="#2a1f3d" stroke-width="5" stroke-linejoin="round"/></svg></div>
   <div id="boot"><div class="bl-bg" aria-hidden="true"><div class="bl-sun"></div>
@@ -741,7 +751,14 @@ function tone(f,d,type,v,f2,delay,dest){const c=AU.c;if(!c)return;const t=c.curr
   o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.1,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);
   o.connect(g);g.connect(dest||AU.g);o.start(t);o.stop(t+d+.03)}
 let lastPickSnd=0;
-let hungerT=0;// faim critique : grognement + bip, puis toutes les 8 s tant qu'on reste sous 25
+let hungerT=0,hpT=0;// faim ou vie sous 25 : alerte sonore en boucle (grognement + bip, battement de cœur)
+// barres qui clignotent, alerte au centre de l'écran et flash rouge quand on perd de la vie
+let lastHp=null,lastS=null;
+function critHud(){const f=S.food<25,h=S.hp<25,a=$('alert');$('fdb').parentNode.classList.toggle('low',f);$('hpb').parentNode.classList.toggle('low',h);
+  if(lastS!==S){lastS=S;lastHp=S.hp}if(S.hp<lastHp-.3){const d=$('dmg');d.classList.remove('on');void d.offsetWidth;d.classList.add('on');snd('hit')}lastHp=S.hp;
+  const on=(f||h)&&!(typeof BOOT!=='undefined'&&BOOT);a.hidden=!on;if(!on)return;
+  const t=(h?"<div><b>❤️ VIE CRITIQUE !</b><span>Soigne-toi : rayon santé du supermarché ou gros repas</span></div>":'')+(f?"<div><b>🍔 J'AI FAIM !</b><span>Mange vite : distributeur de snacks, supermarché ou kebab</span></div>":'');
+  if(a.dataset.t!==t){a.dataset.t=t;a.innerHTML=t}}
 function snd(k){if(!S.meta.snd||!AU.c)return;if(AU.c.state==='suspended')AU.c.resume();
   const seq=(fs,d,ty,v,gap)=>fs.forEach((f,i)=>tone(f,d,ty,v,null,i*gap));
   switch(k){
@@ -758,7 +775,9 @@ function snd(k){if(!S.meta.snd||!AU.c)return;if(AU.c.state==='suspended')AU.c.re
   case 'win':seq([523,659,784,1047,1319],.18,'square',.07,.08);break;
   case 'ach':seq([784,988,1175,1568],.22,'triangle',.13,.09);break;
   case 'tick':tone(1400,.025,'square',.035);break;
-  case 'hunger':tone(95,.35,'sawtooth',.09,60);tone(75,.4,'sawtooth',.08,50,.32);tone(880,.09,'square',.05,null,.8);tone(880,.09,'square',.05,null,.95);break;
+  case 'hunger':tone(95,.3,'sawtooth',.07,60);tone(880,.08,'square',.045,null,.45);break;
+  case 'lowhp':tone(70,.12,'sine',.28,40);tone(60,.14,'sine',.24,35,.2);break;
+  case 'hit':tone(160,.12,'square',.09,70);break;
   case 'event':tone(392,.15,'triangle',.12);tone(523,.3,'triangle',.12,null,.15);break;
   case 'legend':seq([1047,1319,1568,2093,2637],.16,'sine',.13,.07);break;
   case 'card':tone(260,.05,'triangle',.07,620);break;
@@ -1184,7 +1203,8 @@ function update(dt){
     if(JOB.cust.pat<=0&&JOB.t>0){jobFail('Le client en a eu marre et s\'en va.');if(pid==='job')renderPanel()}
     if(JOB.t<=0)endJob(false)}
   S.food=Math.max(0,S.food-dt*.7*(JOB?.2:1));// pendant un mini-jeu, la faim baisse 5 fois moins vite
-  if(S.food<25){hungerT-=dt;if(hungerT<=0){hungerT=8;snd('hunger')}}else hungerT=0;
+  if(S.food<25){hungerT-=dt;if(hungerT<=0){hungerT=1.2;snd('hunger')}}else hungerT=0;
+  if(S.hp<25){hpT-=dt;if(hpT<=0){hpT=1;snd('lowhp')}}else hpT=0;
   if(S.food<=0)S.hp-=dt*3;
   if(S.frigo&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
   if(FA){FA.t+=dt;if(FA.t>=.95&&!FA.ate){FA.ate=1;S.food=Math.min(100,S.food+45);float(P.x,P.y-95,'MIAM !','#ff9f1c');snd('eat')}if(FA.t>1.6)FA=null}
@@ -1719,7 +1739,7 @@ function updHud(){
   {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT}
   if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent='Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
     $('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.';
-    $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';$('fdb').parentNode.classList.toggle('low',S.food<25);$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
+    $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';critHud();$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
   $('cash').textContent=fmt(S.cash);
   const r=autoRate();$('rate').textContent=r>0?'+'+(r<100?r.toFixed(1).replace('.',',')+' '+CUR():fmt(r))+'/s en automatique':'aucun revenu auto';
   const pl=$('payline');
@@ -1729,7 +1749,7 @@ function updHud(){
     else{pl.textContent='Paie de '+fmt(wages())+' dans '+Math.ceil(S.pay.timer)+' s'+(S.manager?' (manager)':'');pl.className=''}
   }else pl.textContent='';
   const pb=$('pay');const show=S.pay.due>0&&!S.manager;if(pb.hidden===show)pb.hidden=!show;if(show)pb.textContent='Payer '+fmt(S.pay.due);
-  $('hpb').style.width=Math.max(0,S.hp)+'%';$('fdb').style.width=S.food+'%';$('fdb').parentNode.classList.toggle('low',S.food<25);
+  $('hpb').style.width=Math.max(0,S.hp)+'%';$('fdb').style.width=S.food+'%';critHud();
   $('hpn').textContent=Math.max(0,Math.ceil(S.hp));$('fdn').textContent=Math.ceil(S.food);
   {const hs=S.band>0||S.heat>0.5;for(const id of ['hl','hbar','htn'])if($(id).hidden===hs)$(id).hidden=!hs;
    {const ds=(S.dirty||0)>=1||S.band>0;for(const id of ['dl','dn'])if($(id).hidden===ds)$(id).hidden=!ds;const t=fmt(S.dirty||0)+(launderR()>0&&S.dirty>=1?' · lavage':'');if($('dn').textContent!==t)$('dn').textContent=t}

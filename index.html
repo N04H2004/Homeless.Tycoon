@@ -117,6 +117,15 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .coin:active{transform:translateY(3px);box-shadow:none}
 #hint{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));color:var(--paper);font-size:12px;opacity:.8;text-align:right}
 #tuto{position:absolute;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(440px,calc(100% - 32px));background:var(--sun);display:flex;flex-direction:column;gap:6px;z-index:2}
+#tuto.top{z-index:61}
+#tuto .tbar{height:10px;border:2px solid var(--ink);border-radius:6px;background:#fff;overflow:hidden}#tuto .tbar i{display:block;height:100%;width:0;background:var(--cash);transition:width .3s}
+#tarrow{position:fixed;z-index:66;width:46px;height:54px;margin-left:-23px;transform:translateY(-100%);pointer-events:none;animation:tarb .6s ease-in-out infinite alternate}
+#tarrow svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 0 rgba(42,31,61,.4))}
+#tarrow.up{transform:none}#tarrow.up svg{transform:rotate(180deg)}
+@keyframes tarb{to{translate:0 -10px}}#tarrow.up{animation-name:tarbu}@keyframes tarbu{to{translate:0 10px}}
+.tglow{animation:tglow 1s ease-in-out infinite!important;position:relative;z-index:2}
+@keyframes tglow{0%,100%{box-shadow:0 4px 0 var(--ink),0 0 0 0 rgba(255,210,63,.9)}50%{box-shadow:0 4px 0 var(--ink),0 0 0 10px rgba(255,210,63,.35)}}
+@media (prefers-reduced-motion:reduce){#tarrow,.tglow{animation:none!important}}
 #tuto .tt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#7b2cbf}
 #tuto .tx{font-family:var(--display);font-size:18px;line-height:1.2;text-wrap:balance}
 #tuto .dots{display:flex;gap:5px}#tuto .dots i{width:10px;height:10px;border-radius:50%;border:2px solid var(--ink);background:#fff}#tuto .dots i.on{background:var(--ink)}
@@ -370,6 +379,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
   <div id="tuto" class="card" hidden></div>
+  <div id="tarrow" hidden aria-hidden="true"><svg viewBox="0 0 60 70"><path d="M18 4h24v30h14L30 66 4 34h14z" fill="#ffd23f" stroke="#2a1f3d" stroke-width="5" stroke-linejoin="round"/></svg></div>
   <div id="boot"><div class="bl-bg" aria-hidden="true"><div class="bl-sun"></div>
     <svg class="bl-cloud c1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="4" stroke-linejoin="round"/></svg>
     <svg class="bl-cloud c2" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="4" stroke-linejoin="round"/></svg>
@@ -1839,7 +1849,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
   return [x.n,x.col,h]}
 // ================= Panneaux =================
 let pid=null,parg=null,ptab='holding',infoBack=null;
-function openPanel(id,arg){if(id==='super'&&tutoOn()&&S.meta.tuto===4)setTimeout(()=>tutoSet(5),400);pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};renderPanel();$('panel').hidden=false;P.tx=null;for(const k in keys)keys[k]=false}
+function openPanel(id,arg){pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};renderPanel();$('panel').hidden=false;P.tx=null;for(const k in keys)keys[k]=false}
 function closePanel(){if(spinning)return;if(JOB){endJob(true);return}$('panel').hidden=true;pid=null;refocus()}
 $('pclose').addEventListener('click',closePanel);
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')closePanel()});
@@ -2673,28 +2683,50 @@ function restoreParis(){const m=S.meta;if(m.parisRestored)return;
   else{const keep=S,pc=m.cur;m.cur=0;S=mx;const r=netRate();S=keep;m.cur=pc;w0.snap=snapOf(mx);w0.rate=Math.round(r*100)/100;w0.g=Math.max(w0.g||.2,.2)}
   save();setTimeout(()=>toast('Ta rue de Paris a été restaurée au maximum !'),1200)}
 // ================= Tutoriel, fiches et guide =================
+// le tutoriel se termine à l'achat du premier distributeur ; chaque étape montre une flèche (dans la rue ou sur un bouton)
+const nearTrash=()=>{let b=null,bd=1e9;for(const t of trash){const d=dist(P.x,P.y,t.x,t.y);if(d<bd){bd=d;b=t}}return b&&[b.x,b.y-10]};
+const nearBin=()=>{let b=null,bd=1e9;for(const [x,y] of BINS){const d=dist(P.x,P.y,x,y);if(d<bd){bd=d;b=[x,y-30]}}return b};
+const tutoGoal=()=>{const t=nearTrash(),b=nearBin();if(!t||S.bag>=cap())return b;if(S.bag>0&&dist(P.x,P.y,b[0],b[1])<dist(P.x,P.y,t[0],t[1]))return b;return t};
 const TUTO=[
- {t:'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller.'},
- {t:'Ramasse 3 déchets : passe simplement à côté.',tg:()=>{let b=null,bd=1e9;for(const t of trash){const d=dist(P.x,P.y,t.x,t.y);if(d<bd){bd=d;b=t}}return b&&[b.x,b.y-10]}},
- {t:'Vide ton sac dans une poubelle verte pour toucher ton argent.',tg:()=>{let b=null,bd=1e9;for(const [x,y] of BINS){const d=dist(P.x,P.y,x,y);if(d<bd){bd=d;b=[x,y-30]}}return b}},
- {t:'Ta faim baisse ! Achète un snack au distributeur (touche E devant).',tg:()=>[SNACK.x,SNACK.y-62]},
- {t:'Entre au supermarché (E) : on y achète à manger, et on peut y signer un CDD pour gagner plus.',tg:()=>[BID.super.door,150]},
- {t:'Bravo ! Suis tes objectifs en bas à gauche. Le bouton Business sert à investir, le Menu contient le Guide.',end:1},
+ {t:()=>'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
+ {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
+ {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
+ {t:()=>'Ta faim baisse ! Va au <b>distributeur de snacks</b> et appuie sur <b>E</b> (ou le bouton Action).',tg:()=>[SNACK.x,SNACK.y-62],ui:()=>$('act').hidden?null:$('act')},
+ {t:()=>`Objectif : ton <b>premier distributeur de boissons</b>, il te rapportera de l'argent tout seul. Ramasse et vide ton sac jusqu'à <b>${fmt(distCost())}</b>.`,tg:tutoGoal,bar:()=>Math.min(1,S.cash/distCost())},
+ {t:()=>'Tu as assez ! Ouvre le menu <b>Business</b>.',ui:()=>$('btnBiz')},
+ {t:()=>'Achète ton <b>distributeur de boissons</b> : clique sur le bouton vert.',ui:()=>document.querySelector('#pbody [data-act="biz:distrib"]')},
 ];
-const TUT={sx:0,sy:0,n:0};
+const TUT={sx:0,sy:0,n:0,tx:''};
 function tutoOn(){return S.meta.tutoDone===false&&!VISIT}
-function tutoSet(i){S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;TUT.n=0;snd('tick');renderTuto()}
-function tutoEnd(){S.meta.tutoDone=true;$('tuto').hidden=true;save();setTimeout(()=>{if(!S.meta.tips.welcome){S.meta.tips.welcome=Date.now()}},10)}
-function renderTuto(){const el=$('tuto');if(!tutoOn()){el.hidden=true;return}const i=S.meta.tuto||0,st=TUTO[i];el.hidden=false;
-  el.innerHTML=`<div class="tt"><span>Tutoriel · ${i+1} / ${TUTO.length}</span><span class="dots">${TUTO.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span><button type="button" id="tskip">${st.end?"C'est parti !":'Passer'}</button></div><div class="tx">${st.t}</div>`;
-  $('tskip').onclick=()=>{tutoEnd();refocus()}}
-function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0;
-  if(i===0&&dist(P.x,P.y,TUT.sx,TUT.sy)>80)tutoSet(1);
-  else if(i===1&&TUT.n>=3)tutoSet(2);
-  else if(i===2&&S.stats.trash>=3)tutoSet(3);
-  else if(i===3&&S.stats.ate>=1)tutoSet(4)}
-function drawTutoArrow(){if(!tutoOn())return;const st=TUTO[S.meta.tuto||0];if(!st.tg)return;const g=st.tg();if(!g)return;let [x,y]=g;const b=Math.sin(T*6)*6;
+function tutoSet(i){if(S.meta.tuto===i&&!$('tuto').hidden)return;S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;if(i<=1)TUT.n=0;snd('tick');renderTuto()}
+function tutoEnd(done){S.meta.tutoDone=true;$('tuto').hidden=true;tutoUI();save();setTimeout(()=>{if(!S.meta.tips.welcome){S.meta.tips.welcome=Date.now()}},10);
+  if(done){snd('ach');toast('Tutoriel terminé ! Ton distributeur rapporte maintenant de l\'argent tout seul. Suis tes objectifs en bas à gauche.')}}
+function renderTuto(){const el=$('tuto');if(!tutoOn()){el.hidden=true;tutoUI();return}const i=Math.min(S.meta.tuto||0,TUTO.length-1),st=TUTO[i];el.hidden=false;el.classList.toggle('top',i===TUTO.length-1);TUT.tx='';
+  el.innerHTML=`<div class="tt"><span>Tutoriel · ${i+1} / ${TUTO.length}</span><span class="dots">${TUTO.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span><button type="button" id="tskip">Passer</button></div><div class="tx" id="ttx"></div>`+(st.bar?'<div class="gp tbar"><i id="tbar"></i></div>':'');
+  $('tskip').onclick=()=>{tutoEnd();refocus()};tutoText()}
+function tutoText(){const st=TUTO[Math.min(S.meta.tuto||0,TUTO.length-1)],t=st.t(),el=$('ttx');if(el&&t!==TUT.tx){TUT.tx=t;el.innerHTML=t}
+  const b=$('tbar');if(b&&st.bar)b.style.width=Math.round(st.bar()*100)+'%'}
+function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=distCost(),biz=!$('panel').hidden&&pid==='biz';
+  if(S.distrib>=1)return tutoEnd(true);
+  if(i===0&&(dist(P.x,P.y,TUT.sx,TUT.sy)>80||TUT.n>0))tutoSet(1);
+  else if(i===1&&(TUT.n>=3||S.bag>=cap()))tutoSet(2);
+  else if(i===2&&S.bag===0&&S.stats.trash>0)tutoSet(S.stats.ate>=1?4:3);
+  else if(i===3&&S.stats.ate>=1)tutoSet(4);
+  else if(i===4&&ok)tutoSet(biz?6:5);
+  else if(i===5&&biz)tutoSet(6);
+  else if(i===6&&!biz)tutoSet(ok?5:4);
+  else if(i===5&&!ok)tutoSet(4);
+  tutoText()}
+// flèche HTML au-dessus des boutons (Business, achat...) avec un halo sur la cible
+let tutoTgt=null;
+function tutoUI(){const a=$('tarrow');const st=tutoOn()&&!(typeof BOOT!=='undefined'&&BOOT)&&!JOB&&TUTO[S.meta.tuto||0],el=st&&st.ui?st.ui():null,r=el&&el.getBoundingClientRect();
+  if(tutoTgt&&tutoTgt!==el)tutoTgt.classList.remove('tglow');tutoTgt=el;
+  if(!el||!r.width||(!$('panel').hidden&&!$('pbody').contains(el))){a.hidden=true;return}
+  el.classList.add('tglow');a.hidden=false;const up=r.top<90;a.classList.toggle('up',up);
+  a.style.left=(r.left+r.width/2)+'px';a.style.top=(up?r.bottom+6:r.top-6)+'px'}
+function drawTutoArrow(){tutoUI();if(!tutoOn())return;const st=TUTO[S.meta.tuto||0];if(!st.tg)return;const g=st.tg();if(!g)return;let [x,y]=g;const b=Math.sin(T*6)*6;
   if(x<camX+30||x>camX+viewW-30){const left=x<camX+30,ax=left?camX+40:camX+viewW-40,ay=330;cx.save();cx.translate(ax,ay);if(left)cx.scale(-1,1);cx.lineWidth=4;cx.beginPath();cx.moveTo(-26+b,-16);cx.lineTo(4+b,-16);cx.lineTo(4+b,-30);cx.lineTo(30+b,0);cx.lineTo(4+b,30);cx.lineTo(4+b,16);cx.lineTo(-26+b,16);cx.closePath();fs('#ffd23f');cx.restore();return}
+  cx.save();cx.translate(x,y+22);const k=(T*1.4)%1;cx.globalAlpha=1-k;cx.lineWidth=4;cx.strokeStyle='#ffd23f';cx.beginPath();cx.ellipse(0,0,18+k*26,7+k*10,0,0,7);cx.stroke();cx.globalAlpha=1;cx.restore();
   cx.save();cx.translate(x,y-36+b);cx.lineWidth=4;cx.beginPath();cx.moveTo(-12,-34);cx.lineTo(12,-34);cx.lineTo(12,-14);cx.lineTo(24,-14);cx.lineTo(0,10);cx.lineTo(-24,-14);cx.lineTo(-12,-14);cx.closePath();fs('#ffd23f');cx.restore()}
 // fiches : s'ouvrent une seule fois, à la première rencontre
 const TIPS=[

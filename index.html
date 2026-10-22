@@ -2687,12 +2687,20 @@ function restoreParis(){const m=S.meta;if(m.parisRestored)return;
 const nearTrash=()=>{let b=null,bd=1e9;for(const t of trash){const d=dist(P.x,P.y,t.x,t.y);if(d<bd){bd=d;b=t}}return b&&[b.x,b.y-10]};
 const nearBin=()=>{let b=null,bd=1e9;for(const [x,y] of BINS){const d=dist(P.x,P.y,x,y);if(d<bd){bd=d;b=[x,y-30]}}return b};
 const tutoGoal=()=>{const t=nearTrash(),b=nearBin();if(!t||S.bag>=cap())return b;if(S.bag>0&&dist(P.x,P.y,b[0],b[1])<dist(P.x,P.y,t[0],t[1]))return b;return t};
+// mini-jeux (CDD) de la ville à tester pendant le tutoriel ; un CDD déjà signé une fois compte comme testé
+const tutoJobs=()=>SHOPS.filter(sh=>sh.job&&JOBS[sh.job]&&jobOk(sh.job)).map(sh=>({sh,k:sh.job,ok:S.cdd[sh.job]!=null}));
+const tutoNextJob=()=>{let b=null,bd=1e9;for(const j of tutoJobs())if(!j.ok){const d=Math.abs(P.x-j.sh.door);if(d<bd){bd=d;b=j}}return b};
+const tutoJobBtn=()=>{for(const j of tutoJobs())if(!j.ok){const e=document.querySelector(`#pbody [data-act="job:${j.k}"]:not(:disabled),#pbody [data-act="jobgo:${j.k}"]`);if(e)return e}return null};
 const TUTO=[
  {t:()=>'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
  {t:()=>'Ta faim baisse ! Va au <b>distributeur de snacks</b> et appuie sur <b>E</b> (ou le bouton Action).',tg:()=>[SNACK.x,SNACK.y-62],ui:()=>$('act').hidden?null:$('act')},
- {t:()=>`Objectif : ton <b>premier distributeur de boissons</b>, il te rapportera de l'argent tout seul. Ramasse et vide ton sac jusqu'à <b>${fmt(distCost())}</b>.`,tg:tutoGoal,bar:()=>Math.min(1,S.cash/distCost())},
+ {t:()=>{const L=tutoJobs(),n=L.filter(j=>j.ok).length,nx=tutoNextJob();if(JOB)return `Mini-jeu en cours : sers un maximum de clients ! <b>${n} / ${L.length}</b>`;
+   const btn=tutoJobBtn(),k=btn?btn.dataset.act.split(':')[1]:nx&&nx.k;
+   return `Teste les mini-jeux de la rue : <b>${n} / ${L.length}</b>.`+(btn?` Ici : <b>${JOBS[k].n}</b>. Clique sur le bouton qui clignote !`:k?` Prochain : <b>${JOBS[k].n}</b>. Entre dans la boutique (<b>E</b>) puis clique sur <b>Signer</b>.`:'')},
+   tg:()=>{const j=tutoNextJob();return j&&[j.sh.door,150]},ui:tutoJobBtn,bar:()=>{const L=tutoJobs();return L.length?L.filter(j=>j.ok).length/L.length:1}},
+ {t:()=>`Objectif : ton <b>premier distributeur de boissons</b>, il te rapportera de l'argent tout seul. <b>Ramasse des déchets ou fais un CDD</b> (chacun se refait le lendemain dans le jeu) jusqu'à <b>${fmt(distCost())}</b>.`,tg:tutoGoal,bar:()=>Math.min(1,S.cash/distCost())},
  {t:()=>'Tu as assez ! Ouvre le menu <b>Business</b>.',ui:()=>$('btnBiz')},
  {t:()=>'Achète ton <b>distributeur de boissons</b> : clique sur le bouton vert.',ui:()=>document.querySelector('#pbody [data-act="biz:distrib"]')},
 ];
@@ -2712,10 +2720,11 @@ function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=dist
   else if(i===1&&(TUT.n>=3||S.bag>=cap()))tutoSet(2);
   else if(i===2&&S.bag===0&&S.stats.trash>0)tutoSet(S.stats.ate>=1?4:3);
   else if(i===3&&S.stats.ate>=1)tutoSet(4);
-  else if(i===4&&ok)tutoSet(biz?6:5);
-  else if(i===5&&biz)tutoSet(6);
-  else if(i===6&&!biz)tutoSet(ok?5:4);
-  else if(i===5&&!ok)tutoSet(4);
+  else if(i===4&&!JOB&&$('panel').hidden&&!tutoNextJob())tutoSet(ok?6:5);
+  else if(i===5&&ok)tutoSet(biz?7:6);
+  else if(i===6&&biz)tutoSet(7);
+  else if(i===7&&!biz)tutoSet(ok?6:5);
+  else if(i===6&&!ok)tutoSet(5);
   tutoText()}
 // flèche HTML au-dessus des boutons (Business, achat...) avec un halo sur la cible
 let tutoTgt=null;

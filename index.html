@@ -296,6 +296,45 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #boot .aus button.off{background:#e4dccb}
 #boot .aus button.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:4px;margin-top:-2px;background:#d62839;border-radius:2px;transform:rotate(-45deg)}
 #boot:not([hidden])~#toast{z-index:70}
+#boot:not(.map){background:linear-gradient(#5ec8ff,#bfeaff 70%);color:var(--ink);overflow:hidden}
+#boot .bl-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#boot .bl-sun{position:absolute;left:50%;top:38%;width:1600px;height:1600px;margin:-800px 0 0 -800px;border-radius:50%;
+  background:radial-gradient(circle,#fff6b0 0 90px,transparent 91px),repeating-conic-gradient(rgba(255,255,255,.28) 0 9deg,transparent 9deg 18deg);animation:blspin 40s linear infinite}
+@keyframes blspin{to{transform:rotate(360deg)}}
+#boot .bl-cloud{position:absolute;width:150px;animation:blcloud 26s linear infinite}
+#boot .c1{top:9%;animation-delay:-4s}#boot .c2{top:22%;width:110px;animation-duration:34s;animation-delay:-20s}#boot .c3{top:4%;width:90px;animation-duration:30s;animation-delay:-12s}
+@keyframes blcloud{from{transform:translateX(-200px)}to{transform:translateX(calc(100vw + 40px))}}
+#boot .bl-city{position:absolute;left:0;bottom:0;width:100%;height:min(30vh,220px)}
+#boot .bl-fly{position:absolute;left:var(--x);bottom:-50px;font-size:32px;animation:blfly 5s linear var(--d) infinite;filter:drop-shadow(0 3px 0 rgba(42,31,61,.5))}
+@keyframes blfly{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(-110vh) rotate(540deg)}}
+#boot .bl-mid{position:relative;margin:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding-bottom:min(18vh,140px)}
+#boot .bl-bin{width:130px;height:150px;overflow:visible;animation:blhop 1.2s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes blhop{0%,100%{transform:translateY(0) scale(1.06,.94)}30%{transform:translateY(-16px) scale(.96,1.04)}55%{transform:translateY(0) scale(1)}}
+#boot .bl-sh{animation:blsh 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes blsh{30%{transform:scale(.7);opacity:.6}}
+#boot .bl-lid{transform-box:view-box;transform-origin:24px 60px;animation:bllid 1.2s ease-in-out infinite}
+@keyframes bllid{0%,15%,100%{transform:rotate(0)}35%,70%{transform:rotate(-38deg)}}
+#boot .bl-pig{animation:blpeek 1.2s ease-in-out infinite}
+@keyframes blpeek{0%,15%,100%{transform:translateY(26px)}35%,70%{transform:translateY(-6px)}}
+#boot .bl-eye{animation:bleye 1.2s ease-in-out infinite}
+@keyframes bleye{40%{transform:translateX(-3px)}60%{transform:translateX(3px)}}
+#boot .bl-logo{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(44px,10vw,92px);line-height:.95;text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .25em}
+#boot .bl-logo span{display:inline-flex}
+#boot .bl-logo .w1{color:#ffd23f;transform:rotate(-3deg)}#boot .bl-logo .w2{color:#7ee08a;transform:rotate(2deg)}
+#boot .bl-logo i{font-style:normal;display:inline-block;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;text-shadow:0 7px 0 var(--ink);
+  animation:blpop .5s cubic-bezier(.2,1.8,.4,1) calc(var(--i)*.05s) both,blwave 1.6s ease-in-out calc(.6s + var(--i)*.08s) infinite}
+@keyframes blpop{from{transform:scale(0) rotate(-30deg)}}
+@keyframes blwave{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#boot .bl-sub{font-family:var(--display);font-size:clamp(14px,3.6vw,19px);background:#ef476f;color:#fff;border:3px solid var(--ink);border-radius:10px;padding:5px 16px;box-shadow:0 4px 0 var(--ink);transform:rotate(-2deg)}
+#boot .bl-bar{--p:0;position:relative;width:min(420px,82vw);height:30px;margin-top:22px;border:4px solid var(--ink);border-radius:16px;background:#fff6df;box-shadow:0 5px 0 var(--ink)}
+#boot .bl-bar i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p)*1%);border-radius:11px;background:repeating-linear-gradient(-45deg,#ffd23f 0 12px,#ffb703 12px 24px);background-size:34px 34px;animation:blstripe .6s linear infinite}
+@keyframes blstripe{to{background-position:34px 0}}
+#boot .bl-bar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:400;font-size:16px;font-variant-numeric:tabular-nums}
+#boot .bl-walk{position:absolute;bottom:100%;left:calc(var(--p)*1%);margin-left:-16px;font-size:30px;line-height:1;transform:scaleX(-1);animation:blwalk .3s ease-in-out infinite alternate}
+@keyframes blwalk{to{translate:0 -5px;rotate:8deg}}
+#boot .bl-tip{position:relative;max-width:min(420px,86vw);min-height:22px;background:#fff6df;border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);padding:8px 14px;font-size:14px;font-weight:600;text-align:center;margin-top:8px}
+#boot .bl-tip::before{content:'';position:absolute;left:50%;top:-11px;width:16px;height:16px;margin-left:-8px;background:#fff6df;border-left:3px solid var(--ink);border-top:3px solid var(--ink);transform:rotate(45deg)}
+@media (prefers-reduced-motion:reduce){#boot .bl-sun,#boot .bl-cloud,#boot .bl-fly,#boot .bl-bin,#boot .bl-sh,#boot .bl-lid,#boot .bl-pig,#boot .bl-eye,#boot .bl-logo i,#boot .bl-bar i,#boot .bl-walk{animation:none}#boot .bl-fly{display:none}#boot .bl-pig{transform:translateY(-6px)}#boot .bl-lid{transform:rotate(-38deg)}}
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
@@ -328,7 +367,26 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
   <div id="tuto" class="card" hidden></div>
-  <div id="boot"><div class="pig">🐦</div><div class="logo">Homeless Tycoon</div><div class="sub">Des poubelles à l'empire mondial</div><div class="load"><i></i></div><div class="ltip" id="ltip"></div></div>
+  <div id="boot"><div class="bl-bg" aria-hidden="true"><div class="bl-sun"></div>
+    <svg class="bl-cloud c1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="4" stroke-linejoin="round"/></svg>
+    <svg class="bl-cloud c2" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="4" stroke-linejoin="round"/></svg>
+    <svg class="bl-cloud c3" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="4" stroke-linejoin="round"/></svg>
+    <span class="bl-fly" style="--x:8%;--d:0s">🥫</span><span class="bl-fly" style="--x:22%;--d:1.1s">🍌</span><span class="bl-fly" style="--x:78%;--d:.4s">🧦</span><span class="bl-fly" style="--x:90%;--d:1.6s">🍕</span><span class="bl-fly" style="--x:64%;--d:2.3s">📦</span>
+    <svg class="bl-city" viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice"><g stroke="#2a1f3d" stroke-width="5" stroke-linejoin="round">
+      <path d="M-10 220V95h120v125M110 220V60h90v160M200 220V120h130v100M330 220V40h100v180M430 220V105h110v115M540 220V70h80v150M620 220V115h140v105M760 220V50h100v170M860 220V100h120v120M980 220V65h90v155M1070 220V110h140v110" fill="none"/>
+      <rect x="-10" y="95" width="120" height="140" fill="#c77dff"/><rect x="110" y="60" width="90" height="170" fill="#ff8fab"/><rect x="200" y="120" width="130" height="110" fill="#ffd166"/><rect x="330" y="40" width="100" height="190" fill="#4cc9f0"/><rect x="430" y="105" width="110" height="125" fill="#f4a261"/><rect x="540" y="70" width="80" height="160" fill="#06d6a0"/><rect x="620" y="115" width="140" height="115" fill="#ef476f"/><rect x="760" y="50" width="100" height="180" fill="#9d4edd"/><rect x="860" y="100" width="120" height="130" fill="#ffd23f"/><rect x="980" y="65" width="90" height="165" fill="#8ecae6"/><rect x="1070" y="110" width="140" height="120" fill="#ff9f1c"/></g>
+      <g fill="#fff6df" stroke="#2a1f3d" stroke-width="3"><rect x="20" y="120" width="22" height="26" rx="3"/><rect x="60" y="120" width="22" height="26" rx="3"/><rect x="135" y="85" width="18" height="24" rx="3"/><rect x="165" y="85" width="18" height="24" rx="3"/><rect x="135" y="135" width="18" height="24" rx="3"/><rect x="230" y="145" width="26" height="22" rx="3"/><rect x="275" y="145" width="26" height="22" rx="3"/><rect x="355" y="65" width="18" height="22" rx="3"/><rect x="390" y="65" width="18" height="22" rx="3"/><rect x="355" y="110" width="18" height="22" rx="3"/><rect x="390" y="155" width="18" height="22" rx="3"/><rect x="455" y="130" width="24" height="24" rx="3"/><rect x="495" y="130" width="24" height="24" rx="3"/><rect x="565" y="95" width="30" height="20" rx="3"/><rect x="565" y="140" width="30" height="20" rx="3"/><rect x="650" y="140" width="24" height="24" rx="3"/><rect x="700" y="140" width="24" height="24" rx="3"/><rect x="785" y="75" width="20" height="24" rx="3"/><rect x="820" y="75" width="20" height="24" rx="3"/><rect x="785" y="125" width="20" height="24" rx="3"/><rect x="890" y="125" width="24" height="22" rx="3"/><rect x="930" y="125" width="24" height="22" rx="3"/><rect x="1005" y="90" width="18" height="24" rx="3"/><rect x="1035" y="140" width="18" height="24" rx="3"/><rect x="1100" y="135" width="26" height="22" rx="3"/><rect x="1150" y="135" width="26" height="22" rx="3"/></g>
+      <rect x="-10" y="196" width="1220" height="40" fill="#b8b8c8" stroke="#2a1f3d" stroke-width="5"/></svg></div>
+    <div class="bl-mid">
+      <svg class="bl-bin" viewBox="0 0 140 160" aria-hidden="true"><ellipse class="bl-sh" cx="70" cy="152" rx="46" ry="7" fill="rgba(42,31,61,.3)"/>
+        <g class="bl-pig"><circle cx="70" cy="58" r="22" fill="#a5a8c8" stroke="#2a1f3d" stroke-width="5"/><circle cx="61" cy="53" r="8" fill="#fff" stroke="#2a1f3d" stroke-width="3"/><circle cx="80" cy="53" r="8" fill="#fff" stroke="#2a1f3d" stroke-width="3"/><g class="bl-eye"><circle cx="63" cy="54" r="3.5" fill="#2a1f3d"/><circle cx="82" cy="54" r="3.5" fill="#2a1f3d"/></g><path d="M64 64l6 9 6-9z" fill="#ff9f1c" stroke="#2a1f3d" stroke-width="3" stroke-linejoin="round"/><path d="M66 36q4-9 10-3" fill="none" stroke="#2a1f3d" stroke-width="4" stroke-linecap="round"/></g>
+        <path d="M28 66h84l-8 76q-1 8-9 8H45q-8 0-9-8z" fill="#2a9d8f" stroke="#2a1f3d" stroke-width="5" stroke-linejoin="round"/><path d="M52 80l2 56M70 80v56M88 80l-2 56" stroke="#1f7a6f" stroke-width="5" stroke-linecap="round"/>
+        <g class="bl-lid"><rect x="22" y="52" width="96" height="16" rx="7" fill="#34c3a8" stroke="#2a1f3d" stroke-width="5"/><rect x="58" y="42" width="24" height="12" rx="5" fill="#34c3a8" stroke="#2a1f3d" stroke-width="5"/></g></svg>
+      <h1 class="bl-logo" aria-label="Homeless Tycoon"><span class="w1"><i style="--i:0">H</i><i style="--i:1">o</i><i style="--i:2">m</i><i style="--i:3">e</i><i style="--i:4">l</i><i style="--i:5">e</i><i style="--i:6">s</i><i style="--i:7">s</i></span><span class="w2"><i style="--i:8">T</i><i style="--i:9">y</i><i style="--i:10">c</i><i style="--i:11">o</i><i style="--i:12">o</i><i style="--i:13">n</i></span></h1>
+      <div class="bl-sub">Des poubelles à l'empire mondial</div>
+      <div class="bl-bar" id="lbar"><i></i><span class="bl-walk" aria-hidden="true">🐦</span><b id="lpct">0 %</b></div>
+      <div class="bl-tip" id="ltip"></div>
+    </div></div>
   <div id="toast" class="card" style="opacity:0"></div>
   <div id="panel" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ptitle">
@@ -2674,7 +2732,7 @@ let last=performance.now();
 let BOOT=true;
 const WEM={paris:'🗼',london:'💂',ny:'🗽',tokyo:'🏯'},WTAG={paris:'Le début',london:'Bandits et bar',ny:'Mode et mécanique',tokyo:'Néons et karaoké'};
 const LTIPS=['Astuce : la touche E fait presque tout.','Astuce : un pigeon nourri rapporte parfois une pièce.','Astuce : les analystes de la Bourse ont toujours raison. Presque.','Astuce : ne tire jamais sur un policier en civil. Enfin, essaie.','Astuce : le costume est au vestiaire du casino.','Chargement des poubelles…','Dressage des pigeons…','Réglage des néons de Tokyo…'];
-function bootLoading(){$('ltip').textContent=pick(LTIPS);let n=0;const it=setInterval(()=>{if(++n>3){clearInterval(it);return}$('ltip').textContent=pick(LTIPS)},450);setTimeout(worldSelect,1900)}
+function bootLoading(){$('ltip').textContent=pick(LTIPS);const t0=performance.now(),bar=$('lbar'),step=()=>{if(!bar.isConnected)return;const k=Math.min(1,(performance.now()-t0)/1800),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,p=Math.round(e*100);bar.style.setProperty('--p',p);$('lpct').textContent=p+' %';if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step);let n=0;const it=setInterval(()=>{if(++n>3){clearInterval(it);return}$('ltip').textContent=pick(LTIPS)},450);setTimeout(worldSelect,1900)}
 const WPATHS='M38,75 Q33,67 72,61 Q111,56 167,53 Q222,50 250,56 Q278,61 303,72 Q328,83 338,97 Q347,111 332,119 Q317,128 304,140 Q292,153 283,167 Q275,181 253,179 Q231,178 231,189 Q231,200 244,204 Q258,208 264,217 Q269,225 276,226 Q283,228 264,218 Q244,208 226,201 Q208,194 192,178 Q175,161 165,150 Q156,139 154,126 Q153,114 139,101 Q125,89 104,86 Q83,83 62,83 Q42,83 38,75Z|M347,42 Q347,22 389,22 Q431,22 438,39 Q444,56 414,69 Q383,83 365,72 Q347,61 347,42Z|M276,243 Q278,222 303,222 Q328,222 344,236 Q361,250 382,258 Q403,267 396,289 Q389,311 378,319 Q367,328 353,342 Q339,356 329,379 Q319,403 310,396 Q300,389 296,375 Q292,361 297,331 Q303,300 289,282 Q275,264 276,243Z|M479,150 Q472,150 474,140 Q475,131 485,129 Q494,128 490,122 Q486,117 496,112 Q506,108 514,104 Q522,100 525,94 Q528,89 521,83 Q514,78 528,68 Q542,58 560,56 Q578,53 594,58 Q611,64 618,74 Q625,83 618,104 Q611,125 597,131 Q583,136 578,140 Q572,144 564,142 Q556,139 549,142 Q542,144 538,136 Q533,128 528,128 Q522,128 515,131 Q508,133 497,142 Q486,150 479,150Z|M485,108 Q483,111 494,110 Q506,108 503,106 Q500,103 497,99 Q494,94 490,92 Q486,89 485,93 Q483,97 485,101 Q486,106 485,108Z|M453,201 Q453,192 462,179 Q472,167 478,158 Q483,150 506,149 Q528,147 542,153 Q556,158 572,161 Q589,164 593,169 Q597,175 608,196 Q619,217 631,217 Q642,217 629,236 Q617,256 614,274 Q611,292 604,306 Q597,319 588,331 Q578,342 567,344 Q556,347 549,338 Q542,328 538,310 Q533,292 529,272 Q525,253 519,244 Q514,236 496,236 Q478,236 465,224 Q453,211 453,201Z|M589,143 Q578,136 594,131 Q611,125 618,104 Q625,83 618,74 Q611,64 639,60 Q667,56 694,51 Q722,47 757,42 Q792,36 840,43 Q889,50 931,56 Q972,61 986,64 Q1000,67 979,75 Q958,83 944,94 Q931,106 910,115 Q889,125 875,129 Q861,133 850,136 Q839,139 836,153 Q833,167 819,181 Q806,194 799,208 Q792,222 785,218 Q778,214 774,210 Q769,206 762,197 Q756,189 739,199 Q722,208 718,218 Q714,228 707,211 Q700,194 686,188 Q672,181 665,181 Q658,181 651,174 Q644,167 639,167 Q633,167 625,188 Q617,208 607,188 Q597,167 599,158 Q600,150 589,143Z|M868,158 Q861,164 868,160 Q875,156 882,154 Q889,153 892,146 Q894,139 893,132 Q892,125 889,132 Q886,139 881,146 Q875,153 868,158Z|M818,328 Q817,311 828,304 Q839,297 850,290 Q861,283 871,283 Q881,283 888,282 Q894,281 900,292 Q906,303 915,314 Q925,325 921,339 Q917,353 903,354 Q889,356 878,347 Q867,339 843,342 Q819,344 818,328Z|M785,240 Q764,236 778,251 Q792,267 812,269 Q833,272 861,268 Q889,264 875,254 Q861,244 833,244 Q806,244 785,240Z|M968,378 Q964,378 971,371 Q978,364 986,360 Q994,356 990,361 Q986,367 979,372 Q972,378 968,378Z|M622,306 Q622,294 631,292 Q639,289 636,303 Q633,317 628,317 Q622,317 622,306Z'.split('|'),WPOS={paris:[507,114],london:[500,107],ny:[294,137],tokyo:[888,151]};
 function gerSeed(){const m=S.meta;if(m.gerOn)return;m.gerOn={};for(const w of m.worlds)if(w.rate>0&&w.i<3)m.gerOn[w.i]=1;const ci=CURI();try{if(ci<m.prestige&&netRate()>0&&!m.worlds.some(w=>w.i===ci+1&&!(w.rate>0)))m.gerOn[ci]=1}catch(e){}}
 const cityOpen=i=>{gerSeed();return i===0||!!S.meta.gerOn[i-1]};

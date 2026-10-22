@@ -741,6 +741,7 @@ function tone(f,d,type,v,f2,delay,dest){const c=AU.c;if(!c)return;const t=c.curr
   o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.1,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);
   o.connect(g);g.connect(dest||AU.g);o.start(t);o.stop(t+d+.03)}
 let lastPickSnd=0;
+let hungerT=0;// faim critique : grognement + bip, puis toutes les 8 s tant qu'on reste sous 25
 function snd(k){if(!S.meta.snd||!AU.c)return;if(AU.c.state==='suspended')AU.c.resume();
   const seq=(fs,d,ty,v,gap)=>fs.forEach((f,i)=>tone(f,d,ty,v,null,i*gap));
   switch(k){
@@ -757,6 +758,7 @@ function snd(k){if(!S.meta.snd||!AU.c)return;if(AU.c.state==='suspended')AU.c.re
   case 'win':seq([523,659,784,1047,1319],.18,'square',.07,.08);break;
   case 'ach':seq([784,988,1175,1568],.22,'triangle',.13,.09);break;
   case 'tick':tone(1400,.025,'square',.035);break;
+  case 'hunger':tone(95,.35,'sawtooth',.09,60);tone(75,.4,'sawtooth',.08,50,.32);tone(880,.09,'square',.05,null,.8);tone(880,.09,'square',.05,null,.95);break;
   case 'event':tone(392,.15,'triangle',.12);tone(523,.3,'triangle',.12,null,.15);break;
   case 'legend':seq([1047,1319,1568,2093,2637],.16,'sine',.13,.07);break;
   case 'card':tone(260,.05,'triangle',.07,620);break;
@@ -1182,6 +1184,7 @@ function update(dt){
     if(JOB.cust.pat<=0&&JOB.t>0){jobFail('Le client en a eu marre et s\'en va.');if(pid==='job')renderPanel()}
     if(JOB.t<=0)endJob(false)}
   S.food=Math.max(0,S.food-dt*.7*(JOB?.2:1));// pendant un mini-jeu, la faim baisse 5 fois moins vite
+  if(S.food<25){hungerT-=dt;if(hungerT<=0){hungerT=8;snd('hunger')}}else hungerT=0;
   if(S.food<=0)S.hp-=dt*3;
   if(S.frigo&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
   if(FA){FA.t+=dt;if(FA.t>=.95&&!FA.ate){FA.ate=1;S.food=Math.min(100,S.food+45);float(P.x,P.y-95,'MIAM !','#ff9f1c');snd('eat')}if(FA.t>1.6)FA=null}
@@ -1504,10 +1507,11 @@ function knockout(){
   const lost=S.cash/2;S.cash-=lost;S.hp=60;S.food=60;S.bag=0;S.bagVal=0;P.x=720;P.y=250;P.tx=null;for(const c of cops)c.chase=0;
   snd('fail');openPanel('ko',lost);
 }
-function callSquad(why,pct){if(VISIT)return;if(squad.some(q=>q.mode==='chase'))return;const door=BID.police.door,n=isNight()?5:4;
+// tout le commissariat (4-5 agents) seulement pour les armes ; un seul agent pour un pickpocket ou le videur
+function callSquad(why,pct,one){if(VISIT)return;const out=squad.filter(q=>q.mode==='chase').length;if(out&&(one||out>=4))return;const door=BID.police.door,n=one?1:(isNight()?5:4)-out;// renforts si un seul agent était déjà dehors
   sqT=0;sqFine=Math.max(20,Math.round(S.cash*(pct||.2)*fineM()));
   for(let i=0;i<n;i++)squad.push({x:door+rnd(-18,18),y:230,delay:.2+i*.45,mode:'chase',t:rnd(0,5),face:-1,moving:false,say:i===0?pick(['Tout le monde dehors !','On le tient !','Sirènes, les gars !']):'',sayT:i===0?2.5:0,spd:rnd(245,270)});
-  snd('siren');setTimeout(()=>snd('siren'),800);toast((why||'Repéré !')+' Tout le commissariat sort à tes trousses !')}
+  snd('siren');setTimeout(()=>snd('siren'),800);toast((why||'Repéré !')+(one?' Un policier sort du commissariat !':' Tout le commissariat sort à tes trousses !'))}
 function squadUpdate(dt){if(!squad.length)return;sqT+=dt;let caught=false;
   for(let i=squad.length-1;i>=0;i--){const q=squad[i];q.t+=dt;q.sayT-=dt;if(q.delay>0){q.delay-=dt;continue}if(q.stun>0){q.stun-=dt;q.moving=false;continue}
     if(q.mode==='chase'){const d=dist(q.x,q.y,P.x,P.y);q.moving=d>3;if(d>3){q.x+=(P.x-q.x)/d*q.spd*dt;q.y+=(P.y-q.y)/d*q.spd*dt;q.face=P.x>q.x?1:-1}
@@ -1548,7 +1552,7 @@ function shoot(){
   S.heat=Math.min(100,S.heat+8);
   for(const p of ppl)if(!p.stun&&dist(p.x,p.y,P.x,P.y)<380){p.flee=3.5;if(p.v)p.v=Math.sign(p.x-P.x||1)*Math.abs(p.v);if(Math.random()<.4){p.say=pick(['Aaaah !','Il est fou !','Au secours !','Planquez-vous !']);p.sayT=1.6}}
   const fp=.4*fineM();
-  if(squad.some(q=>q.mode==='chase'))sqFine=Math.max(sqFine,Math.round(S.cash*fp));else callSquad('Coups de feu dans la rue !',.4);
+  if(squad.filter(q=>q.mode==='chase').length>=4)sqFine=Math.max(sqFine,Math.round(S.cash*fp));else callSquad('Coups de feu dans la rue !',.4);
   for(const c of cops)if(c.active&&dist(c.x,c.y,P.x,P.y)<1100){c.chase=Math.max(c.chase,8);c.chaseB=null;c.fine=Math.max(40,Math.round(S.cash*fp));if(!c.stun){c.say='Arme ! Arme !';c.sayT=1.5}}
   updHud()}
 function stunHit(t,isCop){t.stun=isCop?4:3;t.say=isCop?pick(['Ouille...','Je vois des pigeons...','Mes étoiles !']):pick(['Aïe !','Ouch !']);t.sayT=1.6;float(t.x,t.y-100,'Sonné !','#ffd23f');
@@ -1587,8 +1591,9 @@ function pickpocket(p){
     earn(rnd(5,25)*mult()*(p.rich?3:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+2);snd('coin');
     say(p.rich?pick(['Un portefeuille en croco !','Merci monsieur le riche.']):pick(['Merci du don !','Discret comme un pigeon.',"Personne n'a rien vu."]));
   }else{
-    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+8);callSquad('Pris la main dans le sac !');
-    const c=closestCop(P.x,P.y);
+    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+8);
+    // un seul policier : celui de la rue s'il a tout vu, sinon un agent sort du commissariat
+    const c=copNear?closestCop(P.x,P.y):null;if(!c)callSquad('Pris la main dans le sac !',.15,true);
     if(c){c.chase=4.5;c.chaseB=null;c.fine=Math.max(15,Math.round(S.cash*.15*fineM()));c.say='Halte !';c.sayT=2}
     snd('siren');toast(copNear?'Raté, la police a tout vu ! Cours !':'Raté ! La police arrive, cours !');
   }
@@ -1682,8 +1687,7 @@ function doAct(){
   if(s==='rival'&&S.rivalBought)return openPanel('biz');
   if(s==='casino'){
     if(!hasCostume()){casWarn++;
-      if(casWarn>=2){casWarn=0;const c=closestCop(P.x,P.y);
-        if(c){c.chase=5;c.chaseB=null;c.fine=Math.max(15,Math.round(S.cash*.1*fineM()));c.say='On nous signale un énergumène !';c.sayT=2.5}callSquad('Le videur a appelé la police !');
+      if(casWarn>=2){casWarn=0;callSquad('Le videur a appelé la police !',.1,true);
         S.heat=Math.min(100,S.heat+5);snd('siren');say('Oups, le videur a appelé les flics !');toast('Le videur a appelé la police ! Cours !');return}}
     else casWarn=0}
   openPanel(s==='local'||s==='lot'?'biz':s);

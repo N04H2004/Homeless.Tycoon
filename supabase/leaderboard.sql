@@ -304,7 +304,7 @@ grant execute on function public.claim_tips() to authenticated;
 -- ============ Braquer un joueur du classement ============
 -- Mini-jeu de tir côté jeu : sous 50 % de précision on repart bredouille, puis jusqu'au butin maximum (30 % à 5 % selon la richesse),
 -- sans jamais dépasser l'argent du voleur.
--- Le voleur : 1 braquage par heure. La cible : protégée 24 h après s'être fait braquer.
+-- Le voleur : 1 braquage par jour (24 h). La cible : protégée 24 h après s'être fait braquer.
 -- Une rue privée ne peut ni braquer ni être braquée. La cible perd l'argent à sa prochaine connexion.
 create table if not exists public.heists (
   id bigint generated always as identity primary key,
@@ -347,8 +347,8 @@ begin
   if not found then return jsonb_build_object('error', 'Joueur introuvable'); end if;
   if pr.id = uid then return jsonb_build_object('error', 'Tu ne peux pas te braquer toi-même'); end if;
   if pr.private then return jsonb_build_object('error', pr.pseudo || ' a une rue privée'); end if;
-  if exists (select 1 from public.heists where from_id = uid and created_at > now() - interval '1 hour') then
-    return jsonb_build_object('error', 'Tes bandits se font discrets : un braquage par heure'); end if;
+  if exists (select 1 from public.heists where from_id = uid and created_at > now() - interval '24 hours') then
+    return jsonb_build_object('error', 'Tes bandits se font discrets : un seul braquage par jour (24 h)'); end if;
   if exists (select 1 from public.heists where to_id = pr.id and amount > 0 and created_at > now() - interval '24 hours') then
     return jsonb_build_object('error', pr.pseudo || ' s''est déjà fait braquer aujourd''hui'); end if;
   r := least(greatest(coalesce(nullif(p_rate, 'NaN'), 0), 0), 1);
@@ -359,7 +359,7 @@ begin
   -- moins de 50 % de précision : bredouille ; de 50 à 100 % : de 0 au butin maximum
   pct := round((pmax * greatest(r - 0.5, 0) / 0.5)::numeric, 1);
   if pct <= 0 then
-    insert into public.heists (from_id, to_id, pct, amount, claimed) values (uid, pr.id, 0, 0, true);  -- compte quand même dans la limite d'un braquage par heure
+    insert into public.heists (from_id, to_id, pct, amount, claimed) values (uid, pr.id, 0, 0, true);  -- compte quand même dans la limite d'un braquage par jour
     return jsonb_build_object('ok', true, 'pseudo', pr.pseudo, 'pct', 0, 'pctmax', round(pmax::numeric, 1), 'amount', 0, 'fail', true);
   end if;
   amt := least(floor(c * pct / 100), floor(mine));  -- jamais plus que l'argent du voleur

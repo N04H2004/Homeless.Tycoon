@@ -646,7 +646,7 @@ const INFO={
  crypto:['PigeonCoin',"La monnaie de ta holding : elle relie toutes tes villes.",["Convertis ta trésorerie en PigeonCoin quand le cours est bas : tu en reçois plus.","Dépense-les pour des Pigeons d'Or, du capital de départ ou des gérants.","Les prix montent à chaque achat."],"Regarde la petite courbe : convertis dans un creux, pas dans un pic."],
  heritage:['Héritage',"Certains achats te suivent dans toutes les nouvelles villes.",["Le frigo connecté et le manager : achète-les une fois, ils seront là dans chaque ville.","Les outils, véhicules et tenues sont déjà à vie, partout."],"Achète frigo et manager avant d'ouvrir une nouvelle ville : tu démarreras plus vite."],
  prestige:['Prestige et villes',"Ouvre une filiale dans une nouvelle ville : tout y rapporte plus, mais tu repars de zéro pour l'argent.",["Fais grimper le total gagné dans ta ville pour gagner des Pigeons d'Or.","Ouvre la ville suivante : ta rue actuelle passe en gérance et continue de rapporter.","Tu gardes Pigeons d'Or, bonus, PigeonCoin, tenues, Héritage et succès."],"Dépense tes Pigeons d'Or dans les bonus permanents : ils s'appliquent dans toutes les villes."],
- bourse:['La Bourse',"Achète des actions, revends-les plus cher. Chaque ville a sa propre bourse.",["Les cours suivent des tendances cachées de 30 à 80 s.","La rue influence les cours : la pluie, une manif ou la nuit font bouger certaines actions.","Les analystes te révèlent les tendances (bouton « i » à côté de chacun).","Tes actions restent dans la ville où tu les as achetées."],"Sans analyse c'est un pari. Avec une analyse et une grosse mise, c'est rentable."],
+ bourse:['La Bourse',"Achète des actions, revends-les plus cher. Elle ouvre à New York, puis chaque ville a sa propre bourse.",["Les cours suivent des tendances cachées de 30 à 80 s.","La rue influence les cours : la pluie, une manif ou la nuit font bouger certaines actions.","Les analystes te révèlent les tendances (bouton « i » à côté de chacun).","Tes actions restent dans la ville où tu les as achetées."],"Sans analyse c'est un pari. Avec une analyse et une grosse mise, c'est rentable."],
  noir:['Marché noir',"L'ordinateur du fond du bar : ici on achète les armes.",["Achète une arme : elle est livrée à l'armurerie du bar.","Les armes augmentent les chances de réussite des braquages de tes bandits.","Tu peux aussi en équiper une pour toi à l'armurerie, et acheter des munitions ici."],"La meilleure arme que tu possèdes compte automatiquement pour les braquages."],
  heist:['Braquage de Déchets Corp',"Tes bandits braquent ton rival en pleine nuit. Gros butin, gros risque.",["Planifie le casse : tes bandits libres partiront à la tombée de la nuit.","Regarde la rue : tu les vois entrer chez Déchets Corp.","Réussi : le butin est versé le lendemain matin, chaleur +35.","Raté : alarme, bandits au trou 2 minutes, amende pour toi et chaleur +50."],"Plus de bandits et une meilleure arme = plus de chances (65 % au maximum). Un seul casse par jour."],
  armory:["Armurerie et tir","Équipe une arme pour la porter dans la rue et tirer.",["Équipe une arme achetée sur l'ordinateur du bar.","Dans la rue : touche G, clic droit ou bouton « Tirer ». F reste le pickpocket.","Un policier touché est sonné 4 s : de quoi t'enfuir. Un passant touché lâche son argent.","Chaque tir fait fuir les passants, monte la chaleur et lance toute la police à tes trousses (amende 40 % si on t'attrape)."],"Munitions limitées : rachète-les sur l'ordinateur du bar."],
@@ -1054,7 +1054,7 @@ const ACH=[
 ];
 // ville à partir de laquelle un succès est faisable (bar, bandits et braquage arrivent à Londres) ;
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
-const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
+const ACH_CITY={trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
@@ -1079,11 +1079,12 @@ const STEPS=[
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
  {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
- {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'bourse',c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
   return L.length>1?L.slice(0,-1).join(', ')+' ou '+L[L.length-1]:L[0]};
+const bourseOpen=()=>CI()>=2;// la Bourse n'ouvre qu'à New York (et après)
 const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci&&(x.only==null||x.only===ci)&&!(x.skip&&x.skip.includes(ci))&&(!x.need||(CITY_SHOPS[CITIES[ci].k]||[]).includes(x.need)));// pas d'étape pour une boutique absente de la ville
 const stepW=x=>typeof x.w==='function'?x.w():x.w;
 const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
@@ -2129,6 +2130,10 @@ function renderPanel(){
         `<div class="row"><div class="info"><b>Capital de départ</b><small>+${fmt(capAmt())} tout de suite dans ${CITY().n}</small></div><button class="buy gold" type="button" data-act="hold:cap" ${M.pgc<capCost()?'disabled':''}>${capCost()} PGC</button></div>`+
         '<div class="sec">Héritage · te suit dans chaque nouvelle ville'+ib('heritage')+'</div>'+
         HER.map(([k,n,how])=>`<div class="obj${M.her[k]?' ok':''}"><div class="ck">${M.her[k]?'✓':''}</div><span>${n}${M.her[k]?'':' · '+how+' pour le garder à vie'}</span></div>`).join('');}
+    else if(ptab==='bourse'&&!bourseOpen()){
+      h+='<p class="lead" style="text-align:center;font-size:18px">🔒 La Bourse ouvre à <b>New York</b>.</p><p class="lead">Wall Street n\'accepte pas encore les petits joueurs : continue de développer ta rue, puis ouvre ta filiale à New York (Menu › Prestige).</p>';
+      for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k];if(!st||!st.q)continue;const val=st.q*mk.p,pl=val-st.cost;// anciennes actions : on peut encore les revendre
+        h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span></small></div><div class="btnz"><button class="buy sm red" type="button" data-act="sell:${s.k}">Tout vendre</button></div></div>`}}
     else if(ptab==='bourse'){
       {const X=EXCH[CK()]||EXCH.paris,L=STOCKS_NOW(),iv=L.reduce((a,s)=>{const mk=S.mkt[s.k];return a+(mk?mk.p/(s.p0*cm()):1)},0)/L.length*1000,ich=L.reduce((a,s)=>{const mk=S.mkt[s.k],h0=mk&&mk.h[0]||mk&&mk.p;return a+(mk?(mk.p/h0-1):0)},0)/L.length*100;
         h+=`<div class="stk" style="background:#22223b;color:#fff6df"><div><b>${X.n}</b><small style="display:block;font-size:12px;opacity:.8">${X.d}</small></div><div class="pr">${X.idx}<small style="display:block;font-size:13px" class="${ich>=0?'up':'dn'}">${Math.round(iv).toLocaleString('fr-FR')} pts · ${ich>=0?'+':''}${ich.toFixed(1).replace('.',',')} %</small></div></div>`+
@@ -2281,6 +2286,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='fire2'){const i=+v;if(i>=S.emp)return;const c=sev(i);if(!pay(c))return;const n=S.staff[i].n;pid='biz';if(lastHire&&lastHire.n===n)lastHire=null;S.staff.splice(i,1);S.emp--;emps.splice(i,1);freeClaims();toast(n+' a été licencié. Il part en claquant la porte')}
   if(a==='hire'&&SHIFT[v]){if(!canHire(v)){toast('Équipe de '+v+' complète');snd('err');return renderPanel()}if(!pay(empCost()))return;const st=newStaff(v);S.staff.push(st);S.emp++;syncEmps();lastHire=st;
     REV={st};pid='reveal';renderPanel();startReveal();updHud();save();return}
+  if((a==='stk'||a==='ana')&&!bourseOpen()){snd('err');return}
   if(a==='stk'){const mk=S.mkt[v],st=S.stk[v];let q=w==='max'?Math.floor(S.cash/mk.p):+w;q=Math.min(q,Math.floor(S.cash/mk.p));if(q<1){snd('err');return}
     const c=q*mk.p;S.cash-=c;st.q+=q;st.cost+=c;S.bourse=1;snd('buy')}
   if(a==='ana'){buyAna(+v);pid='plus';ptab='bourse';return renderPanel()}
@@ -3027,11 +3033,11 @@ const TIPS=[
  ['arms','Armes et tir',()=>Object.keys(S.arms||{}).some(k=>S.arms[k]),['Équipe une arme à l\'<b>armurerie</b> du bar.','Dans la rue : <b>G</b>, clic droit ou bouton <b>Tirer</b>. <b>F</b> reste le pickpocket.','Un policier touché est sonné 4 s. Chaque tir lance toute la police à tes trousses.','Les <b>munitions</b> se rachètent sur l\'ordinateur du bar.']],
  ['event','Les événements',()=>!!ev,['Averse : déchets x2. Manif : route bloquée et canettes partout.','Marché : courses à -50 %. Contrôle fiscal : le fisc se sert si tu es riche.']],
  ['legend','Le Pigeon Légendaire',()=>!!LP,['Un pigeon doré traîne dans le coin.','Attrape-le : <b>tous tes gains x3</b> pendant 30 s !']],
- ['bourse','La bourse',()=>S.total>=3000,['Dans le <b>Menu</b>, onglet Bourse.','Chaque ville a sa propre bourse et ses actions. Les cours suivent des tendances cachées.','Les <b>analystes</b> te révèlent les tendances : analyse rapide, complète, et même un délit d\'initié (1 fois par ville).','Le bouton <b>i</b> à côté de chaque analyste explique comment le rentabiliser.']],
+ ['bourse','La bourse',()=>CI()>=2&&S.total>=3000,['Dans le <b>Menu</b>, onglet Bourse.','Chaque ville a sa propre bourse et ses actions. Les cours suivent des tendances cachées.','Les <b>analystes</b> te révèlent les tendances : analyse rapide, complète, et même un délit d\'initié (1 fois par ville).','Le bouton <b>i</b> à côté de chaque analyste explique comment le rentabiliser.']],
  ['prestige','Ouvrir une filiale',()=>pg()>=1&&S.meta.prestige<3,['Tu as assez gagné pour <b>ouvrir une nouvelle ville</b> (Menu, Prestige).','Ta rue actuelle n\'est pas perdue : elle tourne <b>en gérance</b>.','Tu gagnes aussi des <b>Pigeons d\'Or</b> pour des bonus permanents.']],
  ['holding','Ta holding',()=>S.meta.prestige>=1,['Tes autres villes versent leurs revenus dans la <b>trésorerie</b> (Menu, Holding).','Convertis-la en <b>PigeonCoin</b> quand le cours est bas.','Avec la crypto : Pigeons d\'Or, capital de départ, gérants motivés.','Bouton <b>Y aller</b> pour retourner améliorer une ville.','<b>Héritage</b> : frigo et manager te suivent partout. Outils, véhicules et tenues sont à vie.']],
- ['city_london','Bienvenue à Londres',()=>CK()==='london',['Ici on paie en <b>livres (£)</b>, et tout rapporte 1,6 fois plus.','Il pleut <b>souvent</b> : déchets x2, mais les passants courent.','Les voitures roulent <b>à gauche</b>, attention aux bus à impériale !','Nouvelle bourse : la London Stock Exchange.']],
- ['city_ny','Bienvenue à New York',()=>CK()==='ny',['Ici on paie en <b>dollars ($)</b>, et tout rapporte 2,6 fois plus.','Nouvelle bourse : le NYSE et ses Hot Dog Holdings.']],
+ ['city_london','Bienvenue à Londres',()=>CK()==='london',['Ici on paie en <b>livres (£)</b>, et tout rapporte 1,6 fois plus.','Il pleut <b>souvent</b> : déchets x2, mais les passants courent.','Les voitures roulent <b>à gauche</b>, attention aux bus à impériale !']],
+ ['city_ny','Bienvenue à New York',()=>CK()==='ny',['Ici on paie en <b>dollars ($)</b>, et tout rapporte 2,6 fois plus.','<b>La Bourse ouvre enfin</b> : le NYSE et ses Hot Dog Holdings (Menu › Bourse).']],
  ['city_tokyo','Bienvenue à Tokyo',()=>CK()==='tokyo',['Ici on paie en <b>yens (¥)</b>, et tout rapporte 4 fois plus.','Nouvelle bourse : la bourse de Tokyo et ses robots kawaii.']],
 ];
 let tipCD=3;

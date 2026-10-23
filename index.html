@@ -538,7 +538,7 @@ const OUTFITS=[
  {k:'armure',n:'Armure médiévale',d:'Inutile, mais imposant',p:2500},
  {k:'peignoir',n:'Peignoir de luxe',d:'Tenue officielle des rentiers',p:8000},
  {k:'astro',n:"Combinaison d'astronaute",d:'Pour viser la Lune',p:30000},
- {k:'peaky',n:'Costume de baron londonien',d:'Casquette gavroche et tweed façon Peaky Blinders : à Londres, le bookmaker (PMU) et le casino te laissent entrer',p:20000},
+ {k:'peaky',n:'Costume de baron londonien',d:'Casquette gavroche et tweed façon Peaky Blinders : à Londres, le bookmaker (PMU) et le casino te laissent entrer',p:10000},
 ];
 const VEH=[
  // les clés restent celles des anciennes sauvegardes : trott = skate, scooter = trottinette, voiture = scooter
@@ -737,6 +737,7 @@ const shopCost=s=>C(s.base*(LDN()?3:1)*Math.pow(1.5,S.shops[s.k]||0));
 const bandCost=()=>LDN()?C(3000*Math.pow(1.45,S.band)):C(800*Math.pow(1.3,S.band)),nezCost=()=>C(700*Math.pow(1.8,S.bandUp.nez)),pigCost=()=>C(900*Math.pow(1.8,S.bandUp.pigeon));
 const foodP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)*(ev&&ev.k==='marche'?.5:1)));
 const medP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)));
+const estP=e=>e.k==='bar'&&CK()==='london'?80000:C(e.p);// bar à 80 k£ à Londres
 const vehP=v=>Math.round(C(v.p)*(S.shops.motors?.8:1));
 const rivalCost=()=>C(25000);
 const shopLv=()=>SHOPS.reduce((a,s)=>a+(S.shops[s.k]||0),0);
@@ -1071,9 +1072,9 @@ const STEPS=[
  {k:'manager',h:"Business › Manager.",skip:[1],cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
  {k:'tenue',h:"Au vestiaire, collé au casino.",skip:[1],cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
  {k:'casino',h:"Une partie de blackjack ou de roulette.",n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (le costume de baron londonien ou le costume trois-pièces aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
- {k:'peaky',h:"Au cloakroom, collé au casino. Porte-le pour entrer au PMU.",only:1,cost:()=>20000,n:'Acheter le costume de baron londonien',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed façon Peaky Blinders t\'ouvrent les portes du bookmaker (PMU). Porte-le pour entrer.',acts:['outfit:peaky']},
+ {k:'peaky',h:"Au cloakroom, collé au casino. Porte-le pour entrer au PMU.",only:1,cost:()=>10000,n:'Acheter le costume de baron londonien',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed façon Peaky Blinders t\'ouvrent les portes du bookmaker (PMU). Porte-le pour entrer.',acts:['outfit:peaky']},
  {k:'shop',h:"Business › Commerces.",cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
- {k:'bar',h:"Business › Grands lieux.",c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
+ {k:'bar',h:"Business › Grands lieux.",c:1,cost:()=>estP(ESTDEF.bar),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
  {k:'band',h:"Business › Bandits.",c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
  {k:'arme',h:"Bar › ordinateur › marché noir.",c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
    w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
@@ -2102,7 +2103,7 @@ function renderPanel(){
       '<div class="sec">Tes boutiques · '+CITY().n+ib('shops')+'</div>'+
       [...SHOPS].sort((a,b)=>a.inc-b.inc).map(x=>{const l=S.shops[x.k]||0,mx=l>=10;return row(x.n,l?'niv. '+l:'',(L?"Il faut d'abord le petit local · ":'')+`${x.d} · +${String(x.inc).replace('.',',')} ${CUR()} de base par seconde et par niveau`,'shop:'+x.k,mx?0:shopCost(x),mx?'MAX':(l?null:'Racheter '+fmt(shopCost(x))),L||mx)}).join('')+
       '<div class="sec">Les grands lieux · loyers en continu'+ib('estate')+'</div>'+
-      ESTATE.map(e=>S.owned[e.k]?row(e.n,'à toi',`+${e.r} ${CUR()} de base par seconde · ${e.d}`):row(e.n,'',`+${e.r} ${CUR()} de base par seconde · ${e.d}`,'estate:'+e.k,C(e.p),null,L)).join('')+
+      ESTATE.map(e=>S.owned[e.k]?row(e.n,'à toi',`+${e.r} ${CUR()} de base par seconde · ${e.d}`):row(e.n,'',`+${e.r} ${CUR()} de base par seconde · ${e.d}`,'estate:'+e.k,estP(e),null,L)).join('')+
       (S.rivalBought?row('Ex-Déchets Corp','à toi','Ton 2e QG · +20 '+CUR()+' de base par seconde'):row('Déchets Corp','',L?"Il faut d'abord le petit local":'Racheter ton rival : fin de la concurrence et +20 '+CUR()+'/s','rival:buy',rivalCost(),null,L))+
       (CI()<1?'<div class="sec">Le côté obscur</div><p class="lead">🔒 Les bandits, le bar, les armes et le blanchiment se débloquent à <b>Londres</b>. Ici, à Paris, on apprend les bases.</p>':(
       '<div class="sec">Le côté obscur · '+(isNight()?'c\'est la nuit':'bandits au QG jusqu\'à la nuit')+' · chaleur '+Math.ceil(S.heat)+' / 100'+ib('bandits')+'</div>'+
@@ -2270,7 +2271,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='med'){const m=MEDS[+v];if(!pay(medP(m.p)))return;S.hp=Math.min(100,S.hp+m.h);if(m.f)S.food=100;toast('Soigné : '+m.n)}
   if(a==='up'){const u=UP.find(x=>x.k===v);if(S.up[v]>=u.max||!pay(upCost(u)))return;S.up[v]++;toast(u.n+' niveau '+S.up[v]+' · regarde ton perso !')}
   if(a==='shop'){const s=SHOPS.find(x=>x.k===v);const l=S.shops[v]||0;if(!S.local||l>=10||!pay(shopCost(s)))return;S.shops[v]=l+1;toast(l?s.n+' passe niveau '+(l+1):s.n+' est à toi ! Le loyer tombe chaque seconde')}
-  if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(C(es.p)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
+  if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(estP(es)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achet'+(vv.g||'é')+', en route !')}

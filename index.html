@@ -727,7 +727,8 @@ const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac+2*S.meta.perk.sac, speed=
       wageOf=i=>Math.round(12*(1+.25*S.emUp.form+.2*S.emUp.chariot)*(trOf(i)==='flemmard'?.5:1)*(1-.08*S.meta.perk.emp)*cm()),
       wages=()=>{let w=S.manager?C(40):0;for(let i=0;i<S.emp;i++)w+=wageOf(i);return w},
       strikeLim=()=>S.staff.some(s=>s.tr==='syndicaliste')?12:25;
-const upCost=u=>Math.round(C(u.base*Math.pow(1.6,S.up[u.k]))*(S.shops.brico?.8:1));
+const SKM=[1,3,6,11],skC=n=>Math.round(n*SKM[CI()]);// Compétences (outils, véhicules) : moins chères que le reste de la ville
+const upCost=u=>Math.round(skC(u.base*Math.pow(1.6,S.up[u.k]))*(S.shops.brico?.8:1));
 const distCost=()=>C(150*Math.pow(1.18,S.distrib)), distUpCost=()=>C(600*Math.pow(1.9,S.distUp));
 const empCost=()=>Math.round(C(400*Math.pow(1.25,S.emp))*(1-.08*S.meta.perk.emp));
 const formCost=()=>C(300*Math.pow(1.7,S.emUp.form)), charCost=()=>C(500*Math.pow(1.8,S.emUp.chariot));
@@ -737,7 +738,7 @@ const shopCost=s=>C(s.base*(LDN()?3:1)*Math.pow(1.5,S.shops[s.k]||0));
 const bandCost=()=>LDN()?C(3000*Math.pow(1.45,S.band)):C(800*Math.pow(1.3,S.band)),nezCost=()=>C(700*Math.pow(1.8,S.bandUp.nez)),pigCost=()=>C(900*Math.pow(1.8,S.bandUp.pigeon));
 const foodP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)*(ev&&ev.k==='marche'?.5:1)));
 const medP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)));
-const vehP=v=>Math.round(C(v.p)*(S.shops.motors?.8:1));
+const vehP=v=>Math.round(skC(v.p)*(S.shops.motors?.8:1));
 const rivalCost=()=>C(25000);
 const shopLv=()=>SHOPS.reduce((a,s)=>a+(S.shops[s.k]||0),0);
 const richness=()=>shopLv()+S.distUp+(S.secu?5:0)+CI()*10;

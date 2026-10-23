@@ -2067,7 +2067,7 @@ function renderPanel(){
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
-  if(pid==='casino'&&casTab==='rou'&&S.secu)drawWheel();
+  if(pid==='casino'&&casTab==='rou')drawWheel();
   if(pid==='plus'&&ptab==='stats')drawStats();
 }
 function drawStats(){const c=$('sc');if(!c)return;const g=c.getContext('2d'),w=900,hh=360,pad=56;g.clearRect(0,0,w,hh);

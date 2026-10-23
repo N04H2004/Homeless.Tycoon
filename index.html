@@ -1996,6 +1996,13 @@ function openPanel(id,arg){pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};re
 function closePanel(){if(spinning)return;if(JOB){endJob(true);return}$('panel').hidden=true;pid=null;refocus()}
 $('pclose').addEventListener('click',closePanel);
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')closePanel()});
+// le côté obscur (bandits, déguisements, avocat) : dans Business et sur l'ordinateur du bar
+const darkRows=L=>
+      '<div class="sec">Le côté obscur · '+(isNight()?'c\'est la nuit':'bandits au QG jusqu\'à la nuit')+' · chaleur '+Math.ceil(S.heat)+' / 100'+ib('bandits')+'</div>'+
+      row('Bandit',S.band+' / 5'+(bands.some(b=>b.jail>0)?' · '+bands.filter(b=>b.jail>0).length+' au trou':''),L?"Il faut d'abord le petit local":'Sort uniquement la nuit pour pickpocket les passants. Gros butin, mais fait monter la chaleur','biz:band',S.band>=5?0:bandCost(),S.band>=5?'MAX':null,L||S.band>=5)+
+      row('Faux nez et moustache','niv. '+S.bandUp.nez,'+6 % de vols réussis pour tes bandits','biz:nez',S.bandUp.nez>=5?0:nezCost(),S.bandUp.nez>=5?'MAX':null,S.band<1||S.bandUp.nez>=5)+
+      row('Déguisement de pigeon','niv. '+S.bandUp.pigeon,'-15 % de chaleur par vol de bandit. Personne ne soupçonne un pigeon','biz:pigeon',S.bandUp.pigeon>=5?0:pigCost(),S.bandUp.pigeon>=5?'MAX':null,S.band<1||S.bandUp.pigeon>=5)+
+      (S.band<1&&!av()?row('Avocat véreux','',"Il faut au moins 1 bandit"):av()>=5?row('Avocat véreux','niv. 5 · MAX','Maître Lafouine au sommet : chaleur -75 % plus vite, amendes et impôts -40 %'):row('Avocat véreux','niv. '+av(),'Chaque niveau : la chaleur retombe +15 % plus vite, amendes et impôts -8 %. Actuellement : chaleur +'+(15*av())+' %, amendes -'+(8*av())+' %','biz:avocat',avCost()));
 const row=(name,lvl,desc,act,cost,label,lock)=>`<div class="row"><div class="info"><b>${name}</b>${lvl?`<span class="lvl">${lvl}</span>`:''}<small>${desc}</small></div>`+
   (act?`<button class="buy" type="button" data-act="${act}" data-cost="${cost}" data-lock="${lock?1:0}" ${S.cash<cost||lock?'disabled':''}>${label||fmt(cost)}</button>`:'')+`</div>`;
 const tabs=(cur,list,pre)=>'<div class="tabs">'+list.map(([k,l])=>`<button class="tab${cur===k?' on':''}" type="button" data-act="${pre}:${k}">${l}</button>`).join('')+'</div>';
@@ -2028,6 +2035,7 @@ function renderPanel(){
       h='<p class="lead">L\'écran vert grésille. Marché noir et plans de casse, tout passe par ici. Les armes achetées sont rangées à l\'armurerie.</p>'+
         '<div class="sec">Coffre · argent sale'+ib('dirty')+'</div>'+row('Blanchir tout maintenant',fmt(S.dirty||0)+' au coffre','Un comptable louche lave tout d\'un coup, mais garde 35 %. Tu reçois '+fmt((S.dirty||0)*.65)+'.','launder',0,(S.dirty||0)<1?'Coffre vide':'Blanchir · -35 %',(S.dirty||0)<1)+
         ((S.compta||0)>=5?row('Comptable','niv. 5 · MAX','Il blanchit '+fmt2(launderR())+'/s en continu, 10 % de frais'):row('Comptable',(S.compta?'niv. '+S.compta:''),(S.compta?'Blanchit '+fmt2(launderR())+'/s en continu (10 % de frais). Niveau suivant : plus rapide':'Blanchit ton argent sale en continu, avec seulement 10 % de frais. Chaque niveau lave plus vite'),'compta',compCost()))+
+        darkRows(!S.local)+
         '<div class="sec">Marché noir'+ib('noir')+'</div>'+
         ARMS.map(a=>S.arms[a.k]?row(a.n,'à toi',a.d):row(a.n,'',a.d,'arm:'+a.k,C(a.p))).join('')+
         row('Boîte de munitions',ammo()+' en stock','+12 balles (ou cailloux, ou confettis). Chaque tir en consomme une','ammo',C(250))+
@@ -2106,11 +2114,7 @@ function renderPanel(){
       ESTATE.map(e=>S.owned[e.k]?row(e.n,'à toi',`+${e.r} ${CUR()} de base par seconde · ${e.d}`):row(e.n,'',`+${e.r} ${CUR()} de base par seconde · ${e.d}`,'estate:'+e.k,estP(e),null,L)).join('')+
       (S.rivalBought?row('Ex-Déchets Corp','à toi','Ton 2e QG · +20 '+CUR()+' de base par seconde'):row('Déchets Corp','',L?"Il faut d'abord le petit local":'Racheter ton rival : fin de la concurrence et +20 '+CUR()+'/s','rival:buy',rivalCost(),null,L))+
       (CI()<1?'<div class="sec">Le côté obscur</div><p class="lead">🔒 Les bandits, le bar, les armes et le blanchiment se débloquent à <b>Londres</b>. Ici, à Paris, on apprend les bases.</p>':(
-      '<div class="sec">Le côté obscur · '+(isNight()?'c\'est la nuit':'bandits au QG jusqu\'à la nuit')+' · chaleur '+Math.ceil(S.heat)+' / 100'+ib('bandits')+'</div>'+
-      row('Bandit',S.band+' / 5'+(bands.some(b=>b.jail>0)?' · '+bands.filter(b=>b.jail>0).length+' au trou':''),L?"Il faut d'abord le petit local":'Sort uniquement la nuit pour pickpocket les passants. Gros butin, mais fait monter la chaleur','biz:band',S.band>=5?0:bandCost(),S.band>=5?'MAX':null,L||S.band>=5)+
-      row('Faux nez et moustache','niv. '+S.bandUp.nez,'+6 % de vols réussis pour tes bandits','biz:nez',S.bandUp.nez>=5?0:nezCost(),S.bandUp.nez>=5?'MAX':null,S.band<1||S.bandUp.nez>=5)+
-      row('Déguisement de pigeon','niv. '+S.bandUp.pigeon,'-15 % de chaleur par vol de bandit. Personne ne soupçonne un pigeon','biz:pigeon',S.bandUp.pigeon>=5?0:pigCost(),S.bandUp.pigeon>=5?'MAX':null,S.band<1||S.bandUp.pigeon>=5)+
-      (S.band<1&&!av()?row('Avocat véreux','',"Il faut au moins 1 bandit"):av()>=5?row('Avocat véreux','niv. 5 · MAX','Maître Lafouine au sommet : chaleur -75 % plus vite, amendes et impôts -40 %'):row('Avocat véreux','niv. '+av(),'Chaque niveau : la chaleur retombe +15 % plus vite, amendes et impôts -8 %. Actuellement : chaleur +'+(15*av())+' %, amendes -'+(8*av())+' %','biz:avocat',avCost()))+
+      darkRows(L)+
       `<p class="foot">Tes bandits sortent la nuit. Leur butin est de l'argent sale (${fmt(S.dirty||0)} au coffre) : le comptable du bar le blanchit tout seul (${launderR()>0?fmt2(launderR())+'/s, 10 % de frais':'engage-le sur l\'ordinateur du bar'}), et l'ordinateur peut tout blanchir d'un coup (35 % de frais). Chaleur 50 : un flic de plus. 75 : deux fois plus de flics en civil. 100 : descente au QG, amende et coffre saisi.</p>`))+
       '<div class="sec">Fin de partie'+ib('secu')+'</div>'+
       (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',secuCost(),null,S.emp<2))+

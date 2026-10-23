@@ -2327,19 +2327,44 @@ function drawGround(){const ct=CITY(),x0=camX-60,w0=viewW+120;
   cx.globalAlpha=1-dk*.85;cx.fillStyle='#fff';for(let i=0;i<16;i++){const x=((i*330+T*8)%(W+400))-200,y=10+(i%3)*10;if(x<x0-80||x>x0+w0)continue;circ(x,y,16);cx.fill();circ(x+20,y-6,20);cx.fill();circ(x+42,y,15);cx.fill()}
   cx.globalAlpha=1;if(dk<=0){cx.fillStyle=ct.back;cx.fillRect(x0,30,w0,180)}
   drawSkyline();
-  cx.fillStyle='#e9dcc9';cx.fillRect(x0,205,w0,95);
-  cx.strokeStyle='rgba(42,31,61,.12)';cx.lineWidth=2;
-  for(let x=Math.floor(x0/60)*60;x<x0+w0;x+=60){cx.beginPath();cx.moveTo(x,205);cx.lineTo(x,300);cx.moveTo(x,444);cx.lineTo(x,524);cx.stroke()}
-  cx.fillStyle='#b9a68e';cx.fillRect(x0,296,w0,8);
-  cx.fillStyle='#4a4e69';cx.fillRect(x0,304,w0,132);
-  cx.fillStyle='#ffd23f';for(let x=Math.floor(x0/80)*80;x<x0+w0;x+=80)cx.fillRect(x,368,44,6);
-  cx.fillStyle='#b9a68e';cx.fillRect(x0,436,w0,8);
-  cx.fillStyle='#e9dcc9';cx.fillRect(x0,444,w0,80);
+  drawStreet(CK(),x0,w0,dk);
+}
+// sol propre à chaque ville : trottoirs (205-300 et 444-524), bordures, chaussée (304-436), herbe
+const GRND={
+ paris:{walk:'#e9dcc9',joint:60,curb:'#b9a68e',road:'#4f4a58',line:'#f4f1ea'},
+ london:{walk:'#cfd0d6',joint:48,curb:'#9a9ca6',road:'#3d4048',line:'#f4f1ea'},
+ ny:{walk:'#d8d4ce',joint:72,curb:'#a8a39b',road:'#36373d',line:'#ffd23f'},
+ tokyo:{walk:'#e8e2d9',joint:40,curb:'#b8b2a8',road:'#5c6370',line:'#f4f1ea'},
+};
+const hsh=(a,b)=>{const v=Math.sin(a*12.9898+b*78.233)*43758.5453;return v-Math.floor(v)};
+function drawStreet(ck,x0,w0,dk){const G=GRND[ck]||GRND.paris,ct=CITY();
+  // Londres : muret de briques derrière le trottoir, visible entre les façades
+  if(ck==='london'){cx.fillStyle='#7a3b33';cx.fillRect(x0,140,w0,66);
+    for(let r=0,y=142;y<204;r++,y+=12)for(let x=Math.floor(x0/36)*36-(r%2?18:0);x<x0+w0;x+=36){cx.fillStyle=['#a44a3f','#b5574a','#9a4238'][Math.floor(hsh(x,y)*3)];cx.fillRect(x+1,y,34,10)}}
+  for(const [y,h] of [[205,95],[444,80]]){cx.fillStyle=G.walk;cx.fillRect(x0,y,w0,h);cx.strokeStyle='rgba(42,31,61,.12)';cx.lineWidth=2;cx.beginPath();
+    for(let x=Math.floor(x0/G.joint)*G.joint;x<x0+w0;x+=G.joint){cx.moveTo(x,y);cx.lineTo(x,y+h)}
+    if(ck==='london'||ck==='ny')for(let yy=y+G.joint;yy<y+h;yy+=G.joint){cx.moveTo(x0,yy);cx.lineTo(x0+w0,yy)}cx.stroke()}
+  // Tokyo : bande podotactile jaune le long des bordures
+  if(ck==='tokyo')for(const y of [282,448]){cx.fillStyle='#f2c230';cx.fillRect(x0,y,w0,12);cx.fillStyle='rgba(42,31,61,.18)';for(let x=Math.floor(x0/10)*10;x<x0+w0;x+=10)cx.fillRect(x+3,y+4,3,3)}
+  cx.fillStyle=G.curb;cx.fillRect(x0,296,w0,8);cx.fillRect(x0,436,w0,8);
+  cx.fillStyle=G.road;cx.fillRect(x0,304,w0,132);
+  if(ck==='paris'){// pavés parisiens
+    for(let r=0,y=306;y<434;r++,y+=16)for(let x=Math.floor(x0/28)*28-(r%2?14:0);x<x0+w0;x+=28){cx.fillStyle=['#7a7184','#857b8e','#6f6779','#8d8496'][Math.floor(hsh(x,r)*4)];rr(x+2,y+2,24,12,4);cx.fill()}}
+  if(ck==='london'){cx.fillStyle='#ffd23f';for(const y of [309,315,423,429])cx.fillRect(x0,y,w0,3)}// double ligne jaune : stationnement interdit
+  if(ck==='ny'){cx.fillStyle=G.line;cx.fillRect(x0,364,w0,4);cx.fillRect(x0,372,w0,4);
+    for(let x=Math.floor(x0/460)*460+230;x<x0+w0;x+=460){cx.lineWidth=3;cx.strokeStyle=INK;cx.beginPath();cx.ellipse(x,404,24,9,0,0,7);cx.fillStyle='#55565e';cx.fill();cx.stroke();
+      for(let k=0;k<3;k++){const ph=(T*.5+k/3+x*.001)%1;cx.globalAlpha=(1-ph)*.55;cx.fillStyle='#fff';circ(x+Math.sin(ph*6+k)*8,404-ph*70,8+ph*14);cx.fill()}cx.globalAlpha=1}}
+  else{cx.fillStyle=ck==='paris'?'rgba(244,241,234,.9)':G.line;for(let x=Math.floor(x0/80)*80;x<x0+w0;x+=80)cx.fillRect(x,368,44,6)}
+  if(ck==='tokyo'){cx.fillStyle=G.line;cx.fillRect(x0,312,w0,3);cx.fillRect(x0,425,w0,3)}
   cx.fillStyle=ct.grass;cx.fillRect(x0,524,w0,140);
   cx.fillStyle='rgba(0,0,0,.1)';for(let x=Math.floor(x0/47)*47+20;x<x0+w0;x+=47){cx.fillRect(x,540+((x*7)%70),4,8)}
-  cx.fillStyle='rgba(255,255,255,.85)';for(const px of [700,1600,2600,3600])for(let i=0;i<6;i++)cx.fillRect(px,312+i*21,90,12);
+  cx.fillStyle='rgba(255,255,255,.88)';for(const px of [700,1600,2600,3600])for(let i=0;i<6;i++)cx.fillRect(px,312+i*21,90,12);
+  // Tokyo : pétales de cerisier qui tombent
+  if(ck==='tokyo'&&dk<.6){cx.fillStyle='#ffb7c5';for(let i=0;i<26;i++){const x=x0+((i*197+T*30)%(w0+40))-20,y=60+((i*83+T*(40+i%5*8))%470),a=T*2+i;cx.save();cx.translate(x,y);cx.rotate(a);cx.beginPath();cx.ellipse(0,0,5,3,0,0,7);cx.fill();cx.restore()}}
 }
-function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
+function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);
+  if(CK()==='london'){cx.save();rr(x,40,w,170,10);cx.clip();cx.strokeStyle='rgba(42,31,61,.16)';cx.lineWidth=1.5;cx.beginPath();// façades en briques
+    for(let r=0,y=46;y<210;r++,y+=12){cx.moveTo(x,y);cx.lineTo(x+w,y);for(let bx=x+(r%2?15:0);bx<x+w;bx+=30){cx.moveTo(bx,y);cx.lineTo(bx,y+12)}}cx.stroke();cx.restore();rr(x,40,w,170,10);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke()}for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
 function awning(x,w,cols){const ay=98,n=Math.max(2,Math.floor(w/30));
   for(let i=0;i<n;i++){cx.beginPath();const x0=x+i*(w/n),x1=x0+w/n;cx.moveTo(x0,ay);cx.lineTo(x1,ay);cx.lineTo(x1,ay+26);cx.quadraticCurveTo((x0+x1)/2,ay+38,x0,ay+26);cx.closePath();
     cx.fillStyle=cols[i%2];cx.fill();cx.strokeStyle=INK;cx.lineWidth=3;cx.stroke()}}

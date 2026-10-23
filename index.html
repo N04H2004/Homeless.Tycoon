@@ -994,11 +994,11 @@ function checkObj(){
   if(n>S.done){S.done=n;const nx=OBJ.find(o=>!o[2]());if(!sc)toast(nx?'Objectif réussi ! Prochaine phase : '+nx[0]:'Tous les objectifs sont faits. Vise Tokyo !')}
   const nx=OBJ.find(o=>!o[2]());
   // tant qu'il reste des étapes dans la ville, la carte montre l'étape en cours
-  if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+stepW(sc.x),gp=$('goalp');if(gp.hidden)gp.hidden=false;
+  if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+(sc.x.h||stepW(sc.x)),gp=$('goalp');if(gp.hidden)gp.hidden=false;
     $('goalh').textContent='Étape '+(sc.i+1)+' / '+L.length+' · '+CITY().n;$('goalpb').style.width=Math.round(sc.i/L.length*100)+'%';
     const need=sc.x.cost?sc.x.cost():0,poor=need>S.cash,gt=$('goalt');
-    const tt=poor?t+` Il te faut ${fmt(need)} : tu peux ${passiveTip()} (Business) pour gagner de l'argent tout seul, ou ramasser des déchets et faire des CDD.`:t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
-    $('goalps').textContent=poor?'Argent : '+fmt(S.cash)+' / '+fmt(need):'Ensuite : '+fmt(20000)+' gagnés pour la ville suivante ('+fmt(S.total)+')';return}
+    const tt=t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
+    $('goalps').textContent=poor?'Argent : '+fmt(S.cash)+' / '+fmt(need)+' · Business rapporte tout seul':'Ensuite : '+fmt(20000)+' gagnés pour la ville suivante ('+fmt(S.total)+')';return}
   const early=S.total<20000&&!tutoOn(),gp=$('goalp');if(gp.hidden===early)gp.hidden=!early;
   if(early){const a=advice(),t=a;if($('goalt').textContent!==t)$('goalt').textContent=t;
     $('goalh').textContent='Priorité · '+CITY().n+' · '+(isNight()?'Nuit':'Jour');
@@ -1060,27 +1060,27 @@ const ACH_CITY={trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
 const STEPS=[
- {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
- {k:'distrib',cost:()=>distCost(),n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
- {k:'outil',need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
- {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : le skate est le moins cher.',acts:['veh:']},
- {k:'local',cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
- {k:'frigo',skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
- {k:'emp',cost:()=>empCost(),n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
- {k:'manager',skip:[1],cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
- {k:'tenue',skip:[1],cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
- {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (le costume de baron londonien ou le costume trois-pièces aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
- {k:'peaky',only:1,cost:()=>20000,n:'Acheter le costume de baron londonien (pour le PMU)',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed façon Peaky Blinders t\'ouvrent les portes du bookmaker (PMU). Porte-le pour entrer.',acts:['outfit:peaky']},
- {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
- {k:'bar',c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
- {k:'band',c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
- {k:'arme',c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
+ {k:'cdd',h:"Entre dans chaque boutique (E) et signe son CDD.",n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
+ {k:'distrib',h:"Business › Distributeur.",cost:()=>distCost(),n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
+ {k:'outil',h:"Chez Brico Dédé (E).",need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
+ {k:'veh',h:"Chez Pigeon Motors (E).",need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : le skate est le moins cher.',acts:['veh:']},
+ {k:'local',h:"Business › Petit local.",cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
+ {k:'frigo',h:"Business › Frigo connecté.",skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
+ {k:'emp',h:"Business › Recruter.",cost:()=>empCost(),n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
+ {k:'manager',h:"Business › Manager.",skip:[1],cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
+ {k:'tenue',h:"Au vestiaire, collé au casino.",skip:[1],cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
+ {k:'casino',h:"Une partie de blackjack ou de roulette.",n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (le costume de baron londonien ou le costume trois-pièces aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
+ {k:'peaky',h:"Au cloakroom, collé au casino. Porte-le pour entrer au PMU.",only:1,cost:()=>20000,n:'Acheter le costume de baron londonien',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed façon Peaky Blinders t\'ouvrent les portes du bookmaker (PMU). Porte-le pour entrer.',acts:['outfit:peaky']},
+ {k:'shop',h:"Business › Commerces.",cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
+ {k:'bar',h:"Business › Grands lieux.",c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
+ {k:'band',h:"Business › Bandits.",c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
+ {k:'arme',h:"Bar › ordinateur › marché noir.",c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
    w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
- {k:'heist',c:1,n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
+ {k:'heist',h:"Bar › ordinateur › « Le casse ».",c:1,n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
- {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
+ {k:'compta',h:"Bar › ordinateur › comptable.",c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
- {k:'bourse',c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'bourse',h:"Menu › Bourse.",c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');

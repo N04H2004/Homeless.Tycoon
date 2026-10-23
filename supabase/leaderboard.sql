@@ -75,7 +75,8 @@ begin
 end $$;
 
 -- ============ Lecture du classement ============
-create or replace function public.get_leaderboard(p_limit int default 50)
+drop function if exists public.get_leaderboard(int);
+create function public.get_leaderboard(p_limit int default 50)
 returns table (rank bigint, pseudo text, score double precision, is_me boolean)
 language sql stable security definer set search_path = '' as $$
   with ranked as (
@@ -198,3 +199,101 @@ begin
 end $$;
 revoke all on function public.send_feedback(text, text, jsonb) from public;
 grant execute on function public.send_feedback(text, text, jsonb) to anon, authenticated;
+
+-- ============ Visiter la rue des autres joueurs ============
+-- Visite en lecture seule depuis le classement ; « rue privée » pour refuser les visites ;
+-- pourboire en partant, au maximum 50 % de l'argent du joueur visité, récupéré par lui à sa prochaine connexion.
+alter table public.profiles add column if not exists private boolean not null default false;
+
+create table if not exists public.tips (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  from_id uuid references public.profiles (id) on delete cascade,
+  to_id uuid not null references public.profiles (id) on delete cascade,
+  amount double precision not null check (amount > 0),
+  claimed boolean not null default false
+);
+alter table public.tips enable row level security;
+
+drop function if exists public.get_leaderboard(int);
+create function public.get_leaderboard(p_limit int default 50)
+returns table (rank bigint, pseudo text, score double precision, is_me boolean, private boolean, online boolean)
+language sql stable security definer set search_path = '' as $$
+  -- « en ligne » : le jeu envoie le score chaque minute tant qu'il est ouvert (et pas en pause AFK)
+  with ranked as (
+    select rank() over (order by s.score desc) as rank, p.pseudo, s.score, s.user_id = auth.uid() as is_me, p.private,
+           s.updated_at > now() - interval '150 seconds' as online
+    from public.scores s join public.profiles p on p.id = s.user_id
+  )
+  select * from ranked
+  where rank <= least(greatest(p_limit, 1), 100) or is_me
+  order by rank, pseudo;
+$$;
+revoke all on function public.get_leaderboard(int) from public;
+grant execute on function public.get_leaderboard(int) to anon, authenticated;
+
+create or replace function public.set_private(p_private boolean)
+returns text language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then return 'Tu n''es pas connecté'; end if;
+  update public.profiles set private = coalesce(p_private, false) where id = auth.uid();
+  return 'ok';
+end $$;
+revoke all on function public.set_private(boolean) from public, anon;
+grant execute on function public.set_private(boolean) to authenticated;
+
+-- ne renvoie que ce qui se voit dans la rue (pas les actions, ni le reste de la sauvegarde)
+create or replace function public.get_street(p_pseudo text)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare pr record; d jsonb;
+begin
+  select id, pseudo, private into pr from public.profiles where lower(pseudo) = lower(p_pseudo);
+  if not found then return jsonb_build_object('error', 'Joueur introuvable'); end if;
+  if pr.private and pr.id is distinct from auth.uid() then return jsonb_build_object('error', pr.pseudo || ' a une rue privée'); end if;
+  select data into d from public.saves where user_id = pr.id;
+  if d is null then return jsonb_build_object('error', pr.pseudo || ' n''a pas encore de rue sauvegardée'); end if;
+  return jsonb_build_object(
+    'pseudo', pr.pseudo,
+    'ci', least(greatest(coalesce((d -> 'meta' ->> 'cur')::int, least(coalesce((d -> 'meta' ->> 'prestige')::int, 0), 3)), 0), 3),
+    'cash', coalesce((d ->> 'cash')::double precision, 0),
+    'snap', jsonb_build_object(
+      'distrib', d -> 'distrib', 'distUp', d -> 'distUp', 'local', d -> 'local', 'emp', d -> 'emp', 'staff', d -> 'staff',
+      'emUp', d -> 'emUp', 'manager', d -> 'manager', 'frigo', d -> 'frigo', 'secu', d -> 'secu', 'shops', d -> 'shops',
+      'owned', d -> 'owned', 'rivalBought', d -> 'rivalBought', 'band', d -> 'band', 'bandUp', d -> 'bandUp', 'up', d -> 'up'));
+end $$;
+revoke all on function public.get_street(text) from public;
+grant execute on function public.get_street(text) to anon, authenticated;
+
+create or replace function public.send_tip(p_pseudo text, p_amount double precision)
+returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); pr record; c double precision;
+begin
+  if uid is null then return 'Connecte-toi pour laisser un pourboire'; end if;
+  if p_amount is null or p_amount = 'NaN' or p_amount < 1 then return 'Pourboire trop petit'; end if;
+  select id, pseudo, private into pr from public.profiles where lower(pseudo) = lower(p_pseudo);
+  if not found then return 'Joueur introuvable'; end if;
+  if pr.id = uid then return 'Pas de pourboire à toi-même !'; end if;
+  if pr.private then return pr.pseudo || ' a une rue privée'; end if;
+  select coalesce((data ->> 'cash')::double precision, 0) into c from public.saves where user_id = pr.id;
+  if p_amount > 0.5 * coalesce(c, 0) + 1 then return 'Maximum : 50 % de l''argent de ' || pr.pseudo; end if;
+  if exists (select 1 from public.tips where from_id = uid and to_id = pr.id and created_at > now() - interval '1 hour') then
+    return 'Tu as déjà laissé un pourboire à ' || pr.pseudo || ' il y a moins d''une heure'; end if;
+  insert into public.tips (from_id, to_id, amount) values (uid, pr.id, p_amount);
+  return 'ok';
+end $$;
+revoke all on function public.send_tip(text, double precision) from public, anon;
+grant execute on function public.send_tip(text, double precision) to authenticated;
+
+-- le joueur visité récupère ses pourboires (une seule fois chacun)
+create or replace function public.claim_tips()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); r jsonb;
+begin
+  if uid is null then return null; end if;
+  with c as (update public.tips set claimed = true where to_id = uid and not claimed returning from_id, amount)
+  select jsonb_build_object('total', coalesce(sum(c.amount), 0), 'from', coalesce(jsonb_agg(distinct p.pseudo) filter (where p.pseudo is not null), '[]'::jsonb))
+    into r from c left join public.profiles p on p.id = c.from_id;
+  return r;
+end $$;
+revoke all on function public.claim_tips() from public, anon;
+grant execute on function public.claim_tips() to authenticated;

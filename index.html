@@ -305,8 +305,10 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbin{font-family:var(--body);font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
 .lbin:focus{outline:3px solid #4cc9f0;outline-offset:1px}
 .lbt{display:flex;flex-direction:column;gap:4px}
-.lbr{display:grid;grid-template-columns:3.2em 1fr auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;font-weight:600}
+.lbr{display:grid;grid-template-columns:3.2em 1fr auto auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;font-weight:600}
 .lbr .rk{font-family:var(--display);font-size:16px}.lbr .sc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--cash)}
+.lbr .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#bdb6c8;border:1.5px solid var(--ink);margin-right:6px;vertical-align:middle}.lbr .dot.on{background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.3)}
+.lbr .lbv{min-width:0;font-size:12px;padding:3px 8px}
 .lbr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lbr:nth-child(1) .rk{color:#b8860b}.lbr.me{background:#fff3b0}
 .lbw{width:min(560px,100%);background:#fff6df;color:var(--ink);border:4px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink),0 10px 30px rgba(0,0,0,.35);padding:10px 14px;display:flex;flex-direction:column;gap:6px}
@@ -1745,7 +1747,7 @@ function startVisit(k){if(VISIT)return;const w=S.meta.worlds[k];if(!w)return;
   VISIT={k,i:w.i,saved:S,t0:Date.now()};S=vs;resetWorld();$('panel').hidden=true;pid=null;refocus();snd('event');
   toast('Bienvenue à '+CITY().n+' ! Ta filiale tourne sans toi'+(w.snap?'':' (rue reconstituée)'));updHud()}
 function endVisit(){if(!VISIT)return;const el=Math.min(7200,(Date.now()-VISIT.t0)/1000);const clock=S.clock;S=VISIT.saved;VISIT=null;S.clock=clock;resetWorld();if(S.heist&&(S.heist.st==='go'||S.heist.st==='inside'))S.heist.st='plan';catchUp(el,true);
-  $('panel').hidden=true;pid=null;refocus();snd('event');setTimeout(()=>toast('De retour à '+CITY().n),50);updHud();save()}
+  $('panel').hidden=true;pid=null;refocus();snd('event');setTimeout(()=>toast('De retour à '+CITY().n),50);updHud();save();renderTuto()}
 function doAct(){
   if(VISIT){if(spot())visitMsg();return}
   if(INSIDE){const r=roomSpot();if(!r)return;if(r==='exit')return exitBar();
@@ -1775,7 +1777,7 @@ for(const el of document.querySelectorAll('.hudi'))el.addEventListener('click',(
 $('shoot').addEventListener('click',()=>{shoot();refocus()});
 $('steal').addEventListener('click',()=>{doSteal();refocus()});
 $('btnBiz').addEventListener('click',()=>VISIT?visitMsg():openPanel('biz'));
-$('back').addEventListener('click',()=>endVisit());
+$('back').addEventListener('click',()=>leaveVisit());
 $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
@@ -1794,8 +1796,9 @@ function payNow(){
 // ================= HUD =================
 function updHud(){
   {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT}
-  if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent='Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
-    $('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.';
+  if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo:'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
+    if(VISIT.other){$('goalh').textContent='Visite · rue de '+VISIT.other.pseudo+' · '+CITY().n;$('goalt').textContent='Balade-toi chez '+VISIT.other.pseudo+'. Visite seulement : clique sur "Retour à '+HOME().n+'" pour rentrer (et laisser un pourboire si tu veux).'}
+    else{$('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.'}
     $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';critHud();$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
   $('cash').textContent=fmt(S.cash);
   const r=autoRate();$('rate').textContent=r>0?'+'+(r<100?r.toFixed(1).replace('.',',')+' '+CUR():fmt(r))+'/s en automatique':'aucun revenu auto';
@@ -2125,6 +2128,7 @@ function renderPanel(){
     h=`<p class="lead">Tu t'es évanoui sur le trottoir. Pendant ta sieste, les pigeons t'ont piqué ${fmt(parg||0)}.</p><p class="lead">Pense à manger et à passer à la pharmacie quand ta vie baisse.</p><button class="chunky" type="button" data-act="close">Je me relève</button>`;}
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
+  if(pid==='tipv'){t='Un pourboire ?';hd='#ffd23f';h=tipvHTML()}
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
@@ -2147,9 +2151,10 @@ $('pbody').addEventListener('click',e=>{
   {const L=lockOf(b.dataset.act);if(L){toast(lockText(L));snd('err');return}}
   if(a==='lb'){lbAct(v,w);return}
   if(a==='fb'){fbAct(v,w);return}
+  if(a==='tipv'){tipvAct(v);return}
   if(a==='visit'){startVisit(+v);return}
   if(a==='travel'){travelTo(+v);return}
-  if(a==='back'){endVisit();return}
+  if(a==='back'){leaveVisit();return}
   if(VISIT&&!['close','ptab','opt','tab','ko'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
   const pay=c=>{if(S.cash<c){snd('err');return false}S.cash-=c;snd('buy');return true};
   if(a==='close')return closePanel();
@@ -2975,6 +2980,34 @@ function lbErr(e){const m=String(e&&e.message||e||'');
 function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel();const w=$('lbw');if(w)w.innerHTML=lbMini();const a=$('pacc');if(a)a.innerHTML=paccHTML()}
 function paccHTML(){if(!SB)return '<b>Hors ligne</b>';
   return LB.user?`<b>${lbEsc(LB.pseudo)}</b><button class="chunky alt" type="button" data-lbo>Mon compte</button>`:'<b>Invité</b><button class="chunky" type="button" data-lbo>Se connecter</button>'}
+// ---- Visite de la rue d'un autre joueur (lecture seule) et pourboire en partant
+async function visitOther(ps){if(!SB||!ps)return;if(VISIT||JOB||INSIDE){toast('Termine d\'abord ce que tu fais');snd('err');return}
+  if(!LB.ready){LB.msg='Connecte-toi pour visiter les autres rues';LB.err=true;return lbRedraw()}
+  let r;try{r=await SB.rpc('get_street',{p_pseudo:ps})}catch(e){r={error:e}}
+  const d=r.data;if(r.error||!d||d.error){LB.msg=r.error?(/get_street|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Rue introuvable';LB.err=true;snd('err');return lbRedraw()}
+  if(BOOT)enterWorld(CURI());if(BOOT||VISIT)return;
+  const snap={};for(const k in d.snap||{})if(d.snap[k]!=null)snap[k]=d.snap[k];
+  const vs=Object.assign(fresh0(S.meta),snap);vs.meta=S.meta;if(!Array.isArray(vs.staff))vs.staff=[];vs.emp=Math.min(vs.emp||0,vs.staff.length);
+  vs.pay={timer:60,due:0,late:0,strike:false};vs.heat=0;vs.mkt=null;vs.stk={};vs.hist=[];vs.heist=null;vs.hp=100;vs.food=100;vs.bag=0;vs.bagVal=0;vs.ride=S.ride;vs.veh=Object.assign({},S.veh);vs.clock=S.clock;
+  VISIT={k:-1,i:Math.max(0,Math.min(3,d.ci|0)),saved:S,t0:Date.now(),other:{pseudo:d.pseudo,cash:+d.cash||0}};S=vs;resetWorld();$('panel').hidden=true;$('tuto').hidden=true;pid=null;refocus();snd('event');
+  toast('Bienvenue dans la rue de '+d.pseudo+' à '+CITY().n+' ! Visite seulement');updHud()}
+function leaveVisit(){if(VISIT&&VISIT.other){openPanel('tipv');return}endVisit()}
+const fmtH=n=>fmt(n).replace(CITY().cur,HOME().cur);// montants du pourboire dans la monnaie de ta ville
+const tipMax=()=>VISIT&&VISIT.other?Math.floor(Math.min(VISIT.saved.cash,VISIT.other.cash*.5)):0;
+function tipvHTML(){const o=VISIT&&VISIT.other;if(!o)return '';const mx=tipMax();
+  return `<p class="lead">Tu quittes la rue de <b>${lbEsc(o.pseudo)}</b>. Tu veux lui laisser un pourboire ? (au maximum 50 % de son argent, et pas plus que ce que tu as)</p>`+
+    (mx>=1?'<div class="bets">'+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Le maximum']].map(([p,l])=>{const a=Math.max(1,Math.floor(mx*p));return `<button class="buy" type="button" data-act="tipv:${a}">${l} · ${fmtH(a)}</button>`}).join('')+'</div>':'<p class="lead">Pas assez d\'argent pour un pourboire cette fois.</p>')+
+    (TIPV.msg?`<div class="jmsg ko">${lbEsc(TIPV.msg)}</div>`:'')+`<button class="chunky alt" type="button" data-act="tipv:0">Partir sans pourboire</button>`}
+const TIPV={msg:'',busy:false};
+async function tipvAct(v){if(TIPV.busy||!VISIT||!VISIT.other)return;const a=Math.floor(+v||0),o=VISIT.other;TIPV.msg='';
+  if(a<=0){endVisit();return}
+  if(a>tipMax()){TIPV.msg='Montant trop élevé';return renderPanel()}
+  TIPV.busy=true;let r;try{r=await SB.rpc('send_tip',{p_pseudo:o.pseudo,p_amount:a})}catch(e){r={error:e}}TIPV.busy=false;
+  if(r.error||r.data!=='ok'){TIPV.msg=r.error?(/send_tip|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;snd('err');return renderPanel()}
+  VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;endVisit();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
+// pourboires reçus : récupérés à la connexion puis chaque minute
+async function claimTips(){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_tips')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
+  const R=VISIT?VISIT.saved:S;R.cash+=d.total;save();snd('legend');toast((d.from&&d.from.length?d.from.join(', '):'Un visiteur')+' t\'a laissé un pourboire de '+fmt(d.total)+' !');updHud()}
 // ---- Sauvegarde en ligne : la partie stockée dans le navigateur appartient au dernier compte synchronisé
 const OWNER='poubelle-tycoon-owner';
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
@@ -2998,13 +3031,13 @@ async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;le
   if(next!==undefined&&local&&!lsSet(BAK(owner),lsGet(KEY))){LB.msg='Impossible de mettre de côté la partie actuelle : stockage du navigateur plein';LB.err=true;lbRedraw();return false}// la partie actuelle est d'abord mise de côté pour son compte
   if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
     NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
-  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
+  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);claimTips();if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
 function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
   if(!SB)return h+'<small>Classement indisponible hors connexion</small>';
   if(!LB.rows)return h+'<small>Chargement...</small>';
   if(!R.length)return h+"<small>Personne au classement pour l'instant. Sois le premier !</small>";
-  h+='<div class="lbt">'+top.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
+  h+='<div class="lbt">'+top.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm"><i class="dot${r.online?' on':''}" title="${r.online?'En ligne':'Hors ligne'}"></i>${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
   if(me&&!top.includes(me))h+=`<div class="lbr me"><span class="rk">#${me.rank}</span><span class="nm">${lbEsc(me.pseudo)}</span><span class="sc">${lbf(me.score)}</span></div>`;
   else if(!LB.user)h+='<small>Connecte-toi pour apparaître dans le classement</small>';
   return h}
@@ -3016,7 +3049,7 @@ function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" cl
   `<button type="button" data-fbo aria-label="Laisser une remarque" title="Laisser une remarque (bug, idée...)">💬</button>`}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
-async function lbSend(force){if(!SB||!LB.ready)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
+async function lbSend(force){if(!SB||!LB.ready||(typeof AFK!=='undefined'&&AFK))return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
 async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
   if(!/^[A-Za-z0-9_-]{3,16}$/.test(p))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
@@ -3034,7 +3067,11 @@ async function lbAct(v,w){
   if(v==='out'){LB.busy=true;lbRedraw();await cloudPush();try{await SB.auth.signOut()}catch(e){}NOSAVE=true;location.reload();return}
   if(v==='refresh'){LB.msg='';if(LB.user&&!LB.ready)await cloudSync();await lbSend();return lbLoad()}
   if(v==='edit'){LB.edit=w==='1';LB.f.n=LB.edit?LB.pseudo:'';LB.msg='';return lbRedraw()}
-  if(v==='ren')return lbRename()}
+  if(v==='ren')return lbRename();
+  if(v==='priv'){const me=(LB.rows||[]).find(r=>r.is_me),on=!(me&&me.private);let r;try{r=await SB.rpc('set_private',{p_private:on})}catch(e){r={error:e}}
+    if(r.error||r.data!=='ok'){LB.msg=r.error?(/set_private|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;LB.err=true;return lbRedraw()}
+    LB.msg=on?'Ta rue est privée : personne ne peut la visiter.':'Ta rue est ouverte aux visites.';LB.err=false;return lbLoad()}
+  if(v==='visit')return visitOther(w)}
 // le pseudo affiché change, l'identifiant de connexion (lié à l'adresse factice) reste le même
 const lbLogin=()=>LB.user&&LB.user.email?LB.user.email.split('@')[0]:'';
 async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim();
@@ -3050,6 +3087,7 @@ async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim()
 function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';
   let h='';
   if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b>${LB.edit?'':` <button class="buy sm" type="button" data-act="lb:edit:1">Changer de pseudo</button>`}<small>${lbLogin()&&lbLogin()!==LB.pseudo.toLowerCase()?`Pour te connecter, utilise toujours ton identifiant : <b>${lbEsc(lbLogin())}</b>. `:''}${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div><button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button></div>`+
+    (()=>{const me=(LB.rows||[]).find(r=>r.is_me),pv=!!(me&&me.private);return `<div class="row"><div class="info"><b>${pv?'🔒 Rue privée':'🏠 Rue ouverte aux visites'}</b><small>${pv?'Personne ne peut visiter ta rue ni te laisser de pourboire.':'Les autres joueurs peuvent visiter ta rue depuis le classement et te laisser un pourboire.'}</small></div><button class="buy sm" type="button" data-act="lb:priv">${pv?'Ouvrir':'Rendre privée'}</button></div>`})()+
     (LB.edit?`<div class="row lbf"><label>Nouveau pseudo<input class="lbin" data-f="n" maxlength="16" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.n)}"></label><small>C'est le nom affiché dans le classement. Pour te connecter, ton identifiant reste ${lbEsc(lbLogin())}.</small><div class="bets"><button class="chunky alt" type="button" data-act="lb:edit:0">Annuler</button><button class="chunky" type="button" data-act="lb:ren" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':'Valider'}</button></div></div>`:'');
   else{const up=LB.mode==='signup';
     h+=tabs(LB.mode,[['login','Connexion'],['signup','Créer un compte']],'lb:mode')+
@@ -3061,7 +3099,7 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
   h+='<div class="sec">Top 50 · total gagné à vie</div>';
   if(!LB.rows)h+='<p class="lead">Chargement...</p>';
   else if(!LB.rows.length)h+='<p class="lead">Personne au classement pour l\'instant. Sois le premier !</p>';
-  else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm">${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span></div>`).join('')+'</div>';
+  else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm"><i class="dot${r.online?' on':''}" title="${r.online?'En ligne':'Hors ligne'}"></i>${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span>${r.is_me?'<span></span>':r.private?'<span class="lbv" title="Rue privée">🔒</span>':`<button class="buy sm lbv" type="button" data-act="lb:visit:${lbEsc(r.pseudo)}" title="Visiter la rue de ${lbEsc(r.pseudo)}">Visiter</button>`}</div>`).join('')+'</div>';
   return h+'<button class="chunky alt" type="button" data-act="lb:refresh">Actualiser</button>'}
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
 $('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();e.target.dataset.f==='n'?lbRename():lbAuth()}});
@@ -3094,7 +3132,7 @@ $('hlvl').addEventListener('click',()=>{if(VISIT||JOB)return;ptab='succes';openP
 setInterval(updLvl,1000);updLvl();
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
-setInterval(()=>{lbSend();cloudPush()},60000);
+setInterval(()=>{lbSend();cloudPush();claimTips()},60000);
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
 bootLoading();
 updHud();

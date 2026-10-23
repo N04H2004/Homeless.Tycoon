@@ -290,9 +290,12 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); r jsonb;
 begin
   if uid is null then return null; end if;
-  with c as (update public.tips set claimed = true where to_id = uid and not claimed returning from_id, amount)
-  select jsonb_build_object('total', coalesce(sum(c.amount), 0), 'from', coalesce(jsonb_agg(distinct p.pseudo) filter (where p.pseudo is not null), '[]'::jsonb))
-    into r from c left join public.profiles p on p.id = c.from_id;
+  with c as (update public.tips set claimed = true where to_id = uid and not claimed returning from_id, amount),
+       g as (select coalesce(p.pseudo, 'Un visiteur') as pseudo, sum(c.amount) as amount from c left join public.profiles p on p.id = c.from_id group by 1)
+  select jsonb_build_object('total', coalesce(sum(g.amount), 0),
+                            'from', coalesce(jsonb_agg(g.pseudo), '[]'::jsonb),
+                            'items', coalesce(jsonb_agg(jsonb_build_object('pseudo', g.pseudo, 'amount', g.amount)), '[]'::jsonb))
+    into r from g;
   return r;
 end $$;
 revoke all on function public.claim_tips() from public, anon;

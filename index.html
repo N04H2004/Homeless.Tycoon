@@ -42,8 +42,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #clouds.shut{background:rgba(191,234,255,1)}
 #clouds .cl{position:absolute;height:auto;transform:translateX(calc(var(--s)*130vw));transition:transform .75s cubic-bezier(.6,.05,.3,1)}
 #clouds.shut .cl{transform:translateX(0)}
-#cloudt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8);font-family:var(--display);font-size:clamp(22px,4vw,36px);color:var(--ink);text-align:center;opacity:0;transition:opacity .3s,transform .3s;width:90%}
-#clouds.shut #cloudt{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#cloudt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6) rotate(-3deg);font-family:var(--display);font-size:clamp(26px,5vw,46px);line-height:1.1;color:var(--ink);text-align:center;opacity:0;transition:opacity .3s,transform .45s cubic-bezier(.2,1.6,.4,1);max-width:90%;background:var(--sun);border:5px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink);padding:14px 24px;z-index:2}
+#clouds.shut #cloudt{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}
 #dmg{position:absolute;inset:0;z-index:58;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(214,40,57,.15) 30%,rgba(214,40,57,.75) 100%)}
 #dmg.on{animation:dmgf .6s ease-out}@keyframes dmgf{0%{opacity:1}100%{opacity:0}}
 #alert{position:absolute;left:50%;top:44%;z-index:57;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(320px,calc(100% - 32px))}
@@ -2136,6 +2136,7 @@ function renderPanel(){
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
   if(pid==='tipv'){t='Un pourboire ?';hd='#ffd23f';h=tipvHTML()}
+  if(pid==='tipn'){t='💰 Pourboire reçu !';hd='#7ee08a';h=tipnHTML(parg)}
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
@@ -3021,8 +3022,16 @@ async function tipvAct(v){if(TIPV.busy||!VISIT||!VISIT.other)return;const a=Math
   if(r.error||r.data!=='ok'){TIPV.msg=r.error?(/send_tip|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;snd('err');return renderPanel()}
   VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;goHome();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
 // pourboires reçus : récupérés à la connexion puis chaque minute
-async function claimTips(){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_tips')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
-  const R=VISIT?VISIT.saved:S;R.cash+=d.total;save();snd('legend');toast((d.from&&d.from.length?d.from.join(', '):'Un visiteur')+' t\'a laissé un pourboire de '+fmt(d.total)+' !');updHud()}
+// à la connexion : « pendant ton absence » ; en jeu : « vient de passer »
+const TIPN=[];
+async function claimTips(login){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_tips')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
+  const R=VISIT?VISIT.saved:S;R.cash+=d.total;save();updHud();
+  TIPN.push({login,items:d.items&&d.items.length?d.items:(d.from||['Un visiteur']).map(p=>({pseudo:p,amount:d.total/Math.max(1,(d.from||[1]).length)})),total:d.total});showTipN()}
+function showTipN(){if(!TIPN.length||JOB||(!$('panel').hidden&&pid!=='tipn'))return;snd('legend');openPanel('tipn',TIPN.shift())}
+setInterval(showTipN,1500);
+function tipnHTML(n){const one=n.items.length===1,who=n.items.map(i=>`<div class="row"><div class="info"><b>${lbEsc(i.pseudo)}</b><small>${n.login?'est passé dans ta rue':'vient de passer dans ta rue'}</small></div><div class="gold">+${fmtH(i.amount)}</div></div>`).join('');
+  return `<p class="lead" style="font-size:16px">${n.login?(one?'Pendant ton absence, quelqu\'un est passé dans ta rue et t\'a laissé un pourboire !':'Pendant ton absence, des visiteurs sont passés dans ta rue et t\'ont laissé des pourboires !'):(one?`<b>${lbEsc(n.items[0].pseudo)}</b> vient de visiter ta rue et t'a laissé un pourboire !`:'Des visiteurs viennent de passer dans ta rue !')}</p>`+who+
+    `<p class="lead">Total ajouté à ton argent : <b>${fmtH(n.total)}</b></p><button class="chunky" type="button" data-act="close">Merci !</button>`}
 // ---- Sauvegarde en ligne : la partie stockée dans le navigateur appartient au dernier compte synchronisé
 const OWNER='poubelle-tycoon-owner';
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
@@ -3046,7 +3055,7 @@ async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;le
   if(next!==undefined&&local&&!lsSet(BAK(owner),lsGet(KEY))){LB.msg='Impossible de mettre de côté la partie actuelle : stockage du navigateur plein';LB.err=true;lbRedraw();return false}// la partie actuelle est d'abord mise de côté pour son compte
   if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
     NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
-  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);claimTips();if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
+  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);claimTips(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
 function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
   if(!SB)return h+'<small>Classement indisponible hors connexion</small>';
@@ -3147,7 +3156,7 @@ $('hlvl').addEventListener('click',()=>{if(VISIT||JOB)return;ptab='succes';openP
 setInterval(updLvl,1000);updLvl();
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
-setInterval(()=>{lbSend();cloudPush();claimTips()},60000);
+setInterval(()=>{lbSend();cloudPush()},60000);setInterval(()=>claimTips(false),20000);
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
 bootLoading();
 updHud();

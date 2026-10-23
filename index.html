@@ -1051,7 +1051,6 @@ const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 const STEPS=[
  {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
  {k:'distrib',n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
- {k:'outil',need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
  {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : la trottinette est la moins chère.',acts:['veh:']},
  {k:'local',cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
  {k:'frigo',skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
@@ -2070,6 +2069,9 @@ function renderPanel(){
       `<p class="foot">Tes bandits sortent la nuit. Leur butin est de l'argent sale (${fmt(S.dirty||0)} au coffre) : le comptable du bar le blanchit tout seul (${launderR()>0?fmt2(launderR())+'/s, 10 % de frais':'engage-le sur l\'ordinateur du bar'}), et l'ordinateur peut tout blanchir d'un coup (35 % de frais). Chaleur 50 : un flic de plus. 75 : deux fois plus de flics en civil. 100 : descente au QG, amende et coffre saisi.</p>`))+
       '<div class="sec">Fin de partie'+ib('secu')+'</div>'+
       (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',C(5000),null,S.emp<2))+
+      (Object.values(S.veh).some(v=>v)?'<div class="sec">Ton garage</div>'+VEH.filter(v=>S.veh[v.k]).map(v=>{const on=S.ride===v.k;
+        return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div><button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button></div>`}).join('')+
+        (SHOPS.some(x=>x.k==='motors')?'':'<p class="foot">Pour acheter un autre véhicule, passe chez Pigeon Motors à Paris.</p>'):'')+
       `<p class="foot">Les montants "de base" sont multipliés par ta ville (x${String(CITY().m).replace('.',',')}) et tes bonus. Salaires actuels : ${fmt(wages())} / jour.</p>`;}
   else if(pid==='casino'){t="Casino du Pigeon d'Or";hd='#c77dff';
     if(!casinoOk()&&CK()==='london'){h="<p class=\"lead\">Le videur croise les bras. « Ici, on ne reçoit que les gens qui ont pignon sur rue, mon gars. »</p><p class=\"lead\">À Londres, il te faut ton <b>petit local</b> (menu Business), ou porter le <b>costume de baron londonien</b> (cloakroom) ou le costume trois-pièces.</p><div class=\"msg ko\">Attention : si tu insistes, il appelle la police.</div>"}

@@ -1038,7 +1038,7 @@ const STEPS=[
  {k:'frigo',cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
  {k:'emp',n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
  {k:'manager',cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
- {k:'tenue',cost:()=>Math.min(...OUTFITS.filter(o=>o.p>0).map(o=>o.p)),n:'Acheter une tenue au vestiaire',ok:()=>S.meta.wardrobe.length>=2,tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
+ {k:'tenue',cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
  {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
  {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},

@@ -38,6 +38,12 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #afk{position:absolute;inset:0;z-index:80;background:rgba(42,31,61,.6);display:flex;align-items:center;justify-content:center;padding:16px}
 #afk .card{display:flex;flex-direction:column;gap:6px;text-align:center;max-width:340px;font-size:14px;font-weight:600}
 #afk b{font-family:var(--display);font-weight:400;font-size:28px}
+#clouds{position:absolute;inset:0;z-index:95;overflow:hidden;pointer-events:auto;background:rgba(191,234,255,0);transition:background .5s}
+#clouds.shut{background:rgba(191,234,255,1)}
+#clouds .cl{position:absolute;height:auto;transform:translateX(calc(var(--s)*130vw));transition:transform .75s cubic-bezier(.6,.05,.3,1)}
+#clouds.shut .cl{transform:translateX(0)}
+#cloudt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8);font-family:var(--display);font-size:clamp(22px,4vw,36px);color:var(--ink);text-align:center;opacity:0;transition:opacity .3s,transform .3s;width:90%}
+#clouds.shut #cloudt{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #dmg{position:absolute;inset:0;z-index:58;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(214,40,57,.15) 30%,rgba(214,40,57,.75) 100%)}
 #dmg.on{animation:dmgf .6s ease-out}@keyframes dmgf{0%{opacity:1}100%{opacity:0}}
 #alert{position:absolute;left:50%;top:44%;z-index:57;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(320px,calc(100% - 32px))}
@@ -396,6 +402,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
   <div id="dmg" aria-hidden="true"></div>
+  <div id="clouds" hidden aria-hidden="true"><svg class="cl" style="left:-20%;top:-12%;width:70vmax;--s:-1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:40%;top:-14%;width:72vmax;--s:1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:-25%;top:18%;width:66vmax;--s:-1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:45%;top:20%;width:70vmax;--s:1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:-15%;top:48%;width:72vmax;--s:-1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:38%;top:50%;width:74vmax;--s:1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:-22%;top:74%;width:70vmax;--s:-1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:42%;top:76%;width:72vmax;--s:1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:10%;top:30%;width:60vmax;--s:-1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><svg class="cl" style="left:20%;top:60%;width:58vmax;--s:1" viewBox="0 0 120 60"><path d="M20 50a16 16 0 0 1 4-31 22 22 0 0 1 40-8 18 18 0 0 1 32 8 15 15 0 0 1 4 31z" fill="#fff" stroke="#2a1f3d" stroke-width="5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg><div id="cloudt"></div></div>
   <div id="afk" hidden role="dialog" aria-label="Pause"><div class="card"><b>⏸️ Pause</b><span>Tu n'as pas joué depuis 10 minutes : le jeu et tes revenus sont en pause.</span><span>Touche l'écran ou appuie sur une touche pour reprendre.</span></div></div>
   <div id="alert" hidden role="alert"></div>
   <div id="tuto" class="card" hidden></div>
@@ -2152,7 +2159,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='lb'){lbAct(v,w);return}
   if(a==='fb'){fbAct(v,w);return}
   if(a==='tipv'){tipvAct(v);return}
-  if(a==='visit'){startVisit(+v);return}
+  if(a==='visit'){$('panel').hidden=true;pid=null;cloudGo('En route vers '+CITIES[(S.meta.worlds[+v]||{}).i||0].n+'…',()=>startVisit(+v));return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){leaveVisit();return}
   if(VISIT&&!['close','ptab','opt','tab','ko'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
@@ -2985,13 +2992,21 @@ async function visitOther(ps){if(!SB||!ps)return;if(VISIT||JOB||INSIDE){toast('T
   if(!LB.ready){LB.msg='Connecte-toi pour visiter les autres rues';LB.err=true;return lbRedraw()}
   let r;try{r=await SB.rpc('get_street',{p_pseudo:ps})}catch(e){r={error:e}}
   const d=r.data;if(r.error||!d||d.error){LB.msg=r.error?(/get_street|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Rue introuvable';LB.err=true;snd('err');return lbRedraw()}
-  if(BOOT)enterWorld(CURI());if(BOOT||VISIT)return;
+  if(BOOT)enterWorld(CURI());if(BOOT||VISIT)return;$('panel').hidden=true;pid=null;
+  cloudGo('En route vers la rue de '+d.pseudo+'…',()=>{if(VISIT)return;
   const snap={};for(const k in d.snap||{})if(d.snap[k]!=null)snap[k]=d.snap[k];
   const vs=Object.assign(fresh0(S.meta),snap);vs.meta=S.meta;if(!Array.isArray(vs.staff))vs.staff=[];vs.emp=Math.min(vs.emp||0,vs.staff.length);
   vs.pay={timer:60,due:0,late:0,strike:false};vs.heat=0;vs.mkt=null;vs.stk={};vs.hist=[];vs.heist=null;vs.hp=100;vs.food=100;vs.bag=0;vs.bagVal=0;vs.ride=S.ride;vs.veh=Object.assign({},S.veh);vs.clock=S.clock;
   VISIT={k:-1,i:Math.max(0,Math.min(3,d.ci|0)),saved:S,t0:Date.now(),other:{pseudo:d.pseudo,cash:+d.cash||0}};S=vs;resetWorld();$('panel').hidden=true;$('tuto').hidden=true;pid=null;refocus();snd('event');
-  toast('Bienvenue dans la rue de '+d.pseudo+' à '+CITY().n+' ! Visite seulement');updHud()}
-function leaveVisit(){if(VISIT&&VISIT.other){openPanel('tipv');return}endVisit()}
+  toast('Bienvenue dans la rue de '+d.pseudo+' à '+CITY().n+' ! Visite seulement');updHud()})}
+function leaveVisit(){if(VISIT&&VISIT.other){openPanel('tipv');return}goHome()}
+const goHome=()=>{$('panel').hidden=true;pid=null;cloudGo('Retour à '+HOME().n+'…',endVisit)};
+// transition en nuages : ils se referment, on change de rue derrière, puis ils s'écartent
+let cloudBusy=false;
+function cloudGo(txt,fn){const el=$('clouds');if(cloudBusy)return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){fn();return}
+  cloudBusy=true;$('cloudt').textContent=txt||'';el.hidden=false;void el.offsetWidth;el.classList.add('shut');snd('event');
+  setTimeout(()=>{try{fn()}catch(e){}setTimeout(()=>{el.classList.remove('shut');setTimeout(()=>{el.hidden=true;cloudBusy=false},750)},350)},750)}
 const fmtH=n=>fmt(n).replace(CITY().cur,HOME().cur);// montants du pourboire dans la monnaie de ta ville
 const tipMax=()=>VISIT&&VISIT.other?Math.floor(Math.min(VISIT.saved.cash,VISIT.other.cash*.5)):0;
 function tipvHTML(){const o=VISIT&&VISIT.other;if(!o)return '';const mx=tipMax();
@@ -3000,11 +3015,11 @@ function tipvHTML(){const o=VISIT&&VISIT.other;if(!o)return '';const mx=tipMax()
     (TIPV.msg?`<div class="jmsg ko">${lbEsc(TIPV.msg)}</div>`:'')+`<button class="chunky alt" type="button" data-act="tipv:0">Partir sans pourboire</button>`}
 const TIPV={msg:'',busy:false};
 async function tipvAct(v){if(TIPV.busy||!VISIT||!VISIT.other)return;const a=Math.floor(+v||0),o=VISIT.other;TIPV.msg='';
-  if(a<=0){endVisit();return}
+  if(a<=0){goHome();return}
   if(a>tipMax()){TIPV.msg='Montant trop élevé';return renderPanel()}
   TIPV.busy=true;let r;try{r=await SB.rpc('send_tip',{p_pseudo:o.pseudo,p_amount:a})}catch(e){r={error:e}}TIPV.busy=false;
   if(r.error||r.data!=='ok'){TIPV.msg=r.error?(/send_tip|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;snd('err');return renderPanel()}
-  VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;endVisit();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
+  VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;goHome();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
 // pourboires reçus : récupérés à la connexion puis chaque minute
 async function claimTips(){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_tips')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
   const R=VISIT?VISIT.saved:S;R.cash+=d.total;save();snd('legend');toast((d.from&&d.from.length?d.from.join(', '):'Un visiteur')+' t\'a laissé un pourboire de '+fmt(d.total)+' !');updHud()}

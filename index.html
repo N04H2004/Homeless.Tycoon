@@ -314,6 +314,9 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbr{display:grid;grid-template-columns:3.2em 1fr auto auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;font-weight:600}
 .lbr .rk{font-family:var(--display);font-size:16px}.lbr .sc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--cash)}
 .lbr .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#bdb6c8;border:1.5px solid var(--ink);margin-right:6px;vertical-align:middle}.lbr .dot.on{background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.3)}
+.bqa{position:relative;height:280px;border:3px solid var(--ink);border-radius:14px;background:repeating-linear-gradient(0deg,#3a2f4f 0 20px,#43375a 20px 40px);overflow:hidden;touch-action:manipulation;cursor:crosshair}
+.bqt{position:absolute;width:52px;height:52px;margin:-6px 0 0 -6px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:28px;line-height:1;padding:0;cursor:crosshair;animation:bqpop .25s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bqpop{from{transform:scale(0)}}
 .lbr .lbv{min-width:0;font-size:12px;padding:3px 8px}
 .lbr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lbr:nth-child(1) .rk{color:#b8860b}.lbr.me{background:#fff3b0}
@@ -1051,6 +1054,7 @@ const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 const STEPS=[
  {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
  {k:'distrib',n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
+ {k:'outil',need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
  {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : la trottinette est la moins chère.',acts:['veh:']},
  {k:'local',cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
  {k:'frigo',skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
@@ -1065,8 +1069,8 @@ const STEPS=[
  {k:'band',c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
  {k:'arme',c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
    w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
- {k:'heist',c:1,n:'Faire un braquage de Déchets Corp',ok:()=>S.meta.heists>=1||S.rivalBought,tip:'bar',
-   w:'Entre au bar (E) et va à l\'ordinateur : lance « Le casse ». Tes bandits armés braquent Déchets Corp à la tombée de la nuit (un braquage par jour).',acts:['heist']},
+ {k:'heist',c:1,n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
+   w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec 5 à 30 % de son argent.',acts:['heist']},
  {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
 ];
@@ -1992,9 +1996,7 @@ function renderPanel(){
         '<div class="sec">Marché noir'+ib('noir')+'</div>'+
         ARMS.map(a=>S.arms[a.k]?row(a.n,'à toi',a.d):row(a.n,'',a.d,'arm:'+a.k,C(a.p))).join('')+
         row('Boîte de munitions',ammo()+' en stock','+12 balles (ou cailloux, ou confettis). Chaque tir en consomme une','ammo',C(250))+
-        '<div class="sec">Braquer Déchets Corp'+ib('heist')+'</div>'+
-        (S.heist?`<div class="row" style="background:#fff3b0"><div class="info"><b>${{plan:'Braquage prévu cette nuit',go:'Braquage en cours : tes bandits approchent',inside:'Braquage en cours : ils sont dans le coffre !',escape:'Braquage réussi !'}[S.heist.st]||'Braquage'}</b><small>${S.heist.st==='plan'?'Tes bandits libres partiront à la tombée de la nuit. Regarde la rue !':S.heist.st==='escape'?'Butin d\'environ '+fmt(S.heist.loot*gm())+', versé demain matin une fois blanchi.':'Va voir devant Déchets Corp !'}</small></div></div>`
-          :`<div class="row"><div class="info"><b>Le casse</b><small>${blk||`${freeBands()} bandit${freeBands()>1?'s':''} libre${freeBands()>1?'s':''} avec ${bestArm().n.toLowerCase()} · réussite ${Math.round(ch*100)} % · butin environ ${fmt(lt*gm())}`}</small></div><button class="buy red" type="button" data-act="heist" ${blk?'disabled':''}>Planifier</button></div>`)+
+        '<div class="sec">Braquer un joueur</div>'+(()=>{const pb=bqBlock();return `<div class="row"><div class="info"><b>Le casse</b><small>${pb||'Choisis une cible dans le classement : mini-jeu de tir, tu repars avec 5 à 30 % de son argent selon ta précision.'}</small></div><button class="buy red" type="button" data-act="heist" ${pb?'disabled':''}>Choisir</button></div>`})()+
         '<p class="foot">Le casse a lieu la nuit : tes bandits libres entrent chez Déchets Corp, sous tes yeux. Réussi : le butin est blanchi et versé le lendemain matin, chaleur +35. Raté : alarme, bandits au trou 2 min, amende et chaleur +50. Un braquage par jour, 65 % de réussite au maximum.</p>'}}
   else if(pid==='armory'){t='Armurerie';hd='#d62839';const a=armed();
     h='<p class="lead">'+ib('armory')+' Derrière la grille, tes armes attendent sur leurs crochets. Une arme équipée te suit dans la rue.</p>'+
@@ -2150,6 +2152,8 @@ function renderPanel(){
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
   if(pid==='tipv'){t='Un pourboire ?';hd='#ffd23f';h=tipvHTML()}
+  if(pid==='braq'){t='Le casse';hd='#ef476f';h=bqHTML()}
+  if(pid==='bqn'){t='🚨 Tu t\'es fait braquer !';hd='#ef476f';h=bqnHTML(parg)}
   if(pid==='tipn'){t='💰 Pourboire reçu !';hd='#7ee08a';h=tipnHTML(parg)}
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
@@ -2174,6 +2178,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='lb'){lbAct(v,w);return}
   if(a==='fb'){fbAct(v,w);return}
   if(a==='tipv'){tipvAct(v);return}
+  if(a==='braq'){bqAct(v,w);return}
   if(a==='visit'){$('panel').hidden=true;pid=null;cloudGo('En route vers '+CITIES[(S.meta.worlds[+v]||{}).i||0].n+'…',()=>startVisit(+v));return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){leaveVisit();return}
@@ -2240,7 +2245,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='bksel'){if(BK.run)return;BK.sel=+v;BK.msg='Tu mises sur '+HORSES[+v][0]+' (x'+HORSES[+v][1]+').';BK.mc='';snd('pick')}
   if(a==='bkbet'){bkStart(+v)}
   if(a==='equip'){if(!S.arms[v])return;S.weapon=S.weapon===v?null:v;const am=ARMS.find(x=>x.k===v);snd('buy');toast(S.weapon?am.n+' équipé. Attention dehors !':am.n+' rangé à l\'armurerie')}
-  if(a==='heist'){planHeist();return renderPanel()}
+  if(a==='heist'){if(bqBlock())return;BQ.st='pick';BQ.res=null;BQ.msg='';openPanel('braq');lbLoad();return}
   if(a==='fire2'){const i=+v;if(i>=S.emp)return;const c=sev(i);if(!pay(c))return;const n=S.staff[i].n;pid='biz';if(lastHire&&lastHire.n===n)lastHire=null;S.staff.splice(i,1);S.emp--;emps.splice(i,1);freeClaims();toast(n+' a été licencié. Il part en claquant la porte')}
   if(a==='hire'&&SHIFT[v]){if(!canHire(v)){toast('Équipe de '+v+' complète');snd('err');return renderPanel()}if(!pay(empCost()))return;const st=newStaff(v);S.staff.push(st);S.emp++;syncEmps();lastHire=st;
     REV={st};pid='reveal';renderPanel();startReveal();updHud();save();return}
@@ -2904,7 +2909,7 @@ const TIPS=[
  ['pick','Faire les poches',()=>S.stats.pick+S.stats.fines>=1,['Touche <b>F</b> (bouton violet) près d\'un passant.','Si tu rates, <b>toute la brigade</b> sort du commissariat : tiens 20 s pour la semer.','1 passant sur 20 est un <b>policier en civil</b> : amende et matraque assurées.','Chaque vol fait monter la <b>chaleur</b>.']],
  ['bandits','Bandits et chaleur',()=>S.band>=1,['Débloqués à <b>Londres</b>, tes bandits volent <b>la nuit</b> à ta place. Leur butin est de l\'<b>argent sale</b>, stocké au coffre du QG.','Chaque vol fait monter la <b>chaleur</b>. 50 : un flic de plus. 75 : plus de flics en civil. 100 : descente, coffre saisi.','Blanchis avec la <b>laverie</b> ou l\'ordinateur du bar. L\'<b>avocat</b> (5 niveaux) calme la chaleur.','Clique sur <b>Chaleur</b> ou <b>Sale</b> en haut à gauche pour l\'explication complète.']],
  ['casino','Le casino',()=>S.meta.wardrobe.includes('costume')||S.stats.casino>0,['Le costume se vend au <b>vestiaire</b>, collé au casino. Le videur exige que tu le <b>portes</b>. Deuxième refus : il appelle la police.','<b>Blackjack</b> : le croupier tire jusqu\'à 17. 21 en 2 cartes : mise x2,5 (gain 3:2). 21 en 3 cartes ou plus : mise x2 (gain 1:1). Croupier aussi à 21 : égalité possible.','<b>Roulette</b> : vert x1,5 (14 cases sur 24), case dorée x5, rouge perdu (9 cases).']],
- ['bar','Le bar et le marché noir',()=>S.owned.bar,['Touche <b>E</b> devant le bar pour <b>entrer</b> : tu te promènes dans la salle.','<b>Comptoir</b> : un verre pour la faim. <b>Ordinateur</b> : marché noir, munitions, comptable, blanchiment et braquage de Déchets Corp.','<b>Armurerie</b> : équipe une arme pour tirer dans la rue (touche G).','Le braquage a lieu <b>la nuit</b>, le butin est versé <b>le lendemain matin</b>.']],
+ ['bar','Le bar et le marché noir',()=>S.owned.bar,['Touche <b>E</b> devant le bar pour <b>entrer</b> : tu te promènes dans la salle.','<b>Comptoir</b> : un verre pour la faim. <b>Ordinateur</b> : marché noir, munitions, comptable, blanchiment et braquage des autres joueurs.','<b>Armurerie</b> : équipe une arme pour tirer dans la rue (touche G).','Le braquage a lieu <b>la nuit</b>, le butin est versé <b>le lendemain matin</b>.']],
  ['repair','Les objets cassés',()=>broken.length>0&&S.stats.trash>=5,['Un objet cassé traîne dans la rue (étincelles autour).','<b>Reste à côté</b> : tu le répares automatiquement, puis il se revend.','La <b>clé à molette</b> de Brico Dédé répare plus vite.']],
  ['fripe','Les tenues',()=>S.meta.wardrobe.length>1,['Tes tenues te suivent <b>dans toutes les villes</b>.','Le <b>costume</b> se vend au vestiaire du casino, les tenues fun chez Fripe & Chic à New York.','Bouton <b>Porter</b> pour changer de look.']],
  ['motors','Les véhicules',()=>!!S.ride||Object.values(S.veh||{}).some(v=>v),['Pigeon Motors (à Paris) : trottinette, scooter, cabriolet. Tu vas <b>beaucoup plus vite</b>.','En véhicule, les baskets ne comptent qu\'<b>à moitié</b>.','Tes véhicules te suivent <b>à vie</b>, dans toutes les villes.']],
@@ -3036,13 +3041,47 @@ async function tipvAct(v){if(TIPV.busy||!VISIT||!VISIT.other)return;const a=Math
   TIPV.busy=true;let r;try{r=await SB.rpc('send_tip',{p_pseudo:o.pseudo,p_amount:a})}catch(e){r={error:e}}TIPV.busy=false;
   if(r.error||r.data!=='ok'){TIPV.msg=r.error?(/send_tip|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;snd('err');return renderPanel()}
   VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;goHome();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
+// ---- Braquer un joueur du classement : mini-jeu de cibles, 5 à 30 % de son argent selon la précision
+const BQ={st:'pick',target:null,res:null,msg:'',busy:false,hits:0,miss:0,n:0,timer:null};
+const BQ_N=15;
+function bqBlock(){if(!S.owned.bar)return 'Il faut posséder le bar';if(!bestArm())return "Achète d'abord une arme au marché noir";if(S.band<1)return 'Il faut au moins un bandit';
+  if(!SB||!LB.ready)return 'Connecte-toi pour braquer les autres joueurs';return ''}
+function bqHTML(){
+  if(BQ.st==='pick'){const R=(LB.rows||[]).filter(r=>!r.is_me&&!r.private);
+    return `<p class="lead">Choisis ta cible. Pendant le casse, des cibles apparaissent : clique dessus sans les rater. Plus tu es précis, plus tu voles : de 5 % (raté) à 30 % (parfait) de l'argent du joueur.</p>`+
+      (LB.rows?(R.length?'<div class="lbt">'+R.map(r=>`<div class="lbr"><span class="rk">#${r.rank}</span><span class="nm"><i class="dot${r.online?' on':''}"></i>${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span><button class="buy sm red lbv" type="button" data-act="braq:go:${lbEsc(r.pseudo)}">Braquer</button></div>`).join('')+'</div>':'<p class="lead">Personne à braquer pour l\'instant.</p>'):'<p class="lead">Chargement du classement…</p>')+
+      (BQ.msg?`<div class="jmsg ko">${lbEsc(BQ.msg)}</div>`:'')+'<p class="foot">Un braquage par heure. Un joueur braqué est protégé 24 h. Les rues privées ne braquent pas et ne se font pas braquer. Ta chaleur monte de 25.</p>'}
+  if(BQ.st==='play')return `<div class="jbar"><span>Cibles</span><div class="bar"><i id="bqp" style="width:0%;background:#ef476f"></i></div><b id="bqs">0 / ${BQ_N}</b></div><div id="bqa" class="bqa" aria-label="Zone de tir"></div><p class="foot" style="text-align:center">Clique sur les cibles avant qu'elles disparaissent. Un clic à côté compte comme un raté.</p>`;
+  if(BQ.st==='send')return '<p class="lead" style="text-align:center">Tes bandits filent avec le butin…</p>';
+  const r=BQ.res;return r&&r.ok?`<div class="tip"><h3>Casse réussi chez ${lbEsc(r.pseudo)} !</h3></div><p class="lead">Précision : ${Math.round(BQ.rate*100)} % · tu voles <b>${String(r.pct).replace('.',',')} %</b> de son argent.</p><div class="big" style="color:#1f9d5c">+${fmt(r.amount)}</div><p class="foot">${lbEsc(r.pseudo)} le découvrira à sa prochaine connexion. Ta chaleur monte !</p><button class="chunky" type="button" data-act="close">Filer</button>`
+    :`<div class="msg ko">${lbEsc(BQ.msg||'Le casse a échoué')}</div><button class="chunky alt" type="button" data-act="close">Fermer</button>`}
+async function bqAct(v,w){if(v==='go'){if(bqBlock())return;BQ.target=w;BQ.msg='';bqStart();return}}
+function bqStart(){BQ.st='play';BQ.hits=0;BQ.miss=0;BQ.n=0;renderPanel();const A=$('bqa');snd('siren');
+  A.addEventListener('pointerdown',e=>{if(e.target.classList.contains('bqt')){e.target.remove();BQ.hits++;snd('shot')}else{BQ.miss++;snd('err')}bqUpd()});
+  const spawn=()=>{if(pid!=='braq'||BQ.st!=='play'||$('panel').hidden){clearInterval(BQ.timer);if(BQ.st==='play')BQ.st='pick';return}
+    if(BQ.n>=BQ_N){clearInterval(BQ.timer);setTimeout(bqEnd,900);return}BQ.n++;const t=document.createElement('button');t.type='button';t.className='bqt';t.textContent='🎯';t.setAttribute('aria-label','Cible');
+    t.style.left=Math.round(6+Math.random()*80)+'%';t.style.top=Math.round(6+Math.random()*74)+'%';A.appendChild(t);
+    const life=Math.max(650,1100-BQ.n*30);setTimeout(()=>{if(t.isConnected){t.remove();BQ.miss++;bqUpd()}},life);bqUpd()};
+  BQ.timer=setInterval(spawn,800);spawn()}
+function bqUpd(){const p=$('bqp'),s2=$('bqs');if(p)p.style.width=Math.round(BQ.n/BQ_N*100)+'%';if(s2)s2.textContent=BQ.hits+' touchées · '+BQ.miss+' ratées'}
+async function bqEnd(){if(pid!=='braq'||BQ.st!=='play')return;BQ.rate=Math.max(0,Math.min(1,BQ.hits/(BQ_N+Math.max(0,BQ.miss-(BQ_N-BQ.hits)))));BQ.st='send';renderPanel();
+  let r;try{r=await SB.rpc('heist_player',{p_pseudo:BQ.target,p_rate:BQ.rate})}catch(e){r={error:e}}const d=r.data;
+  if(r.error||!d||d.error){BQ.res=null;BQ.msg=r.error?(/heist_player|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Le casse a échoué';snd('fail')}
+  else{BQ.res=d;S.cash+=d.amount;S.meta.heists++;S.heat=Math.min(100,S.heat+25);snd('legend');save();updHud()}
+  BQ.st='done';if(pid==='braq')renderPanel()}
+// braquages subis : découverts à la connexion puis toutes les 20 s
+async function claimHeists(login){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_heists')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
+  const R=VISIT?VISIT.saved:S,lost=Math.min(R.cash,d.total);R.cash-=lost;save();updHud();TIPN.push({heist:1,login,items:d.items||[],total:lost,asked:d.total});showTipN()}
+function bqnHTML(n){return `<p class="lead" style="font-size:16px">${n.login?'Pendant ton absence, des bandits ont braqué ta rue !':'Des bandits viennent de braquer ta rue !'}</p>`+
+  n.items.map(i=>`<div class="row"><div class="info"><b>${lbEsc(i.pseudo)}</b><small>a envoyé ses bandits</small></div><div class="gold" style="color:#d62839">-${fmtH(i.amount)}</div></div>`).join('')+
+  `<p class="lead">Argent perdu : <b>${fmtH(n.total)}</b>${n.asked>n.total?' (tu n\'avais pas plus sur toi)':''}. Pour ne plus être une cible, tu peux rendre ta rue privée (Classement › ton compte).</p><button class="chunky" type="button" data-act="close">Grrr…</button>`}
 // pourboires reçus : récupérés à la connexion puis chaque minute
 // à la connexion : « pendant ton absence » ; en jeu : « vient de passer »
 const TIPN=[];
 async function claimTips(login){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_tips')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
   const R=VISIT?VISIT.saved:S;R.cash+=d.total;save();updHud();
   TIPN.push({login,items:d.items&&d.items.length?d.items:(d.from||['Un visiteur']).map(p=>({pseudo:p,amount:d.total/Math.max(1,(d.from||[1]).length)})),total:d.total});showTipN()}
-function showTipN(){if(!TIPN.length||JOB||(!$('panel').hidden&&pid!=='tipn'))return;snd('legend');openPanel('tipn',TIPN.shift())}
+function showTipN(){if(!TIPN.length||JOB||(!$('panel').hidden&&pid!=='tipn'&&pid!=='bqn'))return;const n=TIPN.shift();snd(n.heist?'siren':'legend');openPanel(n.heist?'bqn':'tipn',n)}
 setInterval(showTipN,1500);
 function tipnHTML(n){const one=n.items.length===1,who=n.items.map(i=>`<div class="row"><div class="info"><b>${lbEsc(i.pseudo)}</b><small>${n.login?'est passé dans ta rue':'vient de passer dans ta rue'}</small></div><div class="gold">+${fmtH(i.amount)}</div></div>`).join('');
   return `<p class="lead" style="font-size:16px">${n.login?(one?'Pendant ton absence, quelqu\'un est passé dans ta rue et t\'a laissé un pourboire !':'Pendant ton absence, des visiteurs sont passés dans ta rue et t\'ont laissé des pourboires !'):(one?`<b>${lbEsc(n.items[0].pseudo)}</b> vient de visiter ta rue et t'a laissé un pourboire !`:'Des visiteurs viennent de passer dans ta rue !')}</p>`+who+
@@ -3070,7 +3109,7 @@ async function cloudSync(){const uid=LB.user&&LB.user.id;if(!uid)return false;le
   if(next!==undefined&&local&&!lsSet(BAK(owner),lsGet(KEY))){LB.msg='Impossible de mettre de côté la partie actuelle : stockage du navigateur plein';LB.err=true;lbRedraw();return false}// la partie actuelle est d'abord mise de côté pour son compte
   if(next!==undefined){NOSAVE=true;if(lsSet(KEY,next)&&lsSet(OWNER,uid)){location.reload();return false}
     NOSAVE=false;LB.msg="Impossible de charger ta sauvegarde : ton navigateur bloque le stockage";LB.err=true;lbRedraw();return false}
-  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);claimTips(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
+  lsSet(OWNER,uid);S.meta.name=LB.pseudo;LB.ready=true;await cloudPush();lbSend(true);claimTips(true);claimHeists(true);if(dbOld){LB.msg=dbOld;LB.err=true}lbRedraw();return true}
 function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   let h=`<div class="hd"><span>🏆 Classement</span><button class="chunky" type="button" data-lbo>${LB.user?'Voir tout':'Se connecter'}</button></div>`;
   if(!SB)return h+'<small>Classement indisponible hors connexion</small>';
@@ -3171,7 +3210,7 @@ $('hlvl').addEventListener('click',()=>{if(VISIT||JOB)return;ptab='succes';openP
 setInterval(updLvl,1000);updLvl();
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
-setInterval(()=>{lbSend();cloudPush()},60000);setInterval(()=>claimTips(false),20000);
+setInterval(()=>{lbSend();cloudPush()},60000);setInterval(()=>{claimTips(false);claimHeists(false)},20000);
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
 bootLoading();
 updHud();

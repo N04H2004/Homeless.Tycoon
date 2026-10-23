@@ -300,3 +300,57 @@ begin
 end $$;
 revoke all on function public.claim_tips() from public, anon;
 grant execute on function public.claim_tips() to authenticated;
+
+-- ============ Braquer un joueur du classement ============
+-- Mini-jeu de tir côté jeu : le taux de réussite (0 à 1) donne 5 à 30 % de l'argent de la cible.
+-- Le voleur : 1 braquage par heure. La cible : protégée 24 h après s'être fait braquer.
+-- Une rue privée ne peut ni braquer ni être braquée. La cible perd l'argent à sa prochaine connexion.
+create table if not exists public.heists (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  from_id uuid references public.profiles (id) on delete set null,
+  to_id uuid not null references public.profiles (id) on delete cascade,
+  pct double precision not null,
+  amount double precision not null check (amount >= 0),
+  claimed boolean not null default false
+);
+alter table public.heists enable row level security;
+
+create or replace function public.heist_player(p_pseudo text, p_rate double precision)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); pr record; c double precision; r double precision; pct double precision; amt double precision;
+begin
+  if uid is null then return jsonb_build_object('error', 'Connecte-toi pour braquer'); end if;
+  if exists (select 1 from public.profiles where id = uid and private) then return jsonb_build_object('error', 'Ta rue est privée : impossible de braquer les autres'); end if;
+  select id, pseudo, private into pr from public.profiles where lower(pseudo) = lower(p_pseudo);
+  if not found then return jsonb_build_object('error', 'Joueur introuvable'); end if;
+  if pr.id = uid then return jsonb_build_object('error', 'Tu ne peux pas te braquer toi-même'); end if;
+  if pr.private then return jsonb_build_object('error', pr.pseudo || ' a une rue privée'); end if;
+  if exists (select 1 from public.heists where from_id = uid and created_at > now() - interval '1 hour') then
+    return jsonb_build_object('error', 'Tes bandits se font discrets : un braquage par heure'); end if;
+  if exists (select 1 from public.heists where to_id = pr.id and created_at > now() - interval '24 hours') then
+    return jsonb_build_object('error', pr.pseudo || ' s''est déjà fait braquer aujourd''hui'); end if;
+  r := least(greatest(coalesce(nullif(p_rate, 'NaN'), 0), 0), 1);
+  pct := round((5 + 25 * r)::numeric, 1);
+  select coalesce((data ->> 'cash')::double precision, 0) into c from public.saves where user_id = pr.id;
+  amt := floor(greatest(coalesce(c, 0), 0) * pct / 100);
+  if amt < 1 then return jsonb_build_object('error', pr.pseudo || ' n''a rien à voler'); end if;
+  insert into public.heists (from_id, to_id, pct, amount) values (uid, pr.id, pct, amt);
+  return jsonb_build_object('ok', true, 'pseudo', pr.pseudo, 'pct', pct, 'amount', amt);
+end $$;
+revoke all on function public.heist_player(text, double precision) from public, anon;
+grant execute on function public.heist_player(text, double precision) to authenticated;
+
+-- la victime découvre ses braquages (une seule fois chacun)
+create or replace function public.claim_heists()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); r jsonb;
+begin
+  if uid is null then return null; end if;
+  with c as (update public.heists set claimed = true where to_id = uid and not claimed returning from_id, amount),
+       g as (select coalesce(p.pseudo, 'Un inconnu') as pseudo, sum(c.amount) as amount from c left join public.profiles p on p.id = c.from_id group by 1)
+  select jsonb_build_object('total', coalesce(sum(g.amount), 0), 'items', coalesce(jsonb_agg(jsonb_build_object('pseudo', g.pseudo, 'amount', g.amount)), '[]'::jsonb)) into r from g;
+  return r;
+end $$;
+revoke all on function public.claim_heists() from public, anon;
+grant execute on function public.claim_heists() to authenticated;

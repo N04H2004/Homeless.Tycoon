@@ -1292,16 +1292,16 @@ function update(dt){
 }
 // ================= CDD et mini-jeux =================
 const JOBS={
- caisse:{n:'Caissier au supermarché',d:'Scanne les articles et rends la monnaie juste. 75 s de service',hd:'#ff8fa3'},
+ caisse:{n:'Caissier au supermarché',d:'Scanne les articles et rends la monnaie juste. 40 s de service',hd:'#ff8fa3'},
  bar:{n:'Barman au Pigeon Borgne',d:'Tire la bière pile au niveau demandé, sans faire déborder. 40 s de service',hd:'#ff70a6'},
- brico:{n:'Vendeur chez Brico Dédé',d:'Trouve le bon outil pour chaque client. 75 s de service',hd:'#f4a261'},
- lavage:{n:'Laveur chez Pigeon Motors',d:'Fais briller les voitures avant que le client s\'impatiente. 75 s de service',hd:'#118ab2'},
- laverie:{n:'Trieur à la laverie',d:'Range chaque vêtement dans la bonne machine. 75 s de service',hd:'#4cc9f0'},
- style:{n:'Styliste chez Fripe & Chic',d:'Compose le look demandé : haut, bas et chaussures. 75 s de service',hd:'#ff8fab'},
- meca:{n:'Mécano au Garage Pneu-Pneu',d:'Trouve la pièce en panne à partir des symptômes. 75 s de service',hd:'#8d99ae'},
- coupe:{n:"Coiffeur chez Tif'Tycoon",d:'Reproduis la coupe de la photo. 75 s de service',hd:'#f72585'},
- karaoke:{n:'Animateur karaoké',d:'Chante en rythme sans fausse note. 75 s de service',hd:'#7209b7'},
- kebab:{n:'Commis chez Momo',d:'Prépare les kebabs exactement comme le client les demande. 75 s de service, un kebab offert à la fin',hd:'#f77f00'},
+ brico:{n:'Vendeur chez Brico Dédé',d:'Trouve le bon outil pour chaque client. 40 s de service',hd:'#f4a261'},
+ lavage:{n:'Laveur chez Pigeon Motors',d:'Fais briller les voitures avant que le client s\'impatiente. 40 s de service',hd:'#118ab2'},
+ laverie:{n:'Trieur à la laverie',d:'Range chaque vêtement dans la bonne machine. 40 s de service',hd:'#4cc9f0'},
+ style:{n:'Styliste chez Fripe & Chic',d:'Compose le look demandé : haut, bas et chaussures. 40 s de service',hd:'#ff8fab'},
+ meca:{n:'Mécano au Garage Pneu-Pneu',d:'Trouve la pièce en panne à partir des symptômes. 40 s de service',hd:'#8d99ae'},
+ coupe:{n:"Coiffeur chez Tif'Tycoon",d:'Reproduis la coupe de la photo. 40 s de service',hd:'#f72585'},
+ karaoke:{n:'Animateur karaoké',d:'Chante en rythme sans fausse note. 40 s de service',hd:'#7209b7'},
+ kebab:{n:'Commis chez Momo',d:'Prépare les kebabs exactement comme le client les demande. 40 s de service, un kebab offert à la fin',hd:'#f77f00'},
 };
 const ING={pain:['Pain','#e9c46a'],viande:['Viande','#8d4a24',1],salade:['Salade','#80b918'],tomate:['Tomate','#e63946',1],oignon:['Oignon','#f1e3f3'],blanche:['Sauce blanche','#ffffff'],samourai:['Samouraï','#f77f00'],harissa:['Harissa','#9d0208',1]};
 const ART={pain:['le pain','de pain'],viande:['la viande','de viande'],salade:['la salade','de salade'],tomate:['la tomate','de tomate'],oignon:["l'oignon","d'oignon"],blanche:['la sauce blanche','de sauce blanche'],samourai:['la sauce samouraï','de sauce samouraï'],harissa:['la harissa','de harissa']};
@@ -1327,7 +1327,7 @@ const SKINS_F={
 };
 const FSK=()=>SKINS_F[CK()]||SKINS_F.paris;
 function applyFoodSkin(){const f=FSK();for(const k in f.ing)ING[k]=f.ing[k];for(const k in f.art)ART[k]=f.art[k];for(const k in f.sauce)SAUCE[k]=f.sauce[k];
-  JOBS.kebab.n=f.job;JOBS.kebab.d='Prépare les '+f.dish+' exactement comme le client les demande. 75 s de service, un '+f.dish+' offert à la fin';KB_LINES.length=0;KB_LINES.push(...f.lines)}
+  JOBS.kebab.n=f.job;JOBS.kebab.d='Prépare les '+f.dish+' exactement comme le client les demande. 40 s de service, un '+f.dish+' offert à la fin';KB_LINES.length=0;KB_LINES.push(...f.lines)}
 const KB_LINES=['Wesh, un kebab {k} !','Bonjour jeune homme, je voudrais un kebab {k}.',"Vite, j'ai pas le temps : kebab {k} !",'Pour moi ce sera un kebab {k}, merci.','Un kebab {k}. Et que ça saute !'];
 try{applyFoodSkin()}catch(e){}
 const GROCERY=[['Baguette',110],['Lait',90],['Pâtes',130],['Chips',240],['Camembert',270],['Pizza surgelée',350],['Croquettes pour chat',680],['Papier toilette x12',560],['Mousse au chocolat',190],['Jus d\'orange',220],['Bananes',160],['Café moulu',420],['Œufs x6',230],['Lessive',890]];
@@ -1506,7 +1506,7 @@ function bkUpdate(dt){if(!BK.run)return;BK.t+=dt/5;const t=Math.min(1,BK.t),e=t<
     if(pid==='bookie')renderPanel();updHud()}}
 
 function startJob(k){if(!jobOk(k)||S.cdd[k]===dayN())return;S.cdd[k]=dayN();S.stats.cdd++;
-  const jd=k==='bar'?40:75;JOB={k,t:jd,dur:jd,earn:0,served:0,fail:0,msg:'',mc:'',cust:null};newCust();pid='job';snd('buy')}
+  JOB={k,t:40,dur:40,earn:0,served:0,fail:0,msg:'',mc:'',cust:null};newCust();pid='job';snd('buy')}
 function newCust(){const J=JOB,name=pick(CNAMES),wt=J.served+J.fail>0?(J.k==='bar'?1:1.8):0;
   if(MG[J.k]){J.cust=mgCust(J,name,wt);return}
   if(J.k==='kebab'){const veg=['salade','tomate','oignon'].filter(()=>Math.random()<.6),sauce=pick(Object.keys(SAUCE)),miss=['salade','tomate','oignon'].filter(v=>!veg.includes(v));

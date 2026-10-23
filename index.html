@@ -42,7 +42,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #clouds.shut{background:rgba(191,234,255,1)}
 #clouds .cl{position:absolute;height:auto;transform:translateX(calc(var(--s)*130vw));transition:transform .75s cubic-bezier(.6,.05,.3,1)}
 #clouds.shut .cl{transform:translateX(0)}
-#cloudt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6) rotate(-3deg);font-family:var(--display);font-size:clamp(26px,5vw,46px);line-height:1.1;color:var(--ink);text-align:center;opacity:0;transition:opacity .3s,transform .45s cubic-bezier(.2,1.6,.4,1);max-width:90%;background:var(--sun);border:5px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink);padding:14px 24px;z-index:2}
+#cloudt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6) rotate(-3deg);font-family:var(--display);font-size:clamp(26px,5vw,46px);line-height:1.1;color:var(--ink);text-align:center;opacity:0;transition:opacity .3s,transform .45s cubic-bezier(.2,1.6,.4,1);width:max-content;max-width:min(560px,86vw);box-sizing:border-box;background:var(--sun);border:5px solid var(--ink);border-radius:20px;box-shadow:0 7px 0 var(--ink);padding:14px 24px;z-index:2}
 #clouds.shut #cloudt{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}
 #dmg{position:absolute;inset:0;z-index:58;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(214,40,57,.15) 30%,rgba(214,40,57,.75) 100%)}
 #dmg.on{animation:dmgf .6s ease-out}@keyframes dmgf{0%{opacity:1}100%{opacity:0}}

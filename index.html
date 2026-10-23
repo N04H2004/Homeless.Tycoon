@@ -3042,32 +3042,46 @@ async function tipvAct(v){if(TIPV.busy||!VISIT||!VISIT.other)return;const a=Math
   if(r.error||r.data!=='ok'){TIPV.msg=r.error?(/send_tip|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;snd('err');return renderPanel()}
   VISIT.saved.cash-=a;snd('coin');const nm=o.pseudo;goHome();setTimeout(()=>toast('Tu as laissé '+fmt(a)+' de pourboire à '+nm+' !'),400)}
 // ---- Braquer un joueur du classement : mini-jeu de cibles, 5 à 30 % de son argent selon la précision
-const BQ={st:'pick',target:null,res:null,msg:'',busy:false,hits:0,miss:0,n:0,timer:null};
+const BQ={st:'pick',target:null,res:null,msg:'',busy:false,hits:0,miss:0,n:0,timer:null,pmax:30,nb:1};
+// difficulté 0 (cible aussi riche que toi) à 1 (10 fois plus riche) : cibles jusqu'à 2 fois plus rapides et plus petites
+const bqDiff=()=>Math.max(0,Math.min(1,(30-BQ.pmax)/25)),bqForgive=()=>.5*(BQ.nb-1);
 const BQ_N=15;
 function bqBlock(){if(!S.owned.bar)return 'Il faut posséder le bar';if(!bestArm())return "Achète d'abord une arme au marché noir";if(S.band<1)return 'Il faut au moins un bandit';
   if(!SB||!LB.ready)return 'Connecte-toi pour braquer les autres joueurs';return ''}
 function bqHTML(){
   if(BQ.st==='pick'){const R=(LB.rows||[]).filter(r=>!r.is_me&&!r.private);
-    return `<p class="lead">Choisis ta cible. Pendant le casse, des cibles apparaissent : clique dessus sans les rater. Plus tu es précis, plus tu voles : de 5 % (raté) à 30 % (parfait) de l'argent du joueur.</p>`+
+    return `<p class="lead">Choisis ta cible. Pendant le casse, des cibles apparaissent : clique dessus sans les rater. Plus tu es précis, plus tu voles (5 % à 30 % de son argent). Plus la cible est riche par rapport à toi, plus c'est dur et moins tu peux prendre.</p>`+
       (LB.rows?(R.length?'<div class="lbt">'+R.map(r=>`<div class="lbr"><span class="rk">#${r.rank}</span><span class="nm"><i class="dot${r.online?' on':''}"></i>${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span><button class="buy sm red lbv" type="button" data-act="braq:go:${lbEsc(r.pseudo)}">Braquer</button></div>`).join('')+'</div>':'<p class="lead">Personne à braquer pour l\'instant.</p>'):'<p class="lead">Chargement du classement…</p>')+
-      (BQ.msg?`<div class="jmsg ko">${lbEsc(BQ.msg)}</div>`:'')+'<p class="foot">Un braquage par heure. Un joueur braqué est protégé 24 h. Les rues privées ne braquent pas et ne se font pas braquer. Ta chaleur monte de 25.</p>'}
+      (BQ.msg?`<div class="jmsg ko">${lbEsc(BQ.msg)}</div>`:'')+'<p class="foot">Un braquage par heure. Un joueur braqué est protégé 24 h. Les rues privées ne braquent pas et ne se font pas braquer. Ton butin ne dépasse jamais l\'argent que tu as sur toi.</p>'}
+  if(BQ.st==='prep'){const d=bqDiff(),mx=Math.min(5,S.band);
+    return `<div class="tip"><h3>Cible : ${lbEsc(BQ.target)}</h3></div><div class="row" style="display:block"><b>Butin maximum : ${String(BQ.pmax).replace('.',',')} % de son argent</b><small style="display:block">${d<.05?'Elle n\'est pas plus riche que toi : cibles à vitesse normale.':d>.95?'Elle est au moins 10 fois plus riche que toi : cibles 2 fois plus rapides et plus petites.':'Elle est plus riche que toi : cibles '+String(Math.round((1/(1-.5*d))*10)/10).replace('.',',')+' fois plus rapides.'} Minimum : 5 % si tu rates tout. Plafond : ton propre argent.</small></div>`+
+      `<div class="sec">Bandits sur le coup · chacun en plus pardonne 0,5 raté · +10 de chaleur par bandit</div><div class="tabs">`+Array.from({length:mx},(_,i)=>`<button class="tab${BQ.nb===i+1?' on':''}" type="button" data-act="braq:nb:${i+1}">${i+1}</button>`).join('')+'</div>'+
+      `<div class="bets"><button class="chunky alt" type="button" data-act="braq:back">Changer de cible</button><button class="chunky" type="button" data-act="braq:start">Lancer le casse</button></div>`}
   if(BQ.st==='play')return `<div class="jbar"><span>Cibles</span><div class="bar"><i id="bqp" style="width:0%;background:#ef476f"></i></div><b id="bqs">0 / ${BQ_N}</b></div><div id="bqa" class="bqa" aria-label="Zone de tir"></div><p class="foot" style="text-align:center">Clique sur les cibles avant qu'elles disparaissent. Un clic à côté compte comme un raté.</p>`;
   if(BQ.st==='send')return '<p class="lead" style="text-align:center">Tes bandits filent avec le butin…</p>';
-  const r=BQ.res;return r&&r.ok?`<div class="tip"><h3>Casse réussi chez ${lbEsc(r.pseudo)} !</h3></div><p class="lead">Précision : ${Math.round(BQ.rate*100)} % · tu voles <b>${String(r.pct).replace('.',',')} %</b> de son argent.</p><div class="big" style="color:#1f9d5c">+${fmt(r.amount)}</div><p class="foot">${lbEsc(r.pseudo)} le découvrira à sa prochaine connexion. Ta chaleur monte !</p><button class="chunky" type="button" data-act="close">Filer</button>`
+  const r=BQ.res;return r&&r.ok?`<div class="tip"><h3>Casse réussi chez ${lbEsc(r.pseudo)} !</h3></div><p class="lead">Précision : ${Math.round(BQ.rate*100)} % · tu voles <b>${String(r.pct).replace('.',',')} %</b> de son argent (maximum ${String(r.pctmax??BQ.pmax).replace('.',',')} %).${r.capped?' Butin plafonné à l\'argent que tu avais sur toi.':''}</p><div class="big" style="color:#1f9d5c">+${fmt(r.amount)}</div><p class="foot">${lbEsc(r.pseudo)} le découvrira à sa prochaine connexion. Ta chaleur monte !</p><button class="chunky" type="button" data-act="close">Filer</button>`
     :`<div class="msg ko">${lbEsc(BQ.msg||'Le casse a échoué')}</div><button class="chunky alt" type="button" data-act="close">Fermer</button>`}
-async function bqAct(v,w){if(v==='go'){if(bqBlock())return;BQ.target=w;BQ.msg='';bqStart();return}}
+async function bqAct(v,w){if(bqBlock())return;
+  if(v==='go'){BQ.target=w;BQ.msg='';let r;try{r=await SB.rpc('heist_preview',{p_pseudo:w})}catch(e){r={error:e}}const d=r.data;
+    if(r.error||!d||d.error){BQ.msg=r.error?(/heist_preview|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Cible indisponible';snd('err');return renderPanel()}
+    BQ.pmax=+d.pctmax||5;BQ.nb=Math.min(5,Math.max(1,S.band));BQ.st='prep';return renderPanel()}
+  if(v==='nb'){BQ.nb=Math.max(1,Math.min(5,S.band,+w||1));return renderPanel()}
+  if(v==='back'){BQ.st='pick';return renderPanel()}
+  if(v==='start')bqStart()}
 function bqStart(){BQ.st='play';BQ.hits=0;BQ.miss=0;BQ.n=0;renderPanel();const A=$('bqa');snd('siren');
   A.addEventListener('pointerdown',e=>{if(e.target.classList.contains('bqt')){e.target.remove();BQ.hits++;snd('shot')}else{BQ.miss++;snd('err')}bqUpd()});
   const spawn=()=>{if(pid!=='braq'||BQ.st!=='play'||$('panel').hidden){clearInterval(BQ.timer);if(BQ.st==='play')BQ.st='pick';return}
     if(BQ.n>=BQ_N){clearInterval(BQ.timer);setTimeout(bqEnd,900);return}BQ.n++;const t=document.createElement('button');t.type='button';t.className='bqt';t.textContent='🎯';t.setAttribute('aria-label','Cible');
+    const df=bqDiff(),sz=Math.round(52*(1-.3*df));t.style.width=t.style.height=sz+'px';t.style.fontSize=Math.round(sz*.55)+'px';
     t.style.left=Math.round(6+Math.random()*80)+'%';t.style.top=Math.round(6+Math.random()*74)+'%';A.appendChild(t);
-    const life=Math.max(650,1100-BQ.n*30);setTimeout(()=>{if(t.isConnected){t.remove();BQ.miss++;bqUpd()}},life);bqUpd()};
-  BQ.timer=setInterval(spawn,800);spawn()}
-function bqUpd(){const p=$('bqp'),s2=$('bqs');if(p)p.style.width=Math.round(BQ.n/BQ_N*100)+'%';if(s2)s2.textContent=BQ.hits+' touchées · '+BQ.miss+' ratées'}
-async function bqEnd(){if(pid!=='braq'||BQ.st!=='play')return;BQ.rate=Math.max(0,Math.min(1,BQ.hits/(BQ_N+Math.max(0,BQ.miss-(BQ_N-BQ.hits)))));BQ.st='send';renderPanel();
+    const life=Math.max(650,1100-BQ.n*30)*(1-.5*df);setTimeout(()=>{if(t.isConnected){t.remove();BQ.miss++;bqUpd()}},life);bqUpd()};
+  BQ.timer=setInterval(spawn,Math.round(800*(1-.35*bqDiff())));spawn()}
+function bqUpd(){const p=$('bqp'),s2=$('bqs');if(p)p.style.width=Math.round(BQ.n/BQ_N*100)+'%';if(s2)s2.textContent=BQ.hits+' touchées · '+BQ.miss+' ratées'+(bqForgive()>0?' (dont '+String(Math.min(BQ.miss,bqForgive())).replace('.',',')+' pardonnées)':'')}
+async function bqEnd(){if(pid!=='braq'||BQ.st!=='play')return;BQ.rate=Math.max(0,Math.min(1,1-Math.max(0,BQ.miss-bqForgive())/BQ_N));BQ.st='send';renderPanel();
+  await cloudPush();// le plafond « ton argent » se calcule sur ta sauvegarde en ligne
   let r;try{r=await SB.rpc('heist_player',{p_pseudo:BQ.target,p_rate:BQ.rate})}catch(e){r={error:e}}const d=r.data;
   if(r.error||!d||d.error){BQ.res=null;BQ.msg=r.error?(/heist_player|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Le casse a échoué';snd('fail')}
-  else{BQ.res=d;S.cash+=d.amount;S.meta.heists++;S.heat=Math.min(100,S.heat+25);snd('legend');save();updHud()}
+  else{BQ.res=d;S.cash+=d.amount;S.meta.heists++;S.heat=Math.min(100,S.heat+10*BQ.nb);snd('legend');save();updHud()}
   BQ.st='done';if(pid==='braq')renderPanel()}
 // braquages subis : découverts à la connexion puis toutes les 20 s
 async function claimHeists(login){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_heists')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;

@@ -302,7 +302,8 @@ revoke all on function public.claim_tips() from public, anon;
 grant execute on function public.claim_tips() to authenticated;
 
 -- ============ Braquer un joueur du classement ============
--- Mini-jeu de tir côté jeu : le taux de réussite (0 à 1) donne 5 à 30 % de l'argent de la cible.
+-- Mini-jeu de tir côté jeu : le taux de réussite (0 à 1) donne de 5 % au butin maximum (30 % à 5 % selon la richesse),
+-- sans jamais dépasser l'argent du voleur.
 -- Le voleur : 1 braquage par heure. La cible : protégée 24 h après s'être fait braquer.
 -- Une rue privée ne peut ni braquer ni être braquée. La cible perd l'argent à sa prochaine connexion.
 create table if not exists public.heists (
@@ -316,9 +317,29 @@ create table if not exists public.heists (
 );
 alter table public.heists enable row level security;
 
+-- butin maximum selon la richesse : 30 % si la cible a autant ou moins que toi, 5 % si elle a 10 fois plus (échelle logarithmique)
+create or replace function public.heist_pctmax(p_victim double precision, p_thief double precision)
+returns double precision language sql immutable as $$
+  select 30 - 25 * least(greatest(log(greatest(coalesce(p_victim, 0), 1) / greatest(coalesce(p_thief, 0), 1)), 0), 1)
+$$;
+
+create or replace function public.heist_preview(p_pseudo text)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); pr record; c double precision; mine double precision;
+begin
+  if uid is null then return jsonb_build_object('error', 'Connecte-toi pour braquer'); end if;
+  select id, pseudo, private into pr from public.profiles where lower(pseudo) = lower(p_pseudo);
+  if not found or pr.private then return jsonb_build_object('error', 'Cible indisponible'); end if;
+  select coalesce((data ->> 'cash')::double precision, 0) into c from public.saves where user_id = pr.id;
+  select coalesce((data ->> 'cash')::double precision, 0) into mine from public.saves where user_id = uid;
+  return jsonb_build_object('pseudo', pr.pseudo, 'pctmax', round(public.heist_pctmax(c, mine)::numeric, 1));
+end $$;
+revoke all on function public.heist_preview(text) from public, anon;
+grant execute on function public.heist_preview(text) to authenticated;
+
 create or replace function public.heist_player(p_pseudo text, p_rate double precision)
 returns jsonb language plpgsql security definer set search_path = '' as $$
-declare uid uuid := auth.uid(); pr record; c double precision; r double precision; pct double precision; amt double precision;
+declare uid uuid := auth.uid(); pr record; c double precision; mine double precision; r double precision; pmax double precision; pct double precision; amt double precision;
 begin
   if uid is null then return jsonb_build_object('error', 'Connecte-toi pour braquer'); end if;
   if exists (select 1 from public.profiles where id = uid and private) then return jsonb_build_object('error', 'Ta rue est privée : impossible de braquer les autres'); end if;
@@ -331,12 +352,15 @@ begin
   if exists (select 1 from public.heists where to_id = pr.id and created_at > now() - interval '24 hours') then
     return jsonb_build_object('error', pr.pseudo || ' s''est déjà fait braquer aujourd''hui'); end if;
   r := least(greatest(coalesce(nullif(p_rate, 'NaN'), 0), 0), 1);
-  pct := round((5 + 25 * r)::numeric, 1);
   select coalesce((data ->> 'cash')::double precision, 0) into c from public.saves where user_id = pr.id;
-  amt := floor(greatest(coalesce(c, 0), 0) * pct / 100);
-  if amt < 1 then return jsonb_build_object('error', pr.pseudo || ' n''a rien à voler'); end if;
+  select coalesce((data ->> 'cash')::double precision, 0) into mine from public.saves where user_id = uid;
+  c := greatest(coalesce(c, 0), 0); mine := greatest(coalesce(mine, 0), 0);
+  pmax := public.heist_pctmax(c, mine);
+  pct := round((5 + (pmax - 5) * r)::numeric, 1);
+  amt := least(floor(c * pct / 100), floor(mine));  -- jamais plus que l'argent du voleur
+  if amt < 1 then return jsonb_build_object('error', case when floor(c * pct / 100) < 1 then pr.pseudo || ' n''a rien à voler' else 'Ton butin est plafonné à ton propre argent : tu n''as rien sur toi' end); end if;
   insert into public.heists (from_id, to_id, pct, amount) values (uid, pr.id, pct, amt);
-  return jsonb_build_object('ok', true, 'pseudo', pr.pseudo, 'pct', pct, 'amount', amt);
+  return jsonb_build_object('ok', true, 'pseudo', pr.pseudo, 'pct', pct, 'pctmax', round(pmax::numeric, 1), 'amount', amt, 'capped', amt < floor(c * pct / 100));
 end $$;
 revoke all on function public.heist_player(text, double precision) from public, anon;
 grant execute on function public.heist_player(text, double precision) to authenticated;

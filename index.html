@@ -960,8 +960,13 @@ const OBJ=[
 function checkObj(){
   if(VISIT)return;
   const n=OBJ.filter(o=>o[2]()).length;
-  if(n>S.done){S.done=n;const nx=OBJ.find(o=>!o[2]());toast(nx?'Objectif réussi ! Prochaine phase : '+nx[0]:'Tous les objectifs sont faits. Vise Tokyo !')}
+  const sc=tutoOn()?null:stepCur();
+  if(n>S.done){S.done=n;const nx=OBJ.find(o=>!o[2]());if(!sc)toast(nx?'Objectif réussi ! Prochaine phase : '+nx[0]:'Tous les objectifs sont faits. Vise Tokyo !')}
   const nx=OBJ.find(o=>!o[2]());
+  // tant qu'il reste des étapes dans la ville, la carte montre l'étape en cours
+  if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+sc.x.w,gp=$('goalp');if($('goalt').textContent!==t)$('goalt').textContent=t;if(gp.hidden)gp.hidden=false;
+    $('goalh').textContent='Étape '+(sc.i+1)+' / '+L.length+' · '+CITY().n;$('goalpb').style.width=Math.round(sc.i/L.length*100)+'%';
+    $('goalps').textContent='Ensuite : '+fmt(20000)+' gagnés pour la ville suivante ('+fmt(S.total)+')';return}
   const early=S.total<20000&&!tutoOn(),gp=$('goalp');if(gp.hidden===early)gp.hidden=!early;
   if(early){const a=advice(),t=a;if($('goalt').textContent!==t)$('goalt').textContent=t;
     $('goalh').textContent='Priorité · '+CITY().n+' · '+(isNight()?'Nuit':'Jour');
@@ -1020,24 +1025,38 @@ const ACH=[
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
 const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
-const FEAT=[
- ['Acheter un outil chez Brico Dédé',()=>Object.values(S.up).some(v=>v>0)],
- ['Installer un distributeur de boissons',()=>S.distrib>=1],
- ['Acheter le petit local (QG)',()=>S.local],
- ['Installer le frigo connecté',()=>S.frigo],
- ['Embaucher un employé',()=>S.emp>=1],
- ['Engager le manager',()=>S.manager],
- ['Racheter une boutique de la rue',()=>Object.values(S.shops).some(v=>v>0)],
- ['Acheter un véhicule chez Pigeon Motors',()=>Object.values(S.veh).some(v=>v)],
- ['Acheter une tenue au vestiaire',()=>S.meta.wardrobe.length>=2],
- ['Jouer au casino',()=>S.stats.casino>=1],
- ['Acheter une action en Bourse',()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0)],
- ['Faire chaque CDD de la rue',()=>tutoJobs().every(j=>j.ok)],
- ['Racheter le bar Le Pigeon Borgne',()=>!!S.owned.bar,1],
- ['Recruter un bandit',()=>S.band>=1,1],
+// étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
+// et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
+const STEPS=[
+ {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
+ {k:'distrib',n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
+ {k:'outil',n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
+ {k:'veh',n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : la trottinette est la moins chère.',acts:['veh:']},
+ {k:'local',n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
+ {k:'frigo',n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
+ {k:'emp',n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
+ {k:'manager',n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
+ {k:'tenue',n:'Acheter une tenue au vestiaire',ok:()=>S.meta.wardrobe.length>=2,tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
+ {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
+ {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'shop',n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
+ {k:'bar',c:1,n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
+ {k:'band',c:1,n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
 ];
-const featList=ci=>FEAT.filter(f=>(f[2]||0)<=ci).map(([n,f])=>{let ok=false;try{ok=!!f()}catch(e){}return [n,ok]});
+const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci);
+const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
+// une étape est ouverte si elle est déjà faite ou si toutes les précédentes le sont
+function stepState(){let open=true;return stepsFor(CI()).map((x,i)=>{const d=stepDone(x),o=d||open;if(!d)open=false;return {x,i,d,o}})}
+const stepCur=()=>stepState().find(e=>!e.d);
+function lockOf(act){if(VISIT||!act)return null;const st=stepState();for(const e of st)if(!e.o&&e.x.acts&&e.x.acts.some(p=>p.endsWith(':')?act.startsWith(p):act===p))return e;return null}
+const lockByKey=k=>{const e=stepState().find(e=>e.x.k===k);return e&&!e.o?e:null};
+const lockText=e=>{const c=stepCur();return `🔒 Étape ${e.i+1} : d'abord « ${c?c.x.n:''} »`};
+const featList=ci=>stepsFor(ci).map(x=>[x.n,stepDone(x)]);
 const featMiss=ci=>featList(ci).filter(f=>!f[1]);
+function stepHTML(i){const L=stepsFor(CI());
+  if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné 20 000 ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
+  const x=L[i];return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${x.w}</p>`+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}
+
 function checkAch(){for(const [k,n,,f] of ACH){if(S.meta.ach[k])continue;try{if(f()){S.meta.ach[k]=Date.now();toast('Succès débloqué : '+n);snd('ach')}}catch(e){}}}
 
 // ================= Jour, nuit, événements =================
@@ -1728,7 +1747,7 @@ function doAct(){
   if(s==='feed'){const p=feedTarget,c=C(1);if(S.cash<c){snd('err');return}S.cash-=c;p.love=6;S.meta.fed++;float(p.x,p.y-30,'♥','#ef476f');snd('feed');
     if(Math.random()<.08){earn(C(20),p.x,p.y-50,'#ffd23f');say('Il m\'a rapporté une pièce !')}return}
   if(s==='rival'&&S.rivalBought)return openPanel('biz');
-  if(s==='casino'){
+  if(s==='casino'){const L=lockByKey('casino');if(L){toast(lockText(L));snd('err');return}
     if(!hasCostume()){casWarn++;
       if(casWarn>=2){casWarn=0;callSquad('Le videur a appelé la police !',.1,true);
         S.heat=Math.min(100,S.heat+5);snd('siren');say('Oups, le videur a appelé les flics !');toast('Le videur a appelé la police ! Cours !');return}}
@@ -2064,8 +2083,8 @@ function renderPanel(){
         `<p class="lead">${ib('prestige')} Ouvre une filiale à <b>${nx.n}</b> (${nx.cur}, gains x${String(nx.m).replace('.',',')}). Ta rue de ${CITY().n} n'est pas perdue : elle passe <b>en gérance</b> et continue de tourner à 20 % (environ +${fmt2(nr*.2)}/s vers la trésorerie de ta holding, à convertir en PigeonCoin).</p>`)+
         `<p class="lead">Tu repars aussi avec ton Héritage : ${HER.filter(([k])=>S.meta.her[k]).map(x=>x[1].toLowerCase()).join(', ')||'rien pour l\'instant (frigo, manager, trottinette à débloquer)'}.</p>`+
         `<div class="row"><div class="info"><b>Pigeons d'Or</b><small>Tu en as ${S.meta.gold}. Cette ville t'en rapporterait ${g} de plus.</small></div><div class="gold">${S.meta.gold}</div></div>`+
-        (last?'':`<div class="sec">Pour ouvrir ${nx.n} · ${req.length-miss.length} / ${req.length}</div><p class="lead">Essaie <b>toutes les fonctionnalités de ${CITY().n}</b>, une fois chacune suffit (pas besoin de tout améliorer) :</p>`+
-          req.map(([n,ok])=>`<div class="obj${ok?' ok':''}"><span class="ck">${ok?'✓':''}</span><span>${n}</span></div>`).join(''))+
+        (last?'':`<div class="sec">Pour ouvrir ${nx.n} · ${req.length-miss.length} / ${req.length}</div><p class="lead">Fais <b>toutes les étapes de ${CITY().n}</b> dans l'ordre, une fois chacune suffit (pas besoin de tout améliorer) :</p>`+
+          stepState().map(e=>`<div class="obj${e.d?' ok':''}" style="${e.o?'':'opacity:.5'}"><span class="ck">${e.d?'✓':e.o?'':'🔒'}</span><span>${e.i+1}. ${e.x.n}</span></div>`).join(''))+
         `<button class="chunky" type="button" data-act="prestige" ${g>=1&&!miss.length?'':'disabled'}>${miss.length?'Encore '+miss.length+' fonctionnalité'+(miss.length>1?'s':'')+' à essayer':g<1?'Fais grimper le total gagné dans cette ville':last?'Encaisser · +'+g+" Pigeon"+(g>1?'s':'')+" d'Or":'Mettre '+CITY().n+' en gérance et ouvrir '+nx.n+' · +'+g+" Pigeons d'Or"}</button>`+
         '<div class="sec">Bonus permanents</div>'+
         PERKS.map(p=>{const l=S.meta.perk[p.k],c=l+1,mx=l>=p.max;return `<div class="row"><div class="info"><b>${p.n}</b><span class="lvl">niv. ${l}</span><small>${p.d}</small></div><button class="buy gold" type="button" data-act="perk:${p.k}" ${mx||S.meta.gold<c?'disabled':''}>${mx?'MAX':c+' P. d\'Or'}</button></div>`}).join('')+
@@ -2091,7 +2110,10 @@ function renderPanel(){
     h=`<p class="lead">Tu t'es évanoui sur le trottoir. Pendant ta sieste, les pigeons t'ont piqué ${fmt(parg||0)}.</p><p class="lead">Pense à manger et à passer à la pharmacie quand ta vie baisse.</p><button class="chunky" type="button" data-act="close">Je me relève</button>`;}
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
   if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
+  if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
+  if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
+  for(const b of $('pbody').querySelectorAll('[data-act]')){const L=lockOf(b.dataset.act);if(L){b.disabled=true;b.textContent='🔒';b.title=lockText(L)}}
   if(pid==='casino'&&casTab==='rou')drawWheel();
   if(pid==='plus'&&ptab==='stats')drawStats();
 }
@@ -2107,6 +2129,7 @@ function drawStats(){const c=$('sc');if(!c)return;const g=c.getContext('2d'),w=9
 $('pbody').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled||spinning)return;
   const [a,v,w]=b.dataset.act.split(':');
+  {const L=lockOf(b.dataset.act);if(L){toast(lockText(L));snd('err');return}}
   if(a==='lb'){lbAct(v,w);return}
   if(a==='fb'){fbAct(v,w);return}
   if(a==='visit'){startVisit(+v);return}
@@ -2831,7 +2854,10 @@ const TIPS=[
 ];
 let tipCD=3;
 function checkTips(){if(VISIT||JOB||tutoOn()||!$('panel').hidden||tipCD>0)return;const m=S.meta;
-  for(const [k,ti,cond,pts] of TIPS){if(m.tips[k])continue;let ok=false;try{ok=cond()}catch(e){}if(ok){m.tips[k]=Date.now();tipCD=6;snd('ach');openPanel('tip',k);return}}}
+  const c=stepCur(),i=c?c.i:stepsFor(CI()).length;
+  if(S.stepAnn!==i){S.stepAnn=i;if(c&&c.x.tip)m.tips[c.x.tip]=m.tips[c.x.tip]||Date.now();tipCD=6;snd('ach');openPanel('step',i);return}
+  // les autres fiches restent lisibles dans le Guide, sans pop-up
+  for(const [k,ti,cond] of TIPS){if(m.tips[k])continue;let ok=false;try{ok=cond()}catch(e){}if(ok)m.tips[k]=Date.now()}}
 function tipHTML(k){const t=TIPS.find(x=>x[0]===k);return t?`<div class="tip"><h3>${t[1]}</h3><ul>${t[3].map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
 function seedTutoAndTips(){const m=S.meta;if(!m.tips)m.tips={};
   if(m.tutoDone===undefined){if(S.total>200||m.prestige>0){m.tutoDone=true;for(const [k,,cond] of TIPS){let ok=false;try{ok=cond()}catch(e){}if(ok)m.tips[k]=1}}else{m.tutoDone=false;m.tuto=0}}

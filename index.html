@@ -540,9 +540,10 @@ const OUTFITS=[
  {k:'peaky',n:'Costume de baron londonien',d:'Casquette gavroche et tweed façon Peaky Blinders : à Londres, le bookmaker (PMU) et le casino te laissent entrer',p:20000},
 ];
 const VEH=[
- {k:'trott',n:'Trottinette',d:'+40 % de vitesse',p:300,b:.4},
- {k:'scooter',n:'Scooter rouge',d:'+90 % de vitesse',p:3000,b:.9},
- {k:'voiture',n:'Cabriolet de luxe',d:'+160 % de vitesse, et les voitures ne te font plus rien',p:40000,b:1.6},
+ // les clés restent celles des anciennes sauvegardes : trott = skate, scooter = trottinette, voiture = scooter
+ {k:'trott',n:'Skate',d:'+30 % de vitesse',p:300,b:.3,g:'é'},
+ {k:'scooter',n:'Trottinette',d:'+60 % de vitesse',p:3000,b:.6,g:'ée'},
+ {k:'voiture',n:'Scooter',d:'+100 % de vitesse, et les voitures ne te font plus rien',p:40000,b:1,g:'é'},
 ];
 const ESTDEF={
  bar:{k:'bar',n:'Bar Le Pigeon Borgne',p:20000,r:10,d:'Devient le QG de tes bandits : armurerie, marché noir, coffre et comptable'},
@@ -637,7 +638,7 @@ const INFO={
  health:['Rayon santé et vie',"Ta vie ne remonte jamais toute seule : il faut te soigner.",["Les voitures, les coups de matraque et la faim à zéro te font perdre de la vie.","Le rayon santé du supermarché vend des soins, dans toutes les villes.","À 0 de vie, tu tombes dans les pommes et perds la moitié de ton cash."],"Rachète le supermarché : tes courses et tes soins coûtent 50 % de moins."],
  food:['Supermarché et faim',"La faim baisse en permanence. À 0, tu perds de la vie.",["Achète à manger au supermarché, présent dans toutes les villes. Certains plats soignent aussi.","Le snack du distributeur dans la rue dépanne, mais il remplit moins.","Le supermarché propose un CDD de caissier (bouton i de la ligne jaune)."],"Le frigo connecté (Business) te nourrit tout seul. Racheter le supermarché divise les prix par deux."],
  fripe:['Tenues et costume',"Des tenues pour changer de look. Elles te suivent à vie, dans toutes les villes.",["Le costume trois-pièces se vend au vestiaire, le petit bâtiment collé au casino, dans chaque ville.","Sans costume, le videur te refoule. La deuxième fois, il appelle la police.","Les tenues fun (hot-dog, pigeon, armure…) se vendent chez Fripe & Chic, à New York.","Clique sur Porter pour changer de tenue."],"Achète le costume dès que tu as 1 000 : le casino s'ouvre."],
- motors:['Pigeon Motors',"Des véhicules pour te déplacer beaucoup plus vite. Achetés une fois, ils te suivent à vie.",["Pigeon Motors se trouve à Paris.","Trottinette +40 %, scooter +90 %, cabriolet +160 % de vitesse.","En véhicule, les baskets ne comptent qu'à moitié. Le cabriolet te protège des voitures."],"Rachète la boutique Pigeon Motors pour avoir tes véhicules à -20 %."],
+ motors:['Pigeon Motors',"Des véhicules pour te déplacer beaucoup plus vite. Achetés une fois, ils te suivent à vie.",["Pigeon Motors se trouve à Paris.","Skate +30 %, trottinette +60 %, scooter +100 % de vitesse.","En véhicule, les baskets ne comptent qu'à moitié. Le scooter te protège des voitures."],"Rachète la boutique Pigeon Motors pour avoir tes véhicules à -20 %."],
  rival:['Déchets Corp',"Ton concurrent : ses ramasseurs gris volent les déchets de ta rue.",["Plus tes commerces grandissent, plus il embauche de ramasseurs.","Sabote leurs chariots : grève de 60 s.","Rachète l'entreprise : fin de la concurrence et un 2e QG qui rapporte en continu.","Avec le bar, tes bandits peuvent aussi braquer son coffre la nuit."],"Le rachat coûte cher, mais il libère toute la rue pour toi et tes employés."],
  bookie:['Courses de chevaux',"Le bookmaker de Londres prend les paris sur les courses en direct.",["Choisis ton cheval : plus sa cote est haute, moins il a de chances de gagner.","Choisis ta mise : 10 %, 25 %, 50 % de ton cash, ou tapis.","S'il gagne, tu touches ta mise multipliée par sa cote (x3 à x20).","Cotes équitables : en moyenne, tu récupères ce que tu mises."],"Gros Biscuit (x20) gagne rarement, mais quand il gagne, c'est la fête."],
  dirty:['Argent sale',"Le butin de tes bandits n'arrive pas sur ton compte : il s'empile dans le coffre du QG.",["Chaque vol de bandit rapporte l'équivalent de 4 à 10 secondes de tes revenus automatiques, en argent sale.","Le comptable du bar le blanchit en continu (10 % de frais). Chaque niveau lave plus vite.","L'ordinateur du bar blanchit tout d'un coup, mais garde 35 %.","À 100 de chaleur, la descente de police saisit tout le coffre."],"Surveille la chaleur : si elle approche 100, blanchis tout au bar avant la descente."],
@@ -1047,7 +1048,7 @@ const ACH=[
  ['barman','Main de maître','Tirer 30 bières au bon niveau',()=>S.meta.beers>=30],
  ['braqueur','Casse du siècle','Réussir un braquage chez Déchets Corp',()=>S.meta.heists>=1],
  ['fashion','Fashion week','Acheter 3 tenues',()=>S.meta.wardrobe.length>=4],
- ['fangio','Fangio','Acheter le cabriolet',()=>!!S.veh.voiture],
+ ['fangio','Fangio','Acheter le scooter',()=>!!S.veh.voiture],
  ['magnat','Magnat','Gagner 1 M€ au total',()=>S.meta.life>=1e6],
  ['depart','Nouveau départ','Ouvrir ta première filiale',()=>S.meta.prestige>=1],
  ['monaco','Bienvenue à Tokyo','Atteindre la 4e ville',()=>S.meta.prestige>=3],
@@ -1062,7 +1063,7 @@ const STEPS=[
  {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
  {k:'distrib',cost:()=>distCost(),n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
  {k:'outil',need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
- {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : la trottinette est la moins chère.',acts:['veh:']},
+ {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : le skate est le moins cher.',acts:['veh:']},
  {k:'local',cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
  {k:'frigo',skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
  {k:'emp',cost:()=>empCost(),n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
@@ -2157,7 +2158,7 @@ function renderPanel(){
     else if(ptab==='prestige'){gerSeed();const g=pg(),ci=CURI(),done=ci>=3||!!S.meta.gerOn[ci],last=done,nx=CITIES[Math.min(ci+1,3)],nr=netRate(),miss=last?[]:featMiss(ci),req=featList(ci);
       h+=(last?`<p class="lead">${ib('prestige')} ${ci>=3?'Tokyo est la dernière ville pour l\'instant. De nouvelles villes arriveront bientôt.':CITY().n+' tourne déjà en gérance : '+nx.n+' est débloquée.'} Tu peux quand même encaisser les Pigeons d'Or gagnés ici.</p>`:
         `<p class="lead">${ib('prestige')} Ouvre une filiale à <b>${nx.n}</b> (${nx.cur}, gains x${String(nx.m).replace('.',',')}). Ta rue de ${CITY().n} n'est pas perdue : elle passe <b>en gérance</b> et continue de tourner à 20 % (environ +${fmt2(nr*.2)}/s vers la trésorerie de ta holding, à convertir en PigeonCoin).</p>`)+
-        `<p class="lead">Tu repars aussi avec ton Héritage : ${HER.filter(([k])=>S.meta.her[k]).map(x=>x[1].toLowerCase()).join(', ')||'rien pour l\'instant (frigo, manager, trottinette à débloquer)'}.</p>`+
+        `<p class="lead">Tu repars aussi avec ton Héritage : ${HER.filter(([k])=>S.meta.her[k]).map(x=>x[1].toLowerCase()).join(', ')||'rien pour l\'instant (frigo et manager à débloquer)'}.</p>`+
         `<div class="row"><div class="info"><b>Pigeons d'Or</b><small>Tu en as ${S.meta.gold}. Cette ville t'en rapporterait ${g} de plus.</small></div><div class="gold">${S.meta.gold}</div></div>`+
         (last?'':`<div class="sec">Pour ouvrir ${nx.n} · ${req.length-miss.length} / ${req.length}</div><p class="lead">Fais <b>toutes les étapes de ${CITY().n}</b> dans l'ordre, une fois chacune suffit (pas besoin de tout améliorer) :</p>`+
           stepState().map(e=>`<div class="obj${e.d?' ok':''}" style="${e.o?'':'opacity:.5'}"><span class="ck">${e.d?'✓':e.o?'':'🔒'}</span><span>${e.i+1}. ${e.x.n}</span></div>`).join(''))+
@@ -2263,7 +2264,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(C(es.p)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
-  if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achetée, en route !')}
+  if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achet'+(vv.g||'é')+', en route !')}
   if(a==='ride'){S.ride=v||'';S.meta.ride=S.ride;snd('buy')}
   if(a==='rival'){
     if(v==='sabo'&&S.local&&rivalStrike<=0){if(!pay(C(500)))return;rivalStrike=60;toast('Pneus crevés, chariots en panne : Déchets Corp fait grève 60 s')}
@@ -2705,7 +2706,7 @@ const OUTLOOK={hotdog:['#e9c46a','#e9c46a'],pigeon:['#9aa5b1','#8090a0'],armure:
 function playerLook(){
   const n=S.done,tri=S.up.tri,out=S.meta.outfit;
   const tier=n>=9?2:n>=5?1:0;
-  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:'#f1c27d',ride:S.ride,lift:S.ride==='scooter'?10:S.ride==='voiture'?14:S.ride==='trott'?5:0,
+  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:'#f1c27d',ride:S.ride,lift:S.ride==='voiture'?10:S.ride==='scooter'?5:S.ride==='trott'?6:0,
     g:{pince:S.up.pince,sac:S.up.sac,basket:S.up.basket,cle:S.up.cle,oeil:S.up.oeil},gun:armed()?S.weapon:null};
   if(out==='costume')return Object.assign(base,{shirt:'#22223b',pants:'#22223b',suit:true,tie:'#d62839',hat:null});
   if(out==='peaky')return Object.assign(base,{shirt:'#6b5b45',pants:'#4a3f35',suit:true,tie:'#2a1f3d',hat:'#3b3127'});
@@ -2714,12 +2715,12 @@ function playerLook(){
     hat:tri>=1?'#2a9d5c':'#ef476f',hatMark:tri>=1&&tri<5?'TRI':'',tophat:tri>=5});
 }
 function drawRide(k,x,y,f,front){if(!k)return;cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;
-  if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();rr(-20,-8,40,5,2);fs('#06d6a0');circ(-16,-2,5);fs('#333');circ(16,-2,5);fs('#333')}
+  if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();circ(-14,-2,4);fs('#333');circ(14,-2,4);fs('#333')}
+    else{cx.beginPath();cx.moveTo(-24,-11);cx.quadraticCurveTo(-22,-6,-16,-6);cx.lineTo(16,-6);cx.quadraticCurveTo(22,-6,24,-11);cx.lineWidth=5;cx.strokeStyle='#333';cx.stroke();cx.lineWidth=3;cx.strokeStyle='#ff9f1c';cx.stroke();cx.strokeStyle='#000'}}
+  if(k==='scooter'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();rr(-20,-8,40,5,2);fs('#06d6a0');circ(-16,-2,5);fs('#333');circ(16,-2,5);fs('#333')}
     else{cx.beginPath();cx.moveTo(16,-6);cx.lineTo(12,-50);cx.lineWidth=4;cx.stroke();cx.beginPath();cx.moveTo(5,-50);cx.lineTo(19,-50);cx.stroke()}}
-  if(k==='scooter'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,28,6,0,0,7);cx.fill();circ(-18,-4,9);fs('#333');circ(20,-4,9);fs('#333');rr(-28,-26,48,18,9);fs('#ef476f')}
+  if(k==='voiture'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,28,6,0,0,7);cx.fill();circ(-18,-4,9);fs('#333');circ(20,-4,9);fs('#333');rr(-28,-26,48,18,9);fs('#ef476f')}
     else{rr(14,-50,12,38,5);fs('#ef476f');rr(18,-58,10,9,3);fs('#cdeefd');circ(26,-34,3);fs('#fff3b0')}}
-  if(k==='voiture'){if(!front){cx.fillStyle='rgba(0,0,0,.2)';cx.beginPath();cx.ellipse(0,4,50,8,0,0,7);cx.fill()}
-    else{rr(-50,-40,100,32,13);fs('#ffd23f');rr(12,-56,18,18,4);fs('#cdeefd');circ(-30,-6,12);fs('#333');circ(30,-6,12);fs('#333');circ(-30,-6,5);fs('#adb5bd');circ(30,-6,5);fs('#adb5bd');circ(48,-26,4);fs('#fff');cx.fillStyle='#e9b800';cx.fillRect(-46,-26,92,3)}}
   cx.restore()}
 function drawBarsUnder(){const w=54,x=P.x-w/2,y=P.y+10;cx.lineWidth=2;
   rr(x,y,w,7,3);fs('#fff');cx.fillStyle='#ef476f';rr(x+1,y+1,(w-2)*Math.max(0,S.hp)/100,5,2);cx.fill();
@@ -2845,7 +2846,7 @@ function draw(){
   if(pickTarget&&!pickTarget.robbed)txt('$',pickTarget.x,pickTarget.y-82+Math.sin(T*8)*3,20,'#c77dff',true);
   if(feedTarget)txt('♥',feedTarget.x,feedTarget.y-34+Math.sin(T*8)*3,16,'#ff8fa3',true);
   for(const s of sparks){const k=s.t/.5;txt(s.star?'✦':'✧',s.x,s.y-k*20,14,s.star?'#ffd23f':'#fff',true)}
-  if(P.sayT>0)drawBubble(P.x,P.y-(S.up.tri>=5||S.meta.outfit==='hotdog'?112:88)-(S.ride==='scooter'?10:S.ride==='voiture'?14:0),P.say);
+  if(P.sayT>0)drawBubble(P.x,P.y-(S.up.tri>=5||S.meta.outfit==='hotdog'?112:88)-(S.ride==='voiture'?10:0),P.say);
   for(const b of shots){if(b.k==='confetti'){for(let k=0;k<5;k++){cx.fillStyle=['#ff70a6','#ffd23f','#06d6a0','#4cc9f0','#fff'][k];cx.fillRect(b.x-Math.sign(b.vx)*k*7+Math.sin(T*30+k)*3,b.y+Math.cos(T*25+k*2)*6,5,5)}}
     else if(b.k==='lance'){cx.beginPath();cx.arc(b.x,b.y,4,0,7);cx.fillStyle='#868e96';cx.fill()}
     else{cx.strokeStyle='rgba(255,210,63,.6)';cx.lineWidth=3;cx.beginPath();cx.moveTo(b.x-Math.sign(b.vx)*26,b.y);cx.lineTo(b.x,b.y);cx.stroke();cx.beginPath();cx.ellipse(b.x,b.y,5,3,0,0,7);cx.fillStyle='#ffd23f';cx.fill();
@@ -2954,7 +2955,7 @@ const GUIDES={
   {t:()=>'La <b>trésorerie</b> se remplit toute seule avec les 20 % de Paris (et des prochaines villes en gérance), même quand tu ne fais rien.',ui:q('#pbody [data-act="hold:conv"]'),...nxt()},
   {t:()=>'Le <b>PigeonCoin</b> (PGC) est la crypto du jeu. Son <b>cours</b> monte et descend toutes les 2 secondes (la courbe) : convertis ta trésorerie en PGC <b>quand le cours est bas</b>, avec ce bouton (5 % de frais).',ui:q('#pbody .stk'),...nxt()},
   {t:()=>'Avec tes PGC, le <b>marché crypto</b> vend des <b>Pigeons d\'Or</b> (pour les bonus permanents) et du <b>capital de départ</b> pour démarrer vite dans ta ville. Le prix monte à chaque achat.',ui:q('#pbody [data-act="hold:po"]'),...nxt()},
-  {t:()=>'L\'<b>Héritage</b> : frigo, manager et trottinette, une fois débloqués, te suivent dans chaque nouvelle ville.',...nxt()},
+  {t:()=>'L\'<b>Héritage</b> : le frigo et le manager, une fois débloqués, te suivent dans chaque nouvelle ville.',...nxt()},
   {t:()=>'Le bouton <b>🌍 Carte des villes</b> te permet de retourner visiter Paris quand tu veux (en lecture seule, ta filiale tourne sans toi).',ui:q('#pbody [data-act="worldmap"]'),...nxt()},
   {t:()=>'Dernier point : retourne dans l\'onglet <b>Prestige</b>.',ui:q('#pbody [data-act="ptab:prestige"]'),done:()=>inTab('prestige')},
   {t:()=>'Ici, dépense tes <b>Pigeons d\'Or</b> dans les <b>bonus permanents</b> : plus d\'argent, meilleur départ, sac plus grand, employés moins chers… Ils comptent dans toutes les villes, pour toujours.',ui:q('#pbody [data-act^="perk:"]'),...nxt()}]},
@@ -3024,7 +3025,7 @@ const TIPS=[
  ['bar','Le bar et le marché noir',()=>S.owned.bar,['Touche <b>E</b> devant le bar pour <b>entrer</b> : tu te promènes dans la salle.','<b>Comptoir</b> : un verre pour la faim. <b>Ordinateur</b> : marché noir, munitions, comptable, blanchiment et braquage des autres joueurs.','<b>Armurerie</b> : équipe une arme pour tirer dans la rue (touche G).','Le braquage a lieu <b>la nuit</b>, le butin est versé <b>le lendemain matin</b>.']],
  ['repair','Les objets cassés',()=>broken.length>0&&S.stats.trash>=5,['Un objet cassé traîne dans la rue (étincelles autour).','<b>Reste à côté</b> : tu le répares automatiquement, puis il se revend.','La <b>clé à molette</b> de Brico Dédé répare plus vite.']],
  ['fripe','Les tenues',()=>S.meta.wardrobe.length>1,['Tes tenues te suivent <b>dans toutes les villes</b>.','Le <b>costume</b> se vend au vestiaire du casino, les tenues fun chez Fripe & Chic à New York.','Bouton <b>Porter</b> pour changer de look.']],
- ['motors','Les véhicules',()=>!!S.ride||Object.values(S.veh||{}).some(v=>v),['Pigeon Motors (à Paris) : trottinette, scooter, cabriolet. Tu vas <b>beaucoup plus vite</b>.','En véhicule, les baskets ne comptent qu\'<b>à moitié</b>.','Tes véhicules te suivent <b>à vie</b>, dans toutes les villes.']],
+ ['motors','Les véhicules',()=>!!S.ride||Object.values(S.veh||{}).some(v=>v),['Pigeon Motors (à Paris) : skate, trottinette, scooter. Tu vas <b>beaucoup plus vite</b>.','En véhicule, les baskets ne comptent qu\'<b>à moitié</b>.','Tes véhicules te suivent <b>à vie</b>, dans toutes les villes.']],
  ['estate','Les grands lieux',()=>ESTATE.some(e=>S.owned[e.k]),['Le casino et le bar se rachètent pour un gros <b>loyer</b>.','Le bar devient le QG de tes bandits.']],
  ['police','La brigade',()=>squad.length>0,['Quand on te repère, <b>tout le commissariat</b> sort pour te courir après.','Tiens <b>20 s</b> sans te faire toucher pour les semer.','Au commissariat, tu peux te rendre (chaleur à zéro) ou payer la caution de tes bandits.']],
  ['heat','La chaleur monte !',()=>S.heat>=40,['<b>50</b> : un policier de plus patrouille, même le jour.','<b>75</b> : deux fois plus de policiers en civil.','<b>100</b> : descente au QG, amende, bandits au trou et <b>coffre d\'argent sale saisi</b>.','Calme le jeu, engage ou monte l\'<b>avocat</b>, ou va te rendre au commissariat.']],

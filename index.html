@@ -317,6 +317,9 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .bqa{position:relative;height:280px;border:3px solid var(--ink);border-radius:14px;background:repeating-linear-gradient(0deg,#3a2f4f 0 20px,#43375a 20px 40px);overflow:hidden;touch-action:manipulation;cursor:crosshair}
 .bqt{position:absolute;width:52px;height:52px;margin:-6px 0 0 -6px;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:28px;line-height:1;padding:0;cursor:crosshair;animation:bqpop .25s cubic-bezier(.2,1.6,.4,1)}
 @keyframes bqpop{from{transform:scale(0)}}
+.grat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:300px;margin:0 auto;touch-action:none;align-self:center}
+.gc{aspect-ratio:1;border:3px solid var(--ink);border-radius:12px;font-size:34px;cursor:pointer;background:repeating-linear-gradient(45deg,#c0c4cc 0 8px,#d6d9df 8px 16px);box-shadow:0 3px 0 var(--ink)}
+.gc.on{background:#fff6df;cursor:default}.gc.win{background:#ffd23f;animation:bqpop .4s}
 .lbr .lbv{min-width:0;font-size:12px;padding:3px 8px}
 .lbr .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lbr:nth-child(1) .rk{color:#b8860b}.lbr.me{background:#fff3b0}
@@ -442,6 +445,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 <script>
 (()=>{
 const W=5100,H=640,INK='#2a1f3d';
+const HEATX=1.6;// la chaleur monte 60 % plus vite à chaque méfait
 let VISIT=null,INSIDE=null,roomCam=0;
 const cv=document.getElementById('cv'),cx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
@@ -567,7 +571,7 @@ const trDir=d=>d>.004?1:d<-.004?-1:0;
 function buyAna(l){const c=anaCost(l);if(S.cash<c){snd('err');return}initMkt();const L=STOCKS_NOW();
   if(l===3){if(S.insUsed){toast('Ton cousin ne te parle plus dans cette ville');snd('err');return}const cand=L.filter(x=>!S.mkt[x.k].ev);if(!cand.length)return;
     S.cash-=c;S.insUsed=1;const s=pick(cand),mk=S.mkt[s.k];mk.ev={in:Math.floor(rnd(9,14)),j:rnd(1,2)};
-    S.heat=Math.min(100,S.heat+30);S.ins={k:s.k,at:S.clock};snd('event');toast("Ton cousin chuchote : « "+s.n+" va bondir, achète vite... et tu ne m'as jamais vu. »");return}
+    S.heat=Math.min(100,S.heat+HEATX*(30));S.ins={k:s.k,at:S.clock};snd('event');toast("Ton cousin chuchote : « "+s.n+" va bondir, achète vite... et tu ne m'as jamais vu. »");return}
   S.cash-=c;let pep=null;
   if(l===2){const s=pick(L.filter(x=>!S.mkt[x.k].ev)),mk=s&&S.mkt[s.k];if(mk){const t=Math.floor(rnd(20,30));mk.tid=(mk.tid||0)+1;mk.tr={id:mk.tid,d:Math.log(1+rnd(.6,1.2))/t*1.35,t};pep=s.k}}
   S.ana={l,at:S.clock,r:L.map(s=>{const mk=S.mkt[s.k];if(!mk.tr){mk.tid=(mk.tid||0)+1;mk.tr={id:mk.tid,d:0,t:10}}const d=trDir(mk.tr.d);let rd=d;if(l===1&&Math.random()>.75){const o=[1,-1,0].filter(x=>x!==d);rd=pick(o)}
@@ -669,7 +673,7 @@ const EVENTS={
 // ================= Sauvegarde =================
 const KEY='poubelle-tycoon-v1';
 const freshMeta=()=>({gold:0,prestige:0,perk:{cash:0,start:0,sac:0,emp:0},wardrobe:['classic'],outfit:'classic',ach:{},life:0,snd:true,mus:true,legend:0,fed:0,escapes:0,casinoLost:0,jackpot:0,bestTrade:0,kebabs:0,changes:0,beers:0,heists:0,her:{},worlds:[],pgc:0,pc:{p:50,h:[]},poBought:0,treas:0,tips:{}});
-const CMS=[1,1.4,2,2.8];
+const CMS=[1,5,10,18];// prix par ville : bien plus que les gains (x1,6 / x2,6 / x4) pour rester longtemps dans chaque ville
 function fresh(m){const o=fresh0(m);const h=(m||o.meta).her||{};if(h.frigo)o.frigo=true;if(h.manager)o.manager=true;if(h.trott){o.veh.trott=1;o.ride='trott'}return o}
 function fresh0(m){m=m||freshMeta();const ci=m.cur??Math.min(m.prestige,3);
   return {cash:Math.round((20+250*m.perk.start)*CMS[ci]),total:0,hp:100,food:80,bag:0,bagVal:0,up:{pince:0,sac:0,basket:0,cle:0,oeil:0,tri:0},
@@ -1186,7 +1190,7 @@ function update(dt){
       if(tb){
         if(tb.jail>0){c.chase=0;c.chaseB=null}
         else{tx=tb.x;ty=tb.y;
-          if(dist(c.x,c.y,tx,ty)<28){tb.jail=60;tb.tgt=null;tb.flee=0;S.heat=Math.min(100,S.heat+10);float(tx,ty-80,'Embarqué !','#ef476f');c.say='Toi, au trou !';c.sayT=2;c.chase=0;c.chaseB=null;toast("Un de tes bandits s'est fait arrêter : 60 s de prison");snd('siren')}
+          if(dist(c.x,c.y,tx,ty)<28){tb.jail=60;tb.tgt=null;tb.flee=0;S.heat=Math.min(100,S.heat+HEATX*(10));float(tx,ty-80,'Embarqué !','#ef476f');c.say='Toi, au trou !';c.sayT=2;c.chase=0;c.chaseB=null;toast("Un de tes bandits s'est fait arrêter : 60 s de prison");snd('siren')}
           else if(c.chase<=0){c.chaseB=null;c.say="Il m'a échappé...";c.sayT=2}}}
       else{tx=P.x;ty=P.y;
         if(!INSIDE&&dist(c.x,c.y,P.x,P.y)<30){fine(c);c.chase=0}
@@ -1218,7 +1222,7 @@ function update(dt){
       let best=null,bd=1e9;for(const [bx,by] of BINS){const d=dist(e.x,e.y,bx,by+10);if(d<bd){bd=d;best=[bx,by+10]}}
       tx=best[0];ty=best[1];
       if(bd<20){let v=e.val*lynx();
-        if(tr==='voleur'){v*=.8;if(Math.random()<.25){v+=rnd(10,30)*mult();S.heat=Math.min(100,S.heat+4);float(e.x,e.y-90,'Hop, un portefeuille','#9d4edd')}}
+        if(tr==='voleur'){v*=.8;if(Math.random()<.25){v+=rnd(10,30)*mult();S.heat=Math.min(100,S.heat+HEATX*(4));float(e.x,e.y-90,'Hop, un portefeuille','#9d4edd')}}
         if((tr==='chanceux'||tr==='star')&&Math.random()<.15){v*=3;float(e.x,e.y-90,'JACKPOT !','#ffd23f')}
         if(v>0)earn(v,e.x,e.y-60);e.carry=0;e.val=0}
     }else{
@@ -1259,7 +1263,7 @@ function update(dt){
     if(tx!=null){const d=dist(b.x,b.y,tx,ty);b.moving=d>3;if(d>3){b.x=clamp(b.x+(tx-b.x)/d*sp*dt,20,W-20);b.y=clamp(b.y+(ty-b.y)/d*sp*dt,215,630);if(Math.abs(tx-b.x)>2)b.face=tx>b.x?1:-1}}
   }
   heistUpdate(dt);
-  S.heat=Math.max(0,S.heat-dt*.25*(1+.15*av())*(S.secu?1.15:1)*(S.owned.bar?1.15:1));
+  S.heat=Math.max(0,S.heat-dt*.15*(1+.15*av())*(S.secu?1.15:1)*(S.owned.bar?1.15:1));
   if(S.dirty>0){const L=launderR();if(L>0){const a=Math.min(S.dirty,L*dt);S.dirty-=a;const g=a*.9;S.cash+=g;S.total+=g;S.meta.life+=g;S.meta.laundered=(S.meta.laundered||0)+g}}
   if(S.heat>=100)raid();
   for(const b of bands)if(b.lootT>0)b.lootT-=dt;
@@ -1396,9 +1400,9 @@ function heistUpdate(dt){const H=S.heist;if(!H)return;
   else if(H.st==='inside'){H.t-=dt;if(Math.floor(H.t*4)%2===0&&Math.random()<dt*3)float(BID.rival.door+rnd(-60,60),90,pick(['BOUM','CLANG','*bruit de coffre*','CHUT !']),'#ffd23f');
     if(H.t<=0){const ok=Math.random()<heistChance(H.n),hm=1-.15*S.bandUp.pigeon;
       for(const b of crew){b.inside=false;b.x=BID.rival.door+rnd(-30,30);b.y=236}
-      if(ok){H.st='escape';H.ok=true;H.loot=heistLoot(H.n)*rnd(.8,1.3);for(const b of crew)b.loot=true;S.meta.heists++;S.heat=Math.min(99,S.heat+35*hm);rivalStrike=90;
+      if(ok){H.st='escape';H.ok=true;H.loot=heistLoot(H.n)*rnd(.8,1.3);for(const b of crew)b.loot=true;S.meta.heists++;S.heat=Math.min(99,S.heat+HEATX*(35*hm));rivalStrike=90;
         float(BID.rival.door,100,'BRAQUAGE RÉUSSI !','#ffd23f');snd('win');setTimeout(()=>snd('siren'),900);toast('Braquage réussi ! Le butin (environ '+fmt(H.loot*gm())+') sera blanchi et versé demain matin')}
-      else{const f=Math.round(S.cash*.15*fineM());S.cash-=f;for(const b of crew){b.jail=120;b.crew=false;b.tgt=null;b.flee=0}S.heat=Math.min(99,S.heat+50*hm);
+      else{const f=Math.round(S.cash*.15*fineM());S.cash-=f;for(const b of crew){b.jail=120;b.crew=false;b.tgt=null;b.flee=0}S.heat=Math.min(99,S.heat+HEATX*(50*hm));
         float(BID.rival.door,100,'ALARME !','#ef476f');snd('siren');toast('Braquage raté ! L\'alarme a sonné : bandits au trou pour 2 min et '+fmt(f)+' d\'amende');S.heist=null}}}
   else if(H.st==='escape'){if(!crew.length&&!H.waiting){H.waiting=true}}}
 function payHeist(){const H=S.heist;if(!H||!H.ok||H.st!=='escape')return;const g=gain(H.loot);for(const b of bands){b.crew=false;b.loot=false}
@@ -1516,22 +1520,42 @@ const HOWTO_MG={
  karaoke:['Chante en rythme.',['Un curseur jaune va et vient sur la barre.','Clique « Chanter ! » (ou Espace) quand il est dans la zone verte.','5 notes réussies : le client est ravi. 3 fausses notes : il s\'en va.'],'La zone rétrécit et le curseur accélère au fil des clients.'],
 };
 // ---------- Bookmaker : courses de chevaux ----------
-const HORSES=[['Éclair de Pigeon',3,'#ef476f'],['Tea Time',4,'#118ab2'],['Rosbif Express',5,'#f77f00'],['Sir Galopin',6,'#06d6a0'],['Gros Biscuit',20,'#9d4edd']];
-const BK={sel:0,bet:0,run:false,t:0,win:-1,fin:null,msg:'Choisis ton cheval, puis ta mise.',mc:''};
-function bkHTML(){const run=BK.run;let h=`<p class="lead">${ib('bookie')} Courses en direct de l'hippodrome. Cotes équitables : en moyenne, tu récupères ta mise.</p><div style="background:#2d6a4f;border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px">`+
-  HORSES.map((hs,i)=>{const pos=run||BK.fin?(BK.fin?BK.fin[i]:0):0;return `<div style="position:relative;height:28px;background:#40916c;border-radius:14px;border:2px solid rgba(0,0,0,.25)"><div style="position:absolute;right:6px;top:0;bottom:0;width:4px;background:repeating-linear-gradient(#fff 0 4px,#000 4px 8px)"></div><span id="hz${i}" style="position:absolute;top:1px;left:calc(${pos*0.9}% );font-size:20px;transform:scaleX(-1);transition:none">🐎</span><span style="position:absolute;left:30px;top:5px;font:600 12px var(--body);color:#fff">${i+1}. ${hs[0]}</span></div>`}).join('')+'</div>';
+// PMU : 3 chevaux, chances affichées clairement et un peu à l'avantage du joueur
+const HORSES=[['Favori · Éclair de Pigeon',.5,2.2,'#ef476f'],['Outsider · Tea Time',.33,3.2,'#118ab2'],['Tocard · Gros Biscuit',.17,6.5,'#9d4edd']];
+const BK={sel:0,bet:0,run:false,t:0,win:-1,fin:null,msg:'Choisis ton cheval, puis ta mise.',mc:'',tab:'course'};
+function bkHTML(){const run=BK.run;let h=tabs(BK.tab,[['course','🐎 Courses'],['grat','🎟️ Jeux à gratter']],'bktab');
+  if(BK.tab==='grat')return h+gratHTML();
+  h+=`<p class="lead">${ib('bookie')} Choisis un cheval : le favori gagne une course sur deux. Plus il est risqué, plus il rapporte.</p><div style="background:#2d6a4f;border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px">`+
+  HORSES.map((hs,i)=>{const pos=run||BK.fin?(BK.fin?BK.fin[i]:0):0;return `<div style="position:relative;height:30px;background:#40916c;border-radius:14px;border:2px solid rgba(0,0,0,.25)"><div style="position:absolute;right:6px;top:0;bottom:0;width:4px;background:repeating-linear-gradient(#fff 0 4px,#000 4px 8px)"></div><span id="hz${i}" style="position:absolute;top:2px;left:calc(${pos*0.9}% );font-size:20px;transform:scaleX(-1);transition:none">🐎</span><span style="position:absolute;left:30px;top:6px;font:600 12px var(--body);color:#fff">${i+1}. ${hs[0]}</span></div>`}).join('')+'</div>';
   h+=`<div class="msg ${BK.mc}" id="bkmsg">${BK.msg}</div>`;
-  if(!run){h+='<div class="ings" style="grid-template-columns:repeat(5,1fr)">'+HORSES.map((hs,i)=>`<button class="ing" type="button" style="background:${BK.sel===i?'#ffd23f':'#fff'};font-size:12px" data-act="bksel:${i}">${i+1}. ${hs[0]}<br><b>x${hs[1]}</b></button>`).join('')+'</div>'+
+  if(!run){h+='<div class="ings" style="grid-template-columns:repeat(3,1fr)">'+HORSES.map((hs,i)=>`<button class="ing" type="button" style="background:${BK.sel===i?'#ffd23f':'#fff'};font-size:12px" data-act="bksel:${i}">${hs[0].split(' · ')[0]}<br>${Math.round(hs[1]*100)} % de chances<br><b>mise x${String(hs[2]).replace('.',',')}</b></button>`).join('')+'</div>'+
     '<div class="bets">'+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="bkbet:${p}" ${S.cash<1?'disabled':''}>${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+'</div>'}
   return h+'<p class="foot">Argent fictif du jeu, aucune vraie mise.</p>'}
 function bkStart(p){if(BK.run)return;const bet=Math.floor(S.cash*p);if(bet<1){snd('err');return}S.cash-=bet;BK.bet=bet;
-  let r=Math.random(),w=0;for(let i=0;i<HORSES.length;i++){r-=1/HORSES[i][1];if(r<=0){w=i;break}w=i}
+  let r=Math.random(),w=HORSES.length-1;for(let i=0;i<HORSES.length;i++){r-=HORSES[i][1];if(r<=0){w=i;break}}
   BK.win=w;BK.run=true;BK.t=0;BK.tg=HORSES.map((_,i)=>i===w?100:rnd(72,96));BK.wob=HORSES.map(()=>rnd(0,6));BK.fin=null;BK.msg='Et ils sont partis !';BK.mc='';S.stats.casino++;snd('event')}
+// jeux à gratter : 9 cases, 3 symboles identiques = gagné (environ 4 tickets sur 10 gagnent quelque chose)
+const GRAT_SYM=[['🥫',1],['🐦',2],['💰',5],['👑',10],['💎',50]],GRAT_P=[.15,.14,.06,.018,.002];
+const GR={grid:null,shown:null,price:0,win:0,sym:-1,done:false};
+const gratPrices=()=>[C(20),C(200),C(2000)];
+function gratBuy(k){const pr=gratPrices()[k];if(pr==null||S.cash<pr){snd('err');return}S.cash-=pr;S.stats.casino++;
+  let r=Math.random(),ws=-1;for(let i=0;i<GRAT_P.length;i++){r-=GRAT_P[i];if(r<=0){ws=i;break}}
+  const cells=[];if(ws>=0)cells.push(ws,ws,ws);
+  while(cells.length<9){const c=Math.floor(Math.random()*GRAT_SYM.length),n=cells.filter(x=>x===c).length;if(n<2&&c!==ws)cells.push(c)}
+  cells.sort(()=>Math.random()-.5);GR.grid=cells;GR.shown=cells.map(()=>false);GR.price=pr;GR.sym=ws;GR.win=ws>=0?pr*GRAT_SYM[ws][1]:0;GR.done=false;snd('buy');updHud()}
+function gratReveal(i){if(!GR.grid||GR.done)return;if(i==null)GR.shown=GR.shown.map(()=>true);else if(!GR.shown[i]){GR.shown[i]=true;snd('tick')}
+  if(GR.shown.every(Boolean)){GR.done=true;if(GR.win>0){S.cash+=GR.win;S.meta.casinoWon=(S.meta.casinoWon||0)+GR.win-GR.price;snd(GR.win>=GR.price*10?'legend':'win')}else{S.meta.casinoLost+=GR.price;snd('fail')}updHud()}}
+function gratHTML(){const P=gratPrices();let h='<p class="lead">Gratte les 9 cases : <b>3 symboles identiques</b> et tu gagnes ! Environ 4 tickets sur 10 rapportent quelque chose.</p>'+
+  '<div class="pc" style="justify-content:center">'+GRAT_SYM.map(([e,m])=>`<span>${e}${e}${e} = mise x${m}</span>`).join('')+'</div>';
+  if(GR.grid){h+='<div class="grat">'+GR.grid.map((c,i)=>`<button type="button" class="gc${GR.shown[i]?' on':''}${GR.done&&c===GR.sym?' win':''}" data-gi="${i}" aria-label="Case ${i+1}">${GR.shown[i]?GRAT_SYM[c][0]:''}</button>`).join('')+'</div>';
+    h+=GR.done?`<div class="msg ${GR.win>0?'ok':'ko'} anim">${GR.win>0?'Gagné ! +'+fmt(GR.win):'Perdu… pas de chance cette fois'}</div>`:'<div class="bets"><button class="chunky alt" type="button" data-act="grat:all" style="grid-column:1/-1">Tout gratter</button></div>'}
+  if(!GR.grid||GR.done)h+='<div class="bets" style="grid-template-columns:repeat(3,1fr)">'+['Petit','Moyen','Gros'].map((n,k)=>`<button class="buy" type="button" data-act="grat:buy:${k}" ${S.cash<P[k]?'disabled':''}>${n} ticket<br>${fmt(P[k])}</button>`).join('')+'</div>';
+  return h+'<p class="foot">Glisse le doigt ou la souris sur les cases pour gratter. Argent fictif du jeu, aucune vraie mise.</p>'}
 function bkUpdate(dt){if(!BK.run)return;BK.t+=dt/5;const t=Math.min(1,BK.t),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
   const pos=BK.tg.map((g,i)=>Math.min(100,g*e+Math.sin(BK.t*9+BK.wob[i])*2*(1-t)));
   for(let i=0;i<pos.length;i++){const el=$('hz'+i);if(el)el.style.left=(pos[i]*.9)+'%'}
   if(t>=1){BK.run=false;BK.fin=pos;const hs=HORSES[BK.win],won=BK.sel===BK.win;
-    if(won){const g=BK.bet*hs[1];S.cash+=g;S.meta.casinoWon=(S.meta.casinoWon||0)+g-BK.bet;BK.msg=hs[0]+' gagne ! +'+fmt(g-BK.bet);BK.mc='ok';snd('legend')}
+    if(won){const g=Math.floor(BK.bet*hs[2]);S.cash+=g;S.meta.casinoWon=(S.meta.casinoWon||0)+g-BK.bet;BK.msg=hs[0]+' gagne ! +'+fmt(g-BK.bet);BK.mc='ok';snd('legend')}
     else{S.meta.casinoLost+=BK.bet;BK.msg=hs[0]+' gagne... ton cheval est arrivé trop tard. -'+fmt(BK.bet);BK.mc='ko';snd('fail')}
     if(pid==='bookie')renderPanel();updHud()}}
 
@@ -1615,7 +1639,7 @@ function squadUpdate(dt){if(!squad.length)return;sqT+=dt;let caught=false;
     if(q.mode==='chase'){const d=dist(q.x,q.y,P.x,P.y);q.moving=d>3;if(d>3){q.x+=(P.x-q.x)/d*q.spd*dt;q.y+=(P.y-q.y)/d*q.spd*dt;q.face=P.x>q.x?1:-1}
       if(d<30&&!caught&&!INSIDE){caught=true}}
     else{const tx=BID.police.door,ty=230,d=dist(q.x,q.y,tx,ty);q.moving=d>3;if(d<12){squad.splice(i,1);continue}q.x+=(tx-q.x)/d*150*dt;q.y+=(ty-q.y)/d*150*dt;q.face=tx>q.x?1:-1}}
-  if(caught){const q=squad.find(q=>q.mode==='chase'&&q.delay<=0)||squad[0];const f=sqFine;S.cash=Math.max(0,S.cash-f);S.hp-=25;S.stats.fines++;S.heat=Math.min(100,S.heat+10);
+  if(caught){const q=squad.find(q=>q.mode==='chase'&&q.delay<=0)||squad[0];const f=sqFine;S.cash=Math.max(0,S.cash-f);S.hp-=25;S.stats.fines++;S.heat=Math.min(100,S.heat+HEATX*(10));
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');q.say='Embarqué !';q.sayT=2;say('Aïe aïe aïe !');snd('fail');toast('Pris par la brigade ! Amende de '+fmt(f)+' et un bon coup de matraque');
     for(const z of squad)z.mode='back'}
   else if(sqT>20&&squad.some(q=>q.mode==='chase')){for(const z of squad)z.mode='back';S.meta.escapes++;float(P.x,P.y-95,'Semés !','#7b2cbf');say('Toute la brigade, semée !');toast('Tu as semé la brigade. Les policiers rentrent au commissariat.')}}
@@ -1628,14 +1652,14 @@ const armed=()=>S.weapon&&S.arms[S.weapon]?ARMS.find(a=>a.k===S.weapon):null;
 function holdup(p){
   if(pickCD>0||p.stun>0)return;pickCD=1.5;const a=armed();p.robbed=true;S.stats.holdup=(S.stats.holdup||0)+1;
   if(p.undercover){p.revealed=true;p.v=0;p.say='Police ! Lâche ton arme !';p.sayT=3;
-    const f=Math.max(50,Math.round(S.cash*.35*fineM()));S.cash=Math.max(0,S.cash-f);S.hp-=35;S.stats.fines++;S.heat=Math.min(100,S.heat+30);
+    const f=Math.max(50,Math.round(S.cash*.35*fineM()));S.cash=Math.max(0,S.cash-f);S.hp-=35;S.stats.fines++;S.heat=Math.min(100,S.heat+HEATX*(30));
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');say('Braquer un flic... bravo.');snd('siren');setTimeout(()=>snd('fail'),300);
     toast("Tu as braqué un policier en civil ! Amende de "+fmt(f)+' et une sacrée volée de matraque');
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
   const g=rnd(40,90)*mult()*a.m*(p.rich?3:1);earn(g,p.x,p.y-85,'#ffd23f');
   p.flee=5;p.say=pick(['Prenez tout !','Pitié, pas le visage !','AU SECOUUURS !','Mon portefeuille !']);p.sayT=2.5;
   say(a.k==='confetti'?'Haut les mains... et les confettis !':'Haut les mains !');snd('coin');
-  S.heat=Math.min(100,S.heat+20);
+  S.heat=Math.min(100,S.heat+HEATX*(20));
   callSquad('Braquage à main armée !',.3);
   for(const c of cops)if(c.active){c.chase=8;c.chaseB=null;c.fine=Math.max(30,Math.round(S.cash*.25*fineM()));c.say='Il est armé !';c.sayT=2}
   toast('Braquage réussi : +'+fmt(g)+'. Toute la police de la ville est à tes trousses, cours !')}
@@ -1647,7 +1671,7 @@ function shoot(){
   const g=GUN[a.k];S.ammo=ammo()-1;shootCD=g.cd;const f=P.face;
   shots.push({x:P.x+f*34,y:P.y-34,base:P.y,vx:f*g.v,life:.75,k:a.k,dz:g.dz,boom:g.boom||0});
   snd(a.k==='confetti'?'confetti':'shot');P.say=a.k==='confetti'?'Surpriiise !':'';P.sayT=a.k==='confetti'?1.2:0;
-  S.heat=Math.min(100,S.heat+8);
+  S.heat=Math.min(100,S.heat+HEATX*(8));
   for(const p of ppl)if(!p.stun&&dist(p.x,p.y,P.x,P.y)<380){p.flee=3.5;if(p.v)p.v=Math.sign(p.x-P.x||1)*Math.abs(p.v);if(Math.random()<.4){p.say=pick(['Aaaah !','Il est fou !','Au secours !','Planquez-vous !']);p.sayT=1.6}}
   const fp=.4*fineM();
   if(squad.filter(q=>q.mode==='chase').length>=4)sqFine=Math.max(sqFine,Math.round(S.cash*fp));else callSquad('Coups de feu dans la rue !',.4);
@@ -1680,16 +1704,16 @@ function roomSpot(){if(RP.y>470)return null;let best=null,bd=95;for(const k in R
 function pickpocket(p){
   if(pickCD>0)return;pickCD=1.2;const tutoPick=tutoOn()&&S.meta.tuto===4;
   if(p.undercover&&!tutoPick){p.robbed=true;p.revealed=true;p.v=0;p.say='Police ! Pas un geste !';p.sayT=3;
-    const f=Math.max(20,Math.round(S.cash*.15*fineM()));S.cash=Math.max(0,S.cash-f);S.hp-=20;S.stats.fines++;S.heat=Math.min(100,S.heat+10);
+    const f=Math.max(20,Math.round(S.cash*.15*fineM()));S.cash=Math.max(0,S.cash-f);S.hp-=20;S.stats.fines++;S.heat=Math.min(100,S.heat+HEATX*(10));
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');say('Un flic en civil ?!');snd('siren');setTimeout(()=>snd('fail'),300);
     toast("C'était un policier en civil ! Amende de "+fmt(f)+' et un coup de matraque');
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
   const copNear=nearCop(P.x,P.y,350);
   if(tutoPick||Math.random()>=.22+(copNear?.45:0)){
-    earn(rnd(5,25)*mult()*(p.rich?3:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+2);snd('coin');
+    earn(rnd(5,25)*mult()*(p.rich?3:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+HEATX*(2));snd('coin');
     say(p.rich?pick(['Un portefeuille en croco !','Merci monsieur le riche.']):pick(['Merci du don !','Discret comme un pigeon.',"Personne n'a rien vu."]));
   }else{
-    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+8);
+    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+HEATX*(8));
     // un seul policier : celui de la rue s'il a tout vu, sinon un agent sort du commissariat
     const c=copNear?closestCop(P.x,P.y):null;if(!c)callSquad('Pris la main dans le sac !',.15,true);
     if(c){c.chase=4.5;c.chaseB=null;c.fine=Math.max(15,Math.round(S.cash*.15*fineM()));c.say='Halte !';c.sayT=2}
@@ -1698,11 +1722,11 @@ function pickpocket(p){
 }
 function bandAttempt(b,p){
   b.cd=rnd(6,10);
-  if(p.undercover){p.robbed=true;p.revealed=true;p.say='Police ! Toi, au trou !';p.sayT=3;b.jail=60;b.tgt=null;S.heat=Math.min(100,S.heat+10);float(b.x,b.y-80,'Flic en civil !','#ef476f');snd('siren');toast("Un de tes bandits a volé un policier en civil : 60 s au trou");return}const copNear=nearCop(b.x,b.y,300),hm=1-.15*S.bandUp.pigeon;
+  if(p.undercover){p.robbed=true;p.revealed=true;p.say='Police ! Toi, au trou !';p.sayT=3;b.jail=60;b.tgt=null;S.heat=Math.min(100,S.heat+HEATX*(10));float(b.x,b.y-80,'Flic en civil !','#ef476f');snd('siren');toast("Un de tes bandits a volé un policier en civil : 60 s au trou");return}const copNear=nearCop(b.x,b.y,300),hm=1-.15*S.bandUp.pigeon;
   if(Math.random()<.62+.06*S.bandUp.nez+(isNight()?.1:0)-(copNear?.35:0)){
-    const dv=Math.max(rnd(8,30)*mult()*lynx()*gm(),autoRate()*rnd(4,10))*(p.rich?2:1);S.dirty=(S.dirty||0)+dv;float(b.x,b.y-80,'+'+fmt(dv)+' sale','#9d4edd');b.lootT=5;snd('coin');p.robbed=true;S.stats.bpick++;S.heat=Math.min(100,S.heat+3*hm);
+    const dv=Math.max(rnd(8,30)*mult()*lynx()*gm(),autoRate()*rnd(4,10))*(p.rich?2:1);S.dirty=(S.dirty||0)+dv;float(b.x,b.y-80,'+'+fmt(dv)+' sale','#9d4edd');b.lootT=5;snd('coin');p.robbed=true;S.stats.bpick++;S.heat=Math.min(100,S.heat+HEATX*(3*hm));
   }else{
-    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+12*hm);
+    p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+HEATX*(12*hm));
     const c=closestCop(b.x,b.y);
     if(copNear&&c&&c.chase<=0){c.chase=4.5;c.chaseB=b;c.say='Halte !';c.sayT=2;b.flee=4.5;b.from=c}
   }
@@ -1786,7 +1810,7 @@ function doAct(){
   if(s==='casino'){const L=lockByKey('casino');if(L){toast(lockText(L));snd('err');return}
     if(!casinoOk()){casWarn++;
       if(casWarn>=2){casWarn=0;callSquad('Le videur a appelé la police !',.1,true);
-        S.heat=Math.min(100,S.heat+5);snd('siren');say('Oups, le videur a appelé les flics !');toast('Le videur a appelé la police ! Cours !');return}}
+        S.heat=Math.min(100,S.heat+HEATX*(5));snd('siren');say('Oups, le videur a appelé les flics !');toast('Le videur a appelé la police ! Cours !');return}}
     else casWarn=0}
   if(s==='bookie'&&S.meta.outfit!=='peaky'){const own=S.meta.wardrobe.includes('peaky');say('« Pas de casquette, pas de pari ! »');snd('err');
     toast(own?'Le bookmaker ne laisse entrer que les barons londoniens : porte ton costume de baron (cloakroom du casino, bouton Porter).':'Le bookmaker ne laisse entrer que les barons londoniens : achète le costume de baron au cloakroom du casino ('+fmt(20000)+') et porte-le.');return}
@@ -2244,6 +2268,8 @@ $('pbody').addEventListener('click',e=>{
   if(a==='launder'){const d=S.dirty||0;if(d<1)return;const g=d*.65;S.dirty=0;S.cash+=g;S.total+=g;S.meta.life+=g;S.meta.laundered=(S.meta.laundered||0)+g;snd('coin');toast(fmt(g)+' blanchis et versés sur ton compte')}
   if(a==='bksel'){if(BK.run)return;BK.sel=+v;BK.msg='Tu mises sur '+HORSES[+v][0]+' (x'+HORSES[+v][1]+').';BK.mc='';snd('pick')}
   if(a==='bkbet'){bkStart(+v)}
+  if(a==='bktab'){BK.tab=v;return renderPanel()}
+  if(a==='grat'){if(v==='buy')gratBuy(+w);else gratReveal(null);return renderPanel()}
   if(a==='equip'){if(!S.arms[v])return;S.weapon=S.weapon===v?null:v;const am=ARMS.find(x=>x.k===v);snd('buy');toast(S.weapon?am.n+' équipé. Attention dehors !':am.n+' rangé à l\'armurerie')}
   if(a==='heist'){if(bqBlock())return;BQ.st='pick';BQ.res=null;BQ.msg='';openPanel('braq');lbLoad();return}
   if(a==='fire2'){const i=+v;if(i>=S.emp)return;const c=sev(i);if(!pay(c))return;const n=S.staff[i].n;pid='biz';if(lastHire&&lastHire.n===n)lastHire=null;S.staff.splice(i,1);S.emp--;emps.splice(i,1);freeClaims();toast(n+' a été licencié. Il part en claquant la porte')}
@@ -2258,7 +2284,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='anainfo'){if(v==='3'){pid='insider';return renderPanel()}pid='anainfo';parg=+v;return renderPanel()}
   if(a==='sell'){const mk=S.mkt[v],st=S.stk[v];if(!st.q)return;const val=st.q*mk.p,pl=val-st.cost;S.cash+=val;S.meta.bestTrade=Math.max(S.meta.bestTrade,pl);
     if(mk.insT&&pl<=0)mk.insT=0;
-    if(pl>0&&mk.insT&&Math.random()<.2){const f=Math.round(pl*.7);S.cash-=f;mk.insT=0;st.q=0;st.cost=0;S.heat=Math.min(100,S.heat+15);snd('siren');toast('Le gendarme de la Bourse a flairé le délit d\'initié : '+fmt(f)+' de bénéfice confisqué !');return renderPanel()}
+    if(pl>0&&mk.insT&&Math.random()<.2){const f=Math.round(pl*.7);S.cash-=f;mk.insT=0;st.q=0;st.cost=0;S.heat=Math.min(100,S.heat+HEATX*(15));snd('siren');toast('Le gendarme de la Bourse a flairé le délit d\'initié : '+fmt(f)+' de bénéfice confisqué !');return renderPanel()}
     mk.insT=0;toast((pl>=0?'Vendu avec '+fmt(pl)+' de bénéfice':'Vendu à perte : '+fmt(pl)));snd(pl>=0?'coin':'fail');st.q=0;st.cost=0}
   if(a==='biz'){
     if(v==='distup'&&S.distrib>0){if(S.distUp>=10||!pay(distUpCost()))return;S.distUp++;toast('Distributeurs améliorés, niveau '+S.distUp+(S.distUp===3?' : passage en gamme BIO':S.distUp===6?' : passage en gamme LUXE':''))}
@@ -3082,7 +3108,7 @@ async function bqEnd(){if(pid!=='braq'||BQ.st!=='play')return;BQ.rate=Math.max(0
   await cloudPush();// le plafond « ton argent » se calcule sur ta sauvegarde en ligne
   let r;try{r=await SB.rpc('heist_player',{p_pseudo:BQ.target,p_rate:BQ.rate})}catch(e){r={error:e}}const d=r.data;
   if(r.error||!d||d.error){BQ.res=null;BQ.msg=r.error?(/heist_player|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):(d&&d.error)||'Le casse a échoué';snd('fail')}
-  else{BQ.res=d;S.cash+=d.amount||0;if(d.amount>0)S.meta.heists++;S.heat=Math.min(100,S.heat+10*BQ.nb);snd('legend');save();updHud()}
+  else{BQ.res=d;S.cash+=d.amount||0;if(d.amount>0)S.meta.heists++;S.heat=Math.min(100,S.heat+HEATX*(10*BQ.nb));snd('legend');save();updHud()}
   BQ.st='done';if(pid==='braq')renderPanel()}
 // braquages subis : découverts à la connexion puis toutes les 20 s
 async function claimHeists(login){if(!SB||!LB.ready)return;let r;try{r=await SB.rpc('claim_heists')}catch(e){return}const d=r&&r.data;if(!d||!(d.total>0))return;
@@ -3217,6 +3243,9 @@ async function fbAct(v,w){if(v==='kind'){FB.kind=w;FB.res='';return fbRedraw()}
   else if(r.data!=='ok'){FB.res=r.data;FB.err=true;snd('err')}
   else{FB.msg='';FB.res='Merci ! Ta remarque est bien arrivée.';FB.err=false;snd('coin')}
   fbRedraw()}
+{let gDown=false;const gHit=e=>{const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('[data-gi]');if(c&&!GR.shown[+c.dataset.gi]){const i=+c.dataset.gi;gratReveal(i);if(GR.done)renderPanel();else{c.classList.add('on');c.textContent=GRAT_SYM[GR.grid[i]][0]}}};// on ne redessine qu'à la fin, pour gratter d'un seul geste
+  $('pbody').addEventListener('pointerdown',e=>{if(e.target.closest('[data-gi]')){gDown=true;gHit(e)}});
+  $('pbody').addEventListener('pointermove',e=>{if(gDown)gHit(e)});addEventListener('pointerup',()=>gDown=false)}
 $('pbody').addEventListener('input',e=>{if(!e.target.classList.contains('fbin'))return;FB.msg=e.target.value;const n=$('fbn');if(n)n.textContent=FB.msg.length});
 $('pbody').addEventListener('keydown',e=>{if(e.target.classList.contains('fbin')&&e.key!=='Escape')e.stopPropagation()});
 $('btnFb').addEventListener('click',()=>{FB.res='';openPanel('fb')});

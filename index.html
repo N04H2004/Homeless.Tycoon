@@ -311,6 +311,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbw .lbr{padding:4px 10px}
 .lbw small{font-size:12px;opacity:.75}
 #boot .aus{display:flex;gap:8px}
+.fbin{width:100%;box-sizing:border-box;font-family:var(--body);font-size:16px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);resize:vertical;-webkit-user-select:text;user-select:text}
+.fbin:focus{outline:3px solid #c77dff;outline-offset:1px}
 #boot .aus button{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);background:#ffd23f;box-shadow:0 4px 0 var(--ink);font-size:22px;line-height:1;cursor:pointer;padding:0}
 #boot .aus button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 #boot .aus button.off{background:#e4dccb}
@@ -378,6 +380,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
       <button class="chunky" id="btnBiz" type="button">Business</button>
       <button class="chunky alt" id="btnMenu" type="button">Menu</button>
       <button class="chunky alt" id="btnLb" type="button">Classement</button>
+      <button class="chunky alt" id="btnFb" type="button">Remarques</button>
     </div>
   </div>
   <div id="evb" class="card" hidden></div>
@@ -911,7 +914,7 @@ catchUp(Math.min(7200,(Date.now()-(S.last||Date.now()))/1000),false);
 // ================= Entrées =================
 const keys={};
 addEventListener('keydown',e=>{
-  if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&document.activeElement.tagName!=='INPUT'){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
+  if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
   if(e.key==='Escape'&&!$('panel').hidden){closePanel();return}
   if(!$('panel').hidden){if(e.key===' '&&JOB&&JOB.k==='karaoke'&&pid==='job'){e.preventDefault();if(!(JOB.cust.wait>0)){mgAct('ksing');if(JOB)renderPanel()}}return}
   if(document.activeElement&&document.activeElement!==cv&&document.activeElement.tagName==='BUTTON'&&e.key.startsWith('Arrow'))document.activeElement.blur();
@@ -1720,7 +1723,7 @@ $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
-for(const id of ['btnBiz','btnLb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
+for(const id of ['btnBiz','btnLb','btnFb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
 function updSnd(){$('snd').textContent=S.meta.snd?'Son : oui':'Son : non';$('snd').classList.toggle('off',!S.meta.snd)}
 updSnd();
 function payNow(){
@@ -2062,6 +2065,7 @@ function renderPanel(){
   else if(pid==='ko'){t='K.O. !';hd='#ef476f';
     h=`<p class="lead">Tu t'es évanoui sur le trottoir. Pendant ta sieste, les pigeons t'ont piqué ${fmt(parg||0)}.</p><p class="lead">Pense à manger et à passer à la pharmacie quand ta vie baisse.</p><button class="chunky" type="button" data-act="close">Je me relève</button>`;}
   if(pid==='lb'){t='Classement';hd='#4cc9f0';h=lbHTML()}
+  if(pid==='fb'){t='Remarques';hd='#c77dff';h=fbHTML()}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='casino'&&casTab==='rou'&&S.secu)drawWheel();
   if(pid==='plus'&&ptab==='stats')drawStats();
@@ -2079,6 +2083,7 @@ $('pbody').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]');if(!b||b.disabled||spinning)return;
   const [a,v,w]=b.dataset.act.split(':');
   if(a==='lb'){lbAct(v,w);return}
+  if(a==='fb'){fbAct(v,w);return}
   if(a==='visit'){startVisit(+v);return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){endVisit();return}
@@ -2905,9 +2910,11 @@ function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   else if(!LB.user)h+='<small>Connecte-toi pour apparaître dans le classement</small>';
   return h}
 $('boot').addEventListener('click',e=>{if(e.target.closest('[data-lbo]')){openPanel('lb');lbSend().finally(lbLoad)}
+  if(e.target.closest('[data-fbo]'))openPanel('fb');
   const a=e.target.closest('[data-au]');if(a){if(a.dataset.au==='snd'){S.meta.snd=!S.meta.snd;updSnd()}else S.meta.mus=!S.meta.mus;auInit();if(S.meta.snd)snd('tick');save();$('aus').innerHTML=ausHTML()}});
 function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" class="${m.snd?'':'off'}" aria-pressed="${!m.snd}" aria-label="${m.snd?'Couper le son':'Remettre le son'}" title="${m.snd?'Couper le son':'Remettre le son'}">🔊</button>`+
-  `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`}
+  `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`+
+  `<button type="button" data-fbo aria-label="Laisser une remarque" title="Laisser une remarque (bug, idée...)">💬</button>`}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.ready)return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
@@ -2960,6 +2967,29 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
 $('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();e.target.dataset.f==='n'?lbRename():lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
+// ---- Remarques des joueurs : envoyées dans la table feedback de Supabase
+const FB={kind:'bug',msg:'',busy:false,res:'',err:false};
+const FBPH={bug:"Qu'est-ce qui s'est passé ? Qu'est-ce que tu faisais juste avant ?",idee:"Ton idée pour améliorer le jeu...",autre:"Ce que tu veux me dire..."};
+function fbHTML(){const who=LB.user?'Envoyé au nom de <b>'+lbEsc(LB.pseudo)+'</b>':'Envoyé anonymement';
+  return '<p class="lead">Un bug, une idée, un truc pas clair ? Dis-le, toutes les remarques sont lues !</p>'+tabs(FB.kind,[['bug','🐞 Bug'],['idee','💡 Idée'],['autre','💬 Autre']],'fb:kind')+
+    `<textarea class="fbin" maxlength="2000" rows="6" placeholder="${FBPH[FB.kind]}" aria-label="Ta remarque">${lbEsc(FB.msg)}</textarea>`+
+    `<p class="foot"><span id="fbn">${FB.msg.length}</span> / 2000 · ${who}. Ta ville, ton appareil et ton avancée sont joints pour aider à corriger les bugs.</p>`+
+    (FB.res?`<div class="jmsg ${FB.err?'ko':'ok'}">${lbEsc(FB.res)}</div>`:'')+
+    `<button class="chunky" type="button" data-act="fb:send" ${FB.busy||!SB?'disabled':''}>${!SB?'Hors ligne':FB.busy?'Envoi...':'Envoyer'}</button>`}
+function fbRedraw(){if(pid==='fb'&&!$('panel').hidden)renderPanel()}
+async function fbAct(v,w){if(v==='kind'){FB.kind=w;FB.res='';return fbRedraw()}
+  if(v!=='send'||FB.busy||!SB)return;const m=FB.msg.trim();
+  if(m.length<3){FB.res='Écris au moins quelques mots';FB.err=true;snd('err');return fbRedraw()}
+  const R=VISIT?VISIT.saved:S,info={ville:CITY().n,ecran:innerWidth+'x'+innerHeight,appareil:navigator.userAgent.slice(0,180),tuto:R.meta.tutoDone?'fini':'étape '+((R.meta.tuto||0)+1),
+    argent:Math.floor(R.cash),total:lbLife(),vie:Math.round(R.hp),faim:Math.round(R.food),site:location.host};
+  FB.busy=true;FB.res='';fbRedraw();let r;try{r=await SB.rpc('send_feedback',{p_kind:FB.kind,p_message:m,p_info:info})}catch(e){r={error:e}}FB.busy=false;
+  if(r.error){FB.res=/send_feedback|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error);FB.err=true;snd('err')}
+  else if(r.data!=='ok'){FB.res=r.data;FB.err=true;snd('err')}
+  else{FB.msg='';FB.res='Merci ! Ta remarque est bien arrivée.';FB.err=false;snd('coin')}
+  fbRedraw()}
+$('pbody').addEventListener('input',e=>{if(!e.target.classList.contains('fbin'))return;FB.msg=e.target.value;const n=$('fbn');if(n)n.textContent=FB.msg.length});
+$('pbody').addEventListener('keydown',e=>{if(e.target.classList.contains('fbin')&&e.key!=='Escape')e.stopPropagation()});
+$('btnFb').addEventListener('click',()=>{FB.res='';openPanel('fb')});
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
 setInterval(()=>{lbSend();cloudPush()},60000);

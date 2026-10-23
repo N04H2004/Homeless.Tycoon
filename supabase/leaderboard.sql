@@ -161,3 +161,40 @@ exception when unique_violation then return 'Ce pseudo est déjà pris';
 end $$;
 revoke all on function public.set_pseudo(text) from public, anon;
 grant execute on function public.set_pseudo(text) to authenticated;
+
+-- ============ Remarques des joueurs (bugs, idées...) ============
+-- Les joueurs écrivent via send_feedback() ; personne ne peut les relire depuis le jeu.
+-- Pour les lire : Table Editor > feedback (ou : select * from public.feedback order by created_at desc;)
+create table if not exists public.feedback (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  user_id uuid references auth.users (id) on delete set null,
+  pseudo text,
+  kind text not null check (kind in ('bug', 'idee', 'autre')),
+  message text not null check (char_length(message) between 3 and 2000),
+  info jsonb,
+  traite boolean not null default false
+);
+alter table public.feedback enable row level security;
+
+create or replace function public.send_feedback(p_kind text, p_message text, p_info jsonb default null)
+returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); ps text; msg text := btrim(coalesce(p_message, ''));
+begin
+  if p_kind not in ('bug', 'idee', 'autre') then return 'Type de remarque inconnu'; end if;
+  if char_length(msg) < 3 then return 'Écris au moins quelques mots'; end if;
+  if char_length(msg) > 2000 then return 'Message trop long (2000 caractères maximum)'; end if;
+  if pg_column_size(p_info) > 4000 then p_info := null; end if;
+  -- anti-spam : 1 remarque toutes les 20 s par compte, 30 par heure pour les joueurs non connectés
+  if uid is not null then
+    if exists (select 1 from public.feedback where user_id = uid and created_at > now() - interval '20 seconds') then
+      return 'Doucement ! Attends quelques secondes avant d''envoyer une autre remarque'; end if;
+    select pseudo into ps from public.profiles where id = uid;
+  elsif (select count(*) from public.feedback where user_id is null and created_at > now() - interval '1 hour') >= 30 then
+    return 'Trop de remarques en ce moment, réessaie plus tard';
+  end if;
+  insert into public.feedback (user_id, pseudo, kind, message, info) values (uid, ps, p_kind, msg, p_info);
+  return 'ok';
+end $$;
+revoke all on function public.send_feedback(text, text, jsonb) from public;
+grant execute on function public.send_feedback(text, text, jsonb) to anon, authenticated;

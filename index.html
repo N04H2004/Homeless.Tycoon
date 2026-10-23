@@ -2983,7 +2983,7 @@ async function fbAct(v,w){if(v==='kind'){FB.kind=w;FB.res='';return fbRedraw()}
   const R=VISIT?VISIT.saved:S,info={ville:CITY().n,ecran:innerWidth+'x'+innerHeight,appareil:navigator.userAgent.slice(0,180),tuto:R.meta.tutoDone?'fini':'étape '+((R.meta.tuto||0)+1),
     argent:Math.floor(R.cash),total:lbLife(),vie:Math.round(R.hp),faim:Math.round(R.food),site:location.host};
   FB.busy=true;FB.res='';fbRedraw();let r;try{r=await SB.rpc('send_feedback',{p_kind:FB.kind,p_message:m,p_info:info})}catch(e){r={error:e}}FB.busy=false;
-  if(r.error){FB.res=/send_feedback|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error);FB.err=true;snd('err')}
+  if(r.error){FB.res=/send_feedback|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql ('+r.error.message+')':lbErr(r.error);FB.err=true;snd('err')}
   else if(r.data!=='ok'){FB.res=r.data;FB.err=true;snd('err')}
   else{FB.msg='';FB.res='Merci ! Ta remarque est bien arrivée.';FB.err=false;snd('coin')}
   fbRedraw()}

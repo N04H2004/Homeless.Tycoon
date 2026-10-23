@@ -1270,9 +1270,9 @@ function update(dt){
     if(tx!=null){const d=dist(b.x,b.y,tx,ty);b.moving=d>3;if(d>3){b.x=clamp(b.x+(tx-b.x)/d*sp*dt,20,W-20);b.y=clamp(b.y+(ty-b.y)/d*sp*dt,215,630);if(Math.abs(tx-b.x)>2)b.face=tx>b.x?1:-1}}
   }
   heistUpdate(dt);
+  if(S.heat>=99.5)raid();// avant la baisse naturelle, sinon la chaleur ne reste jamais à 100
   S.heat=Math.max(0,S.heat-dt*.15*(1+.15*av())*(S.secu?1.15:1)*(S.owned.bar?1.15:1));
   if(S.dirty>0){const L=launderR();if(L>0){const a=Math.min(S.dirty,L*dt);S.dirty-=a;const g=a*.9;S.cash+=g;S.total+=g;S.meta.life+=g;S.meta.laundered=(S.meta.laundered||0)+g}}
-  if(S.heat>=100)raid();
   for(const b of bands)if(b.lootT>0)b.lootT-=dt;
 
   // pigeons (ils ne fuient que si tu bouges)

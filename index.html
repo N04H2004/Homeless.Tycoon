@@ -490,19 +490,19 @@ const MEDS=[
  {n:'Check-up complet',d:'Vie et faim au maximum',p:70,h:100,f:100},
 ];
 const SHOPDEF={
- super:{n:'Supermarché',s:'SUPERMARCHÉ',d:'Courses et rayon santé',base:6000,inc:8,col:'#e63946',awn:['#e63946','#fff'],svc:'super',job:'caisse'},
- kebab:{n:'Kebab Chez Momo',s:'KEBAB',d:'Sauce blanche, marge grasse',base:4000,inc:6,col:'#f77f00',job:'kebab'},
- fish:{n:'Fish & Chips de Nigel',s:'FISH & CHIPS',d:'Friture, vinaigre et papier journal',base:4000,inc:6,col:'#1d4e89',job:'kebab'},
- hotdog:{n:"Joe's Hot Dogs",s:'HOT DOGS',d:'Moutarde et klaxons',base:4000,inc:6,col:'#d62839',job:'kebab'},
- ramen:{n:'Ramen Ichiban',s:'RAMEN',d:'Un bouillon qui mijote depuis 1987',base:4000,inc:6,col:'#bc4749',job:'kebab'},
- brico:{n:'Brico Dédé',s:'BRICO DÉDÉ',d:'Outils à vie. Proprio : tes outils à -20 %',base:8000,inc:10,col:'#f4a261',awn:['#f77f00','#ffd23f'],svc:'brico',job:'brico'},
- motors:{n:'Pigeon Motors',s:'PIGEON MOTORS',d:'Véhicules à vie. Proprio : tes véhicules à -20 %',base:10000,inc:14,col:'#118ab2',awn:['#118ab2','#ffd23f'],svc:'motors',job:'lavage'},
- laverie:{n:'Laverie Mousse & Co',s:'LAVERIE',d:"Les chaussettes tournent, l'argent aussi",base:1500,inc:2.5,col:'#4cc9f0',job:'laverie'},
- bookie:{n:'Bookmaker Lucky Pigeon',s:'BOOKMAKER',d:'Courses de chevaux et cotes douteuses',base:9000,inc:12,col:'#2d6a4f',svc:'bookie'},
- fripe:{n:'Fripe & Chic',s:'FRIPE & CHIC',d:'Tenues fun, à vie',base:12000,inc:16,col:'#ff8fab',awn:['#ff8fab','#fff'],svc:'fripe',job:'style'},
- garage:{n:'Garage Pneu-Pneu',s:'GARAGE',d:'Vidange et blagues de mécano',base:12000,inc:16,col:'#8d99ae',job:'meca'},
- coiffeur:{n:"Salon Tif'Tycoon",s:'COIFFEUR',d:'Coupe dégradée, prix pas dégradé',base:35000,inc:40,col:'#f72585',job:'coupe'},
- karaoke:{n:'Karaoké Pigeon Star',s:'KARAOKÉ',d:'Micro, néons et fausses notes',base:25000,inc:30,col:'#7209b7',job:'karaoke'},
+ super:{n:'Supermarché',s:'SUPERMARCHÉ',d:'Courses et rayon santé',base:18000,inc:8,col:'#e63946',awn:['#e63946','#fff'],svc:'super',job:'caisse'},
+ kebab:{n:'Kebab Chez Momo',s:'KEBAB',d:'Sauce blanche, marge grasse',base:12000,inc:6,col:'#f77f00',job:'kebab'},
+ fish:{n:'Fish & Chips de Nigel',s:'FISH & CHIPS',d:'Friture, vinaigre et papier journal',base:12000,inc:6,col:'#1d4e89',job:'kebab'},
+ hotdog:{n:"Joe's Hot Dogs",s:'HOT DOGS',d:'Moutarde et klaxons',base:12000,inc:6,col:'#d62839',job:'kebab'},
+ ramen:{n:'Ramen Ichiban',s:'RAMEN',d:'Un bouillon qui mijote depuis 1987',base:12000,inc:6,col:'#bc4749',job:'kebab'},
+ brico:{n:'Brico Dédé',s:'BRICO DÉDÉ',d:'Outils à vie. Proprio : tes outils à -20 %',base:24000,inc:10,col:'#f4a261',awn:['#f77f00','#ffd23f'],svc:'brico',job:'brico'},
+ motors:{n:'Pigeon Motors',s:'PIGEON MOTORS',d:'Véhicules à vie. Proprio : tes véhicules à -20 %',base:30000,inc:14,col:'#118ab2',awn:['#118ab2','#ffd23f'],svc:'motors',job:'lavage'},
+ laverie:{n:'Laverie Mousse & Co',s:'LAVERIE',d:"Les chaussettes tournent, l'argent aussi",base:4500,inc:2.5,col:'#4cc9f0',job:'laverie'},
+ bookie:{n:'Bookmaker Lucky Pigeon',s:'BOOKMAKER',d:'Courses de chevaux et cotes douteuses',base:27000,inc:12,col:'#2d6a4f',svc:'bookie'},
+ fripe:{n:'Fripe & Chic',s:'FRIPE & CHIC',d:'Tenues fun, à vie',base:36000,inc:16,col:'#ff8fab',awn:['#ff8fab','#fff'],svc:'fripe',job:'style'},
+ garage:{n:'Garage Pneu-Pneu',s:'GARAGE',d:'Vidange et blagues de mécano',base:36000,inc:16,col:'#8d99ae',job:'meca'},
+ coiffeur:{n:"Salon Tif'Tycoon",s:'COIFFEUR',d:'Coupe dégradée, prix pas dégradé',base:105000,inc:40,col:'#f72585',job:'coupe'},
+ karaoke:{n:'Karaoké Pigeon Star',s:'KARAOKÉ',d:'Micro, néons et fausses notes',base:75000,inc:30,col:'#7209b7',job:'karaoke'},
 };
 const CITY_SHOPS={paris:['super','kebab','brico','motors'],london:['super','fish','laverie','bookie'],ny:['super','hotdog','fripe','garage'],tokyo:['super','ramen','coiffeur','karaoke']};
 const SHOPS=[],BUILD=[],BID={},ESTATE=[];
@@ -729,7 +729,7 @@ const distCost=()=>C(150*Math.pow(1.18,S.distrib)), distUpCost=()=>C(600*Math.po
 const empCost=()=>Math.round(C(400*Math.pow(1.25,S.emp))*(1-.08*S.meta.perk.emp));
 const formCost=()=>C(300*Math.pow(1.7,S.emUp.form)), charCost=()=>C(500*Math.pow(1.8,S.emUp.chariot));
 const shopCost=s=>C(s.base*Math.pow(1.5,S.shops[s.k]||0));
-const bandCost=()=>C(800*Math.pow(1.3,S.band)),nezCost=()=>C(700*Math.pow(1.8,S.bandUp.nez)),pigCost=()=>C(900*Math.pow(1.8,S.bandUp.pigeon));
+const bandCost=()=>C(3000*Math.pow(1.45,S.band)),nezCost=()=>C(700*Math.pow(1.8,S.bandUp.nez)),pigCost=()=>C(900*Math.pow(1.8,S.bandUp.pigeon));
 const foodP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)*(ev&&ev.k==='marche'?.5:1)));
 const medP=p=>Math.max(1,Math.round(C(p)*(S.shops.super?.5:1)));
 const vehP=v=>Math.round(C(v.p)*(S.shops.motors?.8:1));
@@ -745,7 +745,7 @@ const poCost=()=>Math.round(25*Math.pow(1.5,S.meta.poBought));
 const capCost=()=>Math.round(10*Math.pow(1.6,S.capBought)),capAmt=()=>C(1500);
 const motCost=w=>Math.round(20*Math.pow(1.7,Math.round((w.g-.2)/.05)));
 const HER=[['frigo','Frigo connecté','achète-le une fois'],['manager','Manager Gérard','engage-le une fois']];
-const av=()=>S.avocat===true?1:(+S.avocat||0),fineM=()=>1-.08*av(),avCost=()=>C(Math.round(6000*Math.pow(2.6,av()))),launderR=()=>{const L=S.owned.bar?(S.compta||0):0;return L?Math.max(C(2)*L,autoRate()*.15*L):0};
+const av=()=>S.avocat===true?1:(+S.avocat||0),fineM=()=>1-.08*av(),avCost=()=>C(Math.round(20000*Math.pow(2.6,av()))),launderR=()=>{const L=S.owned.bar?(S.compta||0):0;return L?Math.max(C(2)*L,autoRate()*.15*L):0};
 // réorganisation de la rue (v2) : boutiques par ville, outils/véhicules à vie, bandits dès Londres
 function normalizeS(){const m=S.meta,ci=CI();if(VISIT)return;
   m.up=m.up||{};m.veh=m.veh||{};
@@ -2099,7 +2099,7 @@ function renderPanel(){
       (S.band<1&&!av()?row('Avocat véreux','',"Il faut au moins 1 bandit"):av()>=5?row('Avocat véreux','niv. 5 · MAX','Maître Lafouine au sommet : chaleur -75 % plus vite, amendes et impôts -40 %'):row('Avocat véreux','niv. '+av(),'Chaque niveau : la chaleur retombe +15 % plus vite, amendes et impôts -8 %. Actuellement : chaleur +'+(15*av())+' %, amendes -'+(8*av())+' %','biz:avocat',avCost()))+
       `<p class="foot">Tes bandits sortent la nuit. Leur butin est de l'argent sale (${fmt(S.dirty||0)} au coffre) : le comptable du bar le blanchit tout seul (${launderR()>0?fmt2(launderR())+'/s, 10 % de frais':'engage-le sur l\'ordinateur du bar'}), et l'ordinateur peut tout blanchir d'un coup (35 % de frais). Chaleur 50 : un flic de plus. 75 : deux fois plus de flics en civil. 100 : descente au QG, amende et coffre saisi.</p>`))+
       '<div class="sec">Fin de partie'+ib('secu')+'</div>'+
-      (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',C(5000),null,S.emp<2))+
+      (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',C(25000),null,S.emp<2))+
       (Object.values(S.veh).some(v=>v)?'<div class="sec">Ton garage</div>'+VEH.filter(v=>S.veh[v.k]).map(v=>{const on=S.ride===v.k;
         return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div><button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button></div>`}).join('')+
         (SHOPS.some(x=>x.k==='motors')?'':'<p class="foot">Pour acheter un autre véhicule, passe chez Pigeon Motors à Paris.</p>'):'')+
@@ -2301,7 +2301,7 @@ $('pbody').addEventListener('click',e=>{
     if(v==='pigeon'&&S.band>0){if(S.bandUp.pigeon>=5||!pay(pigCost()))return;S.bandUp.pigeon++;toast('Déguisement de pigeon niveau '+S.bandUp.pigeon)}
     if(v==='avocat'&&(S.band>0||av())&&av()<5){if(!pay(avCost()))return;S.avocat=av()+1;toast(S.avocat===1?'Maître Lafouine est à ton service':'Maître Lafouine passe niveau '+S.avocat)}
     if(v==='frigo'&&S.local&&!S.frigo){if(!pay(C(600)))return;S.frigo=true;S.meta.her.frigo=1;toast('Frigo connecté installé')}
-    if(v==='secu'&&S.emp>=2&&!S.secu){if(!pay(C(5000)))return;S.secu=true;toast('Raymond, agent de sécurité, prend son poste')}
+    if(v==='secu'&&S.emp>=2&&!S.secu){if(!pay(C(25000)))return;S.secu=true;toast('Raymond, agent de sécurité, prend son poste')}
   }
   if(a==='bjdeal')bjDeal(+v);
   if(a==='bj'){if(BJ.phase!=='play')return;if(v==='hit')bjHit();else bjStand()}

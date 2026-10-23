@@ -34,6 +34,9 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .bar>i{display:block;height:100%;width:50%;border-radius:4px;transition:width .2s}
 #hpb{background:var(--hp)}
 .bar.low{animation:lowb .7s ease-in-out infinite}
+#afk{position:absolute;inset:0;z-index:80;background:rgba(42,31,61,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+#afk .card{display:flex;flex-direction:column;gap:6px;text-align:center;max-width:340px;font-size:14px;font-weight:600}
+#afk b{font-family:var(--display);font-weight:400;font-size:28px}
 #dmg{position:absolute;inset:0;z-index:58;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(214,40,57,.15) 30%,rgba(214,40,57,.75) 100%)}
 #dmg.on{animation:dmgf .6s ease-out}@keyframes dmgf{0%{opacity:1}100%{opacity:0}}
 #alert{position:absolute;left:50%;top:44%;z-index:57;transform:translate(-50%,-50%);display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(320px,calc(100% - 32px))}
@@ -391,6 +394,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
   <div id="dmg" aria-hidden="true"></div>
+  <div id="afk" hidden role="dialog" aria-label="Pause"><div class="card"><b>⏸️ Pause</b><span>Tu n'as pas joué depuis 10 minutes : le jeu et tes revenus sont en pause.</span><span>Touche l'écran ou appuie sur une touche pour reprendre.</span></div></div>
   <div id="alert" hidden role="alert"></div>
   <div id="tuto" class="card" hidden></div>
   <div id="tarrow" hidden aria-hidden="true"><svg viewBox="0 0 60 70"><path d="M18 4h24v30h14L30 66 4 34h14z" fill="#ffd23f" stroke="#2a1f3d" stroke-width="5" stroke-linejoin="round"/></svg></div>
@@ -904,6 +908,7 @@ const nearCop=(x,y,r)=>cops.some(c=>c.active&&dist(c.x,c.y,x,y)<r);
 const closestCop=(x,y)=>{let b=null,bd=1e9;for(const c of cops)if(c.active){const d=dist(c.x,c.y,x,y);if(d<bd){bd=d;b=c}}return b};
 
 // hors ligne
+const AFK_MAX=600;// anti-AFK : 10 minutes maximum de gains hors jeu, et pause du jeu après 10 minutes sans toucher à rien
 function catchUp(el,away){
   const base=CITY().m*(1+.1*S.meta.perk.cash);
   let g=el*passive()*base;
@@ -912,7 +917,7 @@ function catchUp(el,away){
   const tg=el*gerRate();S.meta.treas+=tg;
   if(away)S.meta.treas-=tg;
   if(g>=1||tg>=1){S.cash+=g;S.total+=g;S.meta.life+=g;setTimeout(()=>toast((away?'Pendant ta visite, ta rue de '+CITY().n+' a rapporté ':'Pendant ton absence, ton business a rapporté ')+fmt(g)+(tg>=1&&!away?' et tes filiales '+fmt(tg):'')),600)}}
-catchUp(Math.min(7200,(Date.now()-(S.last||Date.now()))/1000),false);
+catchUp(Math.min(AFK_MAX,(Date.now()-(S.last||Date.now()))/1000),false);
 
 // ================= Entrées =================
 const keys={};
@@ -2836,7 +2841,7 @@ const TIPS=[
  ['tools','Les outils de Brico Dédé',()=>Object.values(S.up).some(v=>v>0),['<b>Pince</b> : attrape les déchets de plus loin.','<b>Sac XXL</b> : moins d\'allers-retours à la poubelle.','<b>Baskets</b> : plus rapide, pratique pour semer la police.','<b>Œil de lynx</b> : booste tous les revenus automatiques.','Chaque outil se voit sur ton perso !']],
  ['cdd',"Les CDD d'une journée",()=>S.stats.cdd>=1,['Un CDD par boutique et par jour du jeu.','Chaque client réussi est payé tout de suite, avec un pourboire si tu es rapide.','Aucun raté et 5 clients ou plus : bonus "Employé de la journée".','L\'Offre du jour paie un des CDD 50 % de plus.']],
  ['health','Ta vie',()=>S.hp<70,['Ta vie <b>ne remonte pas toute seule</b>.','Soigne-toi au <b>rayon santé du supermarché</b>, ou avec les gros repas.','Voitures, matraques et faim à zéro font mal. À zéro, tu tombes dans les pommes et perds la moitié de ton cash.']],
- ['distrib','Les revenus automatiques',()=>S.distrib>=1,['Les distributeurs rapportent <b>même quand tu ne joues pas</b> (jusqu\'à 2 h d\'absence).','Améliore leur gamme : BIO puis LUXE.','Le compteur sous ton argent montre tout ce qui tombe tout seul chaque seconde.']],
+ ['distrib','Les revenus automatiques',()=>S.distrib>=1,['Les distributeurs rapportent <b>même quand tu ne joues pas</b> (jusqu\'à 10 min d\'absence).','Améliore leur gamme : BIO puis LUXE.','Le compteur sous ton argent montre tout ce qui tombe tout seul chaque seconde.']],
  ['local','Ton QG',()=>S.local,['Le local débloque : <b>employés, rachat des boutiques et frigo</b> (menu Business). Les bandits viendront à Londres.','Attention : ton rival <b>Déchets Corp</b> envoie ses ramasseurs voler tes déchets. Sabote-le ou rachète-le !']],
  ['staff','Tes employés',()=>S.emp>=1,['Chaque recrue est <b>tirée au sort</b> : commune, rare ou légendaire (7 %).','<b>Équipe de jour</b> le jour, <b>équipe de nuit</b> la nuit.','Paie toutes les 60 s, sinon <b>grève</b>. Le <b>manager</b> paie tout seul.','Licencier coûte 3 jours de salaire.']],
  ['shops','Ta première boutique',()=>SHOPS.some(x=>S.shops[x.k]>0),['Une boutique rachetée verse un <b>loyer</b> chaque seconde.','Chaque niveau augmente le loyer, la vitrine évolue jusqu\'au luxe au niveau 10.','Chaque ville a ses 4 boutiques à racheter.']],
@@ -2917,7 +2922,12 @@ function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSe
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
 function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready){LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
   BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!BOOT)update(dt);draw();requestAnimationFrame(loop)}
+let lastInput=Date.now(),AFK=false;
+function afkWake(){lastInput=Date.now();if(AFK){AFK=false;$('afk').hidden=true;last=performance.now()}}
+for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(!AFK&&!BOOT&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;$('afk').hidden=false;save()}
+  if(!BOOT&&!AFK)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
 let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}

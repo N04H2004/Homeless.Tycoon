@@ -1063,8 +1063,10 @@ const STEPS=[
  {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
  {k:'bar',c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
  {k:'band',c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
- {k:'heist',c:1,n:'Faire un braquage de Déchets Corp',ok:()=>S.meta.heists>=1||S.rivalBought,tip:'arms',
-   w:'Entre au bar (E) et va à l\'ordinateur : achète une arme au marché noir, puis lance « Le casse ». Tes bandits armés braquent Déchets Corp à la tombée de la nuit (un braquage par jour).',acts:['heist']},
+ {k:'arme',c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
+   w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
+ {k:'heist',c:1,n:'Faire un braquage de Déchets Corp',ok:()=>S.meta.heists>=1||S.rivalBought,tip:'bar',
+   w:'Entre au bar (E) et va à l\'ordinateur : lance « Le casse ». Tes bandits armés braquent Déchets Corp à la tombée de la nuit (un braquage par jour).',acts:['heist']},
  {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
 ];

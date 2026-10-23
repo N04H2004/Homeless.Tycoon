@@ -3047,7 +3047,7 @@ function seedTutoAndTips(){const m=S.meta;if(!m.tips)m.tips={};
 restoreParis();
 seedTutoAndTips();
 let last=performance.now();
-let BOOT=true;
+var BOOT=true;// var : lisible (undefined) avant cette ligne, sans planter pendant le chargement
 const WEM={paris:'🗼',london:'💂',ny:'🗽',tokyo:'🏯'},WTAG={paris:'Le début',london:'Bandits et bar',ny:'Mode et mécanique',tokyo:'Néons et karaoké'};
 const LTIPS=['Astuce : la touche E fait presque tout.','Astuce : un pigeon nourri rapporte parfois une pièce.','Astuce : les analystes de la Bourse ont toujours raison. Presque.','Astuce : ne tire jamais sur un policier en civil. Enfin, essaie.','Astuce : le costume est au vestiaire du casino.','Chargement des poubelles…','Dressage des pigeons…','Réglage des néons de Tokyo…'];
 function bootLoading(){$('ltip').textContent=pick(LTIPS);const t0=performance.now(),bar=$('lbar'),step=()=>{if(!bar.isConnected)return;const k=Math.min(1,(performance.now()-t0)/1800),e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,p=Math.round(e*100);bar.style.setProperty('--p',p);$('lpct').textContent=p+' %';if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step);let n=0;const it=setInterval(()=>{if(++n>3){clearInterval(it);return}$('ltip').textContent=pick(LTIPS)},450);setTimeout(worldSelect,1900)}

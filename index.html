@@ -397,6 +397,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
       <button class="chunky alt" id="btnObj" type="button">Objectifs</button>
       <button class="chunky" id="back" type="button" hidden>Retour</button>
       <button class="chunky" id="btnBiz" type="button">Business</button>
+      <button class="chunky" id="btnSk" type="button" hidden>Compétences</button>
       <button class="chunky alt" id="btnMenu" type="button">Menu</button>
       <button class="chunky alt" id="btnLb" type="button">Classement</button>
       <button class="chunky alt" id="btnFb" type="button">Remarques</button>
@@ -634,11 +635,11 @@ const INFO={
  shops:['Tes boutiques',"Chaque ville a 4 boutiques. Tu peux y faire un CDD, puis les racheter pour toucher un loyer.",["Paris : supermarché, kebab, Brico Dédé, Pigeon Motors. Londres : supermarché, fish & chips, laverie, bookmaker. New York : supermarché, hot-dog, Fripe & Chic, garage. Tokyo : konbini, ramen, coiffeur, karaoké.","Racheter une boutique te verse un loyer chaque seconde. Chaque niveau (jusqu'à 10) l'augmente.","La vitrine évolue avec le niveau. Une boutique rachetée n'a plus de CDD : tu es le patron."],"Commence par la boutique la moins chère : le loyer tombe même quand tu ne joues pas."],
  estate:['Les grands lieux',"Le casino et le bar se rachètent aussi, pour un gros loyer.",["Le casino est dans toutes les villes : le racheter te verse un énorme loyer.","Le bar (à partir de Londres) devient le QG de tes bandits : armurerie, marché noir, coffre et comptable.","Racheter Déchets Corp met fin à la concurrence et en fait ton 2e QG."],"Gros prix mais revenu sûr : idéal quand tu as du cash qui dort."],
  bandits:['Le côté obscur',"Des bandits qui sortent la nuit pour faire les poches des passants. Gros butin, mais la police surveille.",["Les bandits se débloquent à Londres. Recrute-les : ils sortent à la tombée de la nuit et volent les passants. Leur butin est de l'argent sale, stocké au coffre du QG.","Chaque vol fait monter la chaleur. Elle redescend lentement toute seule.","Chaleur 50 : un policier de plus. 75 : deux fois plus de flics en civil. 100 : descente au QG, amende, coffre saisi et bandits au trou.","Blanchis l'argent sale avec le comptable ou l'ordinateur du bar. L'avocat (5 niveaux) fait retomber la chaleur plus vite et réduit les amendes."],"Surveille la jauge Chaleur en haut à gauche, et passe au commissariat te rendre si elle devient trop haute."],
- tools:['Les outils de Brico Dédé',"Des outils qui te rendent plus efficace dans la rue. Achetés une fois, ils te suivent à vie dans toutes les villes.",["Brico Dédé se trouve à Paris : c'est là qu'on achète et améliore les outils.","Pince : tu attrapes de plus loin. Sac XXL : tu portes plus de déchets.","Baskets : tu cours plus vite (effet réduit de moitié sur un véhicule). Clé à molette : tu répares plus vite.","Œil de lynx : tous tes revenus automatiques augmentent. Tri sélectif : chaque déchet vaut plus."],"Au début : Sac XXL puis Pince. Rachète la boutique Brico Dédé pour avoir tes outils à -20 %."],
+ tools:['Les outils de Brico Dédé',"Des outils qui te rendent plus efficace dans la rue. Achetés une fois, ils te suivent à vie dans toutes les villes.",["Brico Dédé se trouve à Paris. À partir de Londres, améliore tes outils dans le bouton Compétences.","Pince : tu attrapes de plus loin. Sac XXL : tu portes plus de déchets.","Baskets : tu cours plus vite (effet réduit de moitié sur un véhicule). Clé à molette : tu répares plus vite.","Œil de lynx : tous tes revenus automatiques augmentent. Tri sélectif : chaque déchet vaut plus."],"Au début : Sac XXL puis Pince. Rachète la boutique Brico Dédé pour avoir tes outils à -20 %."],
  health:['Rayon santé et vie',"Ta vie ne remonte jamais toute seule : il faut te soigner.",["Les voitures, les coups de matraque et la faim à zéro te font perdre de la vie.","Le rayon santé du supermarché vend des soins, dans toutes les villes.","À 0 de vie, tu tombes dans les pommes et perds la moitié de ton cash."],"Rachète le supermarché : tes courses et tes soins coûtent 50 % de moins."],
  food:['Supermarché et faim',"La faim baisse en permanence. À 0, tu perds de la vie.",["Achète à manger au supermarché, présent dans toutes les villes. Certains plats soignent aussi.","Le snack du distributeur dans la rue dépanne, mais il remplit moins.","Le supermarché propose un CDD de caissier (bouton i de la ligne jaune)."],"Le frigo connecté (Business) te nourrit tout seul. Racheter le supermarché divise les prix par deux."],
  fripe:['Tenues et costume',"Des tenues pour changer de look. Elles te suivent à vie, dans toutes les villes.",["Le costume trois-pièces se vend au vestiaire, le petit bâtiment collé au casino, dans chaque ville.","Sans costume, le videur te refoule. La deuxième fois, il appelle la police.","Les tenues fun (hot-dog, pigeon, armure…) se vendent chez Fripe & Chic, à New York.","Clique sur Porter pour changer de tenue."],"Achète le costume dès que tu as 1 000 : le casino s'ouvre."],
- motors:['Pigeon Motors',"Des véhicules pour te déplacer beaucoup plus vite. Achetés une fois, ils te suivent à vie.",["Pigeon Motors se trouve à Paris. Dans les autres villes, achète-les dans Business › Ton garage.","Skate +30 %, trottinette +60 %, scooter +100 % de vitesse.","En véhicule, les baskets ne comptent qu'à moitié. Le scooter te protège des voitures."],"Rachète la boutique Pigeon Motors pour avoir tes véhicules à -20 %."],
+ motors:['Pigeon Motors',"Des véhicules pour te déplacer beaucoup plus vite. Achetés une fois, ils te suivent à vie.",["Pigeon Motors se trouve à Paris. À partir de Londres, retrouve-les dans le bouton Compétences.","Skate +30 %, trottinette +60 %, scooter +100 % de vitesse.","En véhicule, les baskets ne comptent qu'à moitié. Le scooter te protège des voitures."],"Rachète la boutique Pigeon Motors pour avoir tes véhicules à -20 %."],
  rival:['Déchets Corp',"Ton concurrent : ses ramasseurs gris volent les déchets de ta rue.",["Plus tes commerces grandissent, plus il embauche de ramasseurs.","Sabote leurs chariots : grève de 60 s.","Rachète l'entreprise : fin de la concurrence et un 2e QG qui rapporte en continu.","Avec le bar, tes bandits peuvent aussi braquer son coffre la nuit."],"Le rachat coûte cher, mais il libère toute la rue pour toi et tes employés."],
  bookie:['Courses de chevaux',"Le bookmaker de Londres prend les paris sur les courses en direct.",["Choisis ton cheval : plus sa cote est haute, moins il a de chances de gagner.","Choisis ta mise : 10 %, 25 %, 50 % de ton cash, ou tapis.","S'il gagne, tu touches ta mise multipliée par sa cote (x3 à x20).","Cotes équitables : en moyenne, tu récupères ce que tu mises."],"Gros Biscuit (x20) gagne rarement, mais quand il gagne, c'est la fête."],
  dirty:['Argent sale',"Le butin de tes bandits n'arrive pas sur ton compte : il s'empile dans le coffre du QG.",["Chaque vol de bandit rapporte l'équivalent de 4 à 10 secondes de tes revenus automatiques, en argent sale.","Le comptable du bar le blanchit en continu (10 % de frais). Chaque niveau lave plus vite.","L'ordinateur du bar blanchit tout d'un coup, mais garde 35 %.","À 100 de chaleur, la descente de police saisit tout le coffre."],"Surveille la chaleur : si elle approche 100, blanchis tout au bar avant la descente."],
@@ -1830,12 +1831,13 @@ for(const el of document.querySelectorAll('.hudi'))el.addEventListener('click',(
 $('shoot').addEventListener('click',()=>{shoot();refocus()});
 $('steal').addEventListener('click',()=>{doSteal();refocus()});
 $('btnBiz').addEventListener('click',()=>VISIT?visitMsg():openPanel('biz'));
+$('btnSk').addEventListener('click',()=>VISIT?visitMsg():openPanel('skills'));
 $('back').addEventListener('click',()=>leaveVisit());
 $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
-for(const id of ['btnBiz','btnLb','btnFb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
+for(const id of ['btnBiz','btnSk','btnLb','btnFb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
 function updSnd(){$('snd').textContent=S.meta.snd?'Son : oui':'Son : non';$('snd').classList.toggle('off',!S.meta.snd)}
 updSnd();
 function payNow(){
@@ -1848,7 +1850,7 @@ function payNow(){
 
 // ================= HUD =================
 function updHud(){
-  {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT}
+  {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT;const sk=$('btnSk'),skh=!!VISIT||CURI()<1;if(sk.hidden!==skh)sk.hidden=skh}
   if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo:'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
     if(VISIT.other){$('goalh').textContent='Visite · rue de '+VISIT.other.pseudo+' · '+CITY().n;$('goalt').textContent='Balade-toi chez '+VISIT.other.pseudo+'. Visite seulement : clique sur "Retour à '+HOME().n+'" pour rentrer (et laisser un pourboire si tu veux).'}
     else{$('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.'}
@@ -2072,6 +2074,12 @@ function renderPanel(){
     else h=`<p class="lead">${ib('rival')} Ton concurrent envoie ${rivals.length} ramasseurs piquer les déchets de la rue. Plus tes commerces grandissent, plus il embauche.</p>`+
       row('Saboter leurs chariots','',"Leurs ramasseurs font grève pendant 60 s",'rival:sabo',C(500),null,rivalStrike>0)+
       row('Racheter Déchets Corp','',"Fin de la concurrence. Leur siège devient ton 2e QG : +20 "+CUR()+"/s",'rival:buy',rivalCost());}
+  else if(pid==='skills'){t='Compétences';hd='#ffd23f';
+    h='<p class="lead">Tes outils et tes véhicules te suivent à vie, dans toutes les villes.</p><div class="sec">Outils de Brico Dédé'+ib('tools')+'</div>'+
+      UP.map(u=>{const l=S.up[u.k],mx=l>=u.max;return row(u.n,'niv. '+l,u.d,'up:'+u.k,mx?0:upCost(u),mx?'MAX':null,mx)}).join('')+
+      '<div class="sec">Véhicules'+ib('motors')+'</div>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
+        return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
+          (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('');}
   else if(pid==='biz'){t=S.local?'Poubelle Corp · QG':'Business';hd='#7ee08a';const L=!S.local;
     h='<div class="sec">Revenus automatiques'+ib('distrib')+'</div>'+
       row('Distributeur de boissons',S.distrib+' / 8',`Rapporte ${(.8*(1+.3*S.distUp)).toFixed(2).replace('.',',')} ${CUR()} de base par seconde chacun`,'biz:distrib',S.distrib>=8?0:distCost(),S.distrib>=8?'MAX':null,S.distrib>=8)+
@@ -2105,7 +2113,7 @@ function renderPanel(){
       `<p class="foot">Tes bandits sortent la nuit. Leur butin est de l'argent sale (${fmt(S.dirty||0)} au coffre) : le comptable du bar le blanchit tout seul (${launderR()>0?fmt2(launderR())+'/s, 10 % de frais':'engage-le sur l\'ordinateur du bar'}), et l'ordinateur peut tout blanchir d'un coup (35 % de frais). Chaleur 50 : un flic de plus. 75 : deux fois plus de flics en civil. 100 : descente au QG, amende et coffre saisi.</p>`))+
       '<div class="sec">Fin de partie'+ib('secu')+'</div>'+
       (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',secuCost(),null,S.emp<2))+
-      (()=>{const mot=SHOPS.some(x=>x.k==='motors'),L=VEH.filter(v=>S.veh[v.k]||!mot);// sans Pigeon Motors dans la ville, on achète les véhicules ici
+      (()=>{const mot=SHOPS.some(x=>x.k==='motors'),L=mot?VEH.filter(v=>S.veh[v.k]):[];// hors de Paris, les véhicules sont dans Compétences
         return L.length?'<div class="sec">Ton garage</div>'+L.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
         return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
           (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join(''):''})()+

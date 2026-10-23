@@ -485,7 +485,7 @@ const LABELS={ny:{super:'SUPERMARKET',casino:'GOLDEN PIGEON CASINO',bar:'THE ONE
 const PROPS={
  paris:[['morris',860,505],['metro',1110,508],['wallace',1450,600],['terrasse',2620,592],['morris',3520,505],['wallace',3960,600],['terrasse',4330,592]],
  london:[['booth',860,505],['tube',1110,508],['postbox',1450,505],['bench',2620,600],['booth',3520,505],['postbox',3960,505],['booth',4330,505]],
- ny:[['hydrant',860,505],['subway',1110,508],['newsstand',1460,505],['pretzel',2620,515],['walk',3520,505],['hydrant',3960,505],['streetsign',4330,505]],
+ ny:[['hydrant',860,505],['subway',1110,508],['newsstand',1460,505],['pretzel',2620,515],['walk',3520,505],['hydrant',3960,505],['streetsign',4330,505],['musician',4930,505]],
 };
 const MEDS=[
  {n:'Pansement à paillettes',d:"Ne soigne rien, mais c'est joli",p:5,h:15},
@@ -889,12 +889,28 @@ function spawnTrash(x,y){
 }
 function richLook(){const r=Math.random()<Math.min(.7,richness()/50);return r?{rich:1,shirt:pick(['#22223b','#6d597a','#14213d']),top:Math.random()<.5,dog:Math.random()<.5,hair:pick(HAIRS)}:{}}
 function spawnPpl(edge){const dir=Math.random()<.5?1:-1;
-  ppl.push({x:edge?(dir>0?-30:W+30):rnd(100,W-100),y:sideY(),v:dir*rnd(45,80),t:rnd(0,9),shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),
-    robbed:false,flee:0,say:'',sayT:0,cd:rnd(5,15),...richLook(),...cityLook(),undercover:Math.random()<(S.heat>=75?.1:.05)})}
+  const o={x:edge?(dir>0?-30:W+30):rnd(100,W-100),y:sideY(),v:dir*rnd(45,80),t:rnd(0,9),shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),
+    robbed:false,flee:0,say:'',sayT:0,cd:rnd(5,15),...richLook(),...cityLook(),undercover:Math.random()<(S.heat>=75?.1:.05)};if(o.vm)o.v*=o.vm;ppl.push(o)}
 function cityLook(){const k=CK(),o={};
   if(k==='paris'){if(Math.random()<.3)o.beret=1;if(Math.random()<.25){o.shirt='#1d3557';o.stripes=1}if(Math.random()<.25)o.baguette=1}
   if(k==='london'){const q=Math.random();if(q<.06){o.guard=1;o.shirt='#c1121f';o.pants='#14213d'}else{if(Math.random()<.35)o.bowler=1;if(Math.random()<.35)o.umbrella=1}}
+  // New York : traders pressés (riches), joggeurs, livreurs à vélo, promeneurs de chiens, touristes
+  if(k==='ny'){const q=Math.random(),n={top:0,dog:0};
+    if(q<.16)Object.assign(o,n,{ny:'trader',rich:1,shirt:pick(['#22223b','#14213d','#495057']),vm:1.5});
+    else if(q<.28)Object.assign(o,n,{ny:'jog',shirt:pick(['#f72585','#06d6a0','#ffd23f','#4cc9f0']),pants:'#22223b',vm:2.2});
+    else if(q<.36)Object.assign(o,n,{ny:'bike',shirt:'#d62839',cap:'#d62839',vm:2.6});
+    else if(q<.42)Object.assign(o,n,{ny:'dogs',vm:.8});
+    else if(q<.56)Object.assign(o,{ny:'tourist',top:0,shirt:'#fff',cap:pick(['#ef476f','#118ab2','#ffd23f']),vm:.7})}
   return o}
+// New York : vélo de livreur et accessoires des passants
+function drawBike(x,y,f){cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;cx.strokeStyle=INK;circ(-18,-10,11);cx.stroke();circ(18,-10,11);cx.stroke();
+  cx.beginPath();cx.moveTo(-18,-10);cx.lineTo(-4,-26);cx.lineTo(12,-26);cx.lineTo(18,-10);cx.moveTo(-4,-26);cx.lineTo(2,-10);cx.lineTo(-18,-10);cx.moveTo(12,-26);cx.lineTo(14,-34);cx.strokeStyle='#d62839';cx.stroke();cx.restore()}
+function nyAcc(p,fc){cx.save();cx.translate(p.x,p.y);cx.scale(.92,.92);cx.lineWidth=2.5;cx.strokeStyle=INK;const k=p.ny;
+  if(k==='trader'){rr(fc*13-4,-34,9,13,2);fs('#fff');cx.fillStyle='#8d5a3b';cx.fillRect(fc*13-4,-34,9,3);if(p.sayT<=0&&Math.floor(p.t)%5<2){rr(-fc*17-3,-66,6,12,2);fs('#22223b')}}
+  if(k==='jog'){rr(-15,-70,30,5,2);fs('#fff');if(Math.floor(p.t*3)%4===0){cx.fillStyle='#8ecae6';circ(fc*16,-64,2.5);cx.fill()}}
+  if(k==='tourist'){txt('I♥NY',0,-24,7,'#d62839');rr(-7,-38,14,9,2);fs('#22223b');circ(0,-34,3);fs('#adb5bd');if(Math.floor(p.t*1.5)%7===0){cx.fillStyle='rgba(255,255,255,.85)';circ(fc*10,-40,10);cx.fill()}}
+  if(k==='bike'){rr(-fc*16-11,-56,22,20,3);fs('#ffd23f');txt('PIZZA',-fc*16,-46,6,'#d62839')}
+  cx.restore()}
 const SIGNS=['PLUS DE PIGEONS !','MOINS DE LUNDIS','KEBAB GRATUIT','TOUS EN TONGS','À BAS LES POUBELLES','LA SIESTE POUR TOUS'];
 function spawnManif(){const x0=clamp(P.x-420,40,W-500);
   for(let i=0;i<9;i++)ppl.push({x:x0+i*55+rnd(-10,10),y:rnd(322,420),v:rnd(28,40),t:rnd(0,9),shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),
@@ -1188,6 +1204,7 @@ function update(dt){
   pplTimer-=dt;if(pplTimer<=0){pplTimer=rnd(2.5,5);if(ppl.filter(p=>!p.manif).length<13)spawnPpl(true)}
   for(let i=ppl.length-1;i>=0;i--){const p=ppl[i];p.t+=dt;p.sayT-=dt;if(p.stun>0){p.stun-=dt;continue}p.flee-=dt;p.cd-=dt;
     p.x+=p.v*(p.flee>0?2.8:rain&&!p.manif?1.9:1)*dt;
+    if(p.ny&&p.sayT<=0&&p.flee<=0&&Math.random()<dt*.06)({trader:()=>{p.say=pick(['BUY ! BUY !','SELL SELL SELL !','Le Dow plonge !','Pas le temps !']);p.sayT=1.8},tourist:()=>{p.say=pick(['Selfie !','Oh my god, a pigeon !','Where is Times Square ?']);p.sayT=1.8},jog:()=>{p.say=pick(['Left side !','Pardon !']);p.sayT=1.2}}[p.ny]||(()=>{}))();
     if(p.x<-60||p.x>W+60){ppl.splice(i,1);continue}
     if(p.cd<=0){p.cd=p.manif?rnd(2,5):rnd(12,26);if((p.manif||Math.random()<.55)&&trash.length<maxTrash()+8){spawnTrash(p.x,clamp(p.y+6,232,622));
       if(!p.manif){p.say=pick(['Oups.','Personne a vu.','La flemme.']);p.sayT=1.6}}
@@ -2441,6 +2458,10 @@ function drawProp(t,x,y){cx.lineWidth=3;cx.fillStyle='rgba(0,0,0,.16)';cx.beginP
   else if(t==='walk'){rr(x-3,y-100,6,100,2);fs('#495057');rr(x-18,y-128,36,32,4);fs('#22223b');const w=Math.floor(T/4)%2;
     if(w)txt('WALK',x,y-112,10,'#f8f9fa');else{cx.fillStyle='#ff9f1c';rr(x-7,y-120,14,14,4);cx.fill();cx.fillRect(x-7,y-110,14,6)}}
   else if(t==='streetsign'){rr(x-3,y-110,6,110,2);fs('#495057');rr(x-46,y-120,92,18,3);fs('#2d6a4f');txt('BROADWAY',x,y-111,10,'#fff');rr(x-34,y-98,68,16,3);fs('#2d6a4f');txt('5TH AVE',x,y-90,9,'#fff')}
+  else if(t==='musician'){rr(x-40,y-10,40,12,4);fs('#6a040f');cx.fillStyle='#ffd23f';for(let k=0;k<4;k++){circ(x-32+k*8,y-6,2.5);cx.fill()}
+    drawGuy(x+10,y,{s:.95,t:T,moving:false,face:-1,shirt:'#7209b7',pants:'#22223b',skin:'#8d5524',hat:'#14141a',shades:1});
+    cx.save();cx.translate(x+10,y);cx.scale(.95,.95);cx.lineWidth=3;cx.strokeStyle=INK;cx.beginPath();cx.moveTo(-10,-50);cx.quadraticCurveTo(-22,-36,-14,-20);cx.quadraticCurveTo(-8,-12,-2,-22);cx.lineWidth=7;cx.strokeStyle='#e9b800';cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK;circ(-2,-24,6);fs('#e9b800');cx.restore();
+    for(let k=0;k<3;k++){const ph=(T*.6+k/3)%1;cx.globalAlpha=1-ph;txt(k%2?'♫':'♪',x-10-ph*30+Math.sin(ph*8)*6,y-80-ph*60,16,'#f72585',true)}cx.globalAlpha=1}
   else if(t==='bench'){rr(x-40,y-34,80,8,3);fs('#2d6a4f');rr(x-40,y-22,80,8,3);fs('#2d6a4f');rr(x-36,y-16,6,16,2);fs(INK);rr(x+30,y-16,6,16,2);fs(INK)}}
 function drawPlaque(){const k=CK();cx.save();cx.lineWidth=3;
   if(k==='paris'){rr(-48,150,124,40,6);fs('#1d4e89');cx.strokeStyle='#f1faee';cx.lineWidth=2;rr(-44,154,116,32,4);cx.stroke();txt('20e ARR.',14,163,8,'#f1faee');txt('RUE DES PIGEONS',14,177,10,'#f1faee')}
@@ -2943,7 +2964,10 @@ function draw(){
   for(let i=0;i<10;i++){const tx=150+i*520;if(inV(tx))L.push([630,()=>drawTree(tx,630)])}
   for(const [pt,px,py] of (PROPS[CK()]||[]))if(inV(px))L.push([py,()=>drawProp(pt,px,py)]);
   for(const p of ppl)if(inV(p.x))L.push([p.y,()=>{const fc=p.v>0?1:-1;if(p.dog)drawDog(p.x-fc*26,p.y+4,fc,p.t);if(p.sign)drawSign(p.x,p.y,p.sign);
-    drawGuy(p.x,p.y,{s:.92,t:p.t,moving:true,face:fc,shirt:p.shirt,pants:p.rich?'#22223b':p.pants,skin:p.skin,hair:p.top||p.guard||p.bowler?null:p.hair,tophat:p.top&&!p.guard&&!p.revealed,suit:p.rich&&!p.guard,hat:p.revealed?'#14213d':undefined,badge:p.revealed,tie:'#ffd23f',sad:p.flee>0,beret:p.beret,stripes:p.stripes,baguette:p.baguette,bowler:p.bowler&&!p.top,bearskin:p.guard,umbrella:p.umbrella||(p.bowler&&ev&&ev.k==='pluie')});
+    if(p.ny==='bike')drawBike(p.x,p.y,fc);
+    if(p.ny==='dogs'){cx.strokeStyle='rgba(42,31,61,.6)';cx.lineWidth=1.5;cx.beginPath();for(let k=0;k<6;k++){cx.moveTo(p.x+fc*14,p.y-26);cx.lineTo(p.x+fc*(34+k%3*16),p.y+(k-2.5)*7)}cx.stroke();for(let k=0;k<6;k++)drawDog(p.x+fc*(34+k%3*16),p.y+(k-2.5)*7,fc,p.t+k*.3)}
+    drawGuy(p.x,p.y,{s:.92,t:p.t,moving:true,face:fc,shirt:p.shirt,pants:p.rich?'#22223b':p.pants,skin:p.skin,hair:p.top||p.guard||p.bowler?null:p.hair,tophat:p.top&&!p.guard&&!p.revealed,suit:p.rich&&!p.guard,hat:p.revealed?'#14213d':p.cap,badge:p.revealed,ride:p.ny==='bike'?'bike':undefined,lift:p.ny==='bike'?18:0,tie:'#ffd23f',sad:p.flee>0,beret:p.beret,stripes:p.stripes,baguette:p.baguette,bowler:p.bowler&&!p.top,bearskin:p.guard,umbrella:p.umbrella||(p.bowler&&ev&&ev.k==='pluie')});
+    if(p.ny)nyAcc(p,fc);
     if(p.sayT>0)drawBubble(p.x,p.y-74,p.say,p.flee>0?'#ffccd5':'#fff')}]);
   for(const q of squad)if(q.delay<=0&&inV(q.x))L.push([q.y,()=>{drawGuy(q.x,q.y,{t:q.t,moving:q.moving,face:q.face,shirt:'#1d3557',pants:'#14213d',skin:SKINS[(squad.indexOf(q)+1)%5],hat:'#14213d',hatMark:CK()==='ny'?'NYPD':'',badge:1,s:1});
     if(q.mode==='chase')txt('!',q.x,q.y-92+Math.sin(T*14+q.t)*3,22,'#ef476f',true);if(q.sayT>0)drawBubble(q.x,q.y-80,q.say,'#cdeefd')}]);

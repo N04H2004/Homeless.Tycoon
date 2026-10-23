@@ -692,7 +692,7 @@ const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac+2*S.meta.perk.sac, speed=
       empSpd=()=>125*(1+.15*S.emUp.form), empCap=()=>3+2*S.emUp.chariot,
       trOf=i=>(S.staff[i]||{}).tr||'',
       onShift=st=>st&&(st.sh==='nuit')===isNight(),
-      empOne=st=>1.1*(1+.15*S.emUp.form)*(1+.12*S.emUp.chariot)*(TRAITS[st.tr]?TRAITS[st.tr].f:1),
+      empOne=st=>1.1*mult()*(1+.15*S.emUp.form)*(1+.12*S.emUp.chariot)*(TRAITS[st.tr]?TRAITS[st.tr].f:1),
       empRate=all=>S.pay.strike?0:S.staff.slice(0,S.emp).reduce((a,st)=>a+(all?empOne(st)*(st.sh==='nuit'?.33:.67):onShift(st)?empOne(st):0),0),
       // ce qu'un employé rapporte par seconde, uniquement pendant les heures de son équipe
       empLine=st=>{const r=empOne(st)*lynx()*gm(),on=onShift(st);return S.pay.strike?'<b style="color:#d62839">en grève : 0 / s</b>':`<b>+${fmt2(r)} / s</b> ${on?'<span style="color:#1f9d5c">· en service</span>':'· au repos ('+(st.sh==='nuit'?'travaille la nuit':'travaille le jour')+')'}`},

@@ -1536,9 +1536,9 @@ function bkStart(p){if(BK.run)return;const bet=Math.floor(S.cash*p);if(bet<1){sn
   BK.win=w;BK.run=true;BK.t=0;BK.tg=HORSES.map((_,i)=>i===w?100:rnd(72,96));BK.wob=HORSES.map(()=>rnd(0,6));BK.fin=null;BK.msg='Et ils sont partis !';BK.mc='';S.stats.casino++;snd('event')}
 // jeux à gratter : 9 cases, 3 symboles identiques = gagné (environ 4 tickets sur 10 gagnent quelque chose)
 const GRAT_SYM=[['🥫',1],['🐦',2],['💰',5],['👑',10],['💎',50]],GRAT_P=[.15,.14,.06,.018,.002];
-const GR={grid:null,shown:null,price:0,win:0,sym:-1,done:false};
+const GR={grid:null,shown:null,price:0,win:0,sym:-1,done:false,custom:''};
 const gratPrices=()=>[C(20),C(200),C(2000)];
-function gratBuy(k){const pr=gratPrices()[k];if(pr==null||S.cash<pr){snd('err');return}S.cash-=pr;S.stats.casino++;
+function gratBuy(k){const pr=k==='perso'?Math.floor(+GR.custom||0):gratPrices()[k];if(!(pr>=1)||S.cash<pr){snd('err');return}S.cash-=pr;S.stats.casino++;
   let r=Math.random(),ws=-1;for(let i=0;i<GRAT_P.length;i++){r-=GRAT_P[i];if(r<=0){ws=i;break}}
   const cells=[];if(ws>=0)cells.push(ws,ws,ws);
   while(cells.length<9){const c=Math.floor(Math.random()*GRAT_SYM.length),n=cells.filter(x=>x===c).length;if(n<2&&c!==ws)cells.push(c)}
@@ -1549,7 +1549,10 @@ function gratHTML(){const P=gratPrices();let h='<p class="lead">Gratte les 9 cas
   '<div class="pc" style="justify-content:center">'+GRAT_SYM.map(([e,m])=>`<span>${e}${e}${e} = mise x${m}</span>`).join('')+'</div>';
   if(GR.grid){h+='<div class="grat">'+GR.grid.map((c,i)=>`<button type="button" class="gc${GR.shown[i]?' on':''}${GR.done&&c===GR.sym?' win':''}" data-gi="${i}" aria-label="Case ${i+1}">${GR.shown[i]?GRAT_SYM[c][0]:''}</button>`).join('')+'</div>';
     h+=GR.done?`<div class="msg ${GR.win>0?'ok':'ko'} anim">${GR.win>0?'Gagné ! +'+fmt(GR.win):'Perdu… pas de chance cette fois'}</div>`:'<div class="bets"><button class="chunky alt" type="button" data-act="grat:all" style="grid-column:1/-1">Tout gratter</button></div>'}
-  if(!GR.grid||GR.done)h+='<div class="bets" style="grid-template-columns:repeat(3,1fr)">'+['Petit','Moyen','Gros'].map((n,k)=>`<button class="buy" type="button" data-act="grat:buy:${k}" ${S.cash<P[k]?'disabled':''}>${n} ticket<br>${fmt(P[k])}</button>`).join('')+'</div>';
+  if(!GR.grid||GR.done){h+='<div class="bets" style="grid-template-columns:repeat(3,1fr)">'+['Petit','Moyen','Gros'].map((n,k)=>`<button class="buy" type="button" data-act="grat:buy:${k}" ${S.cash<P[k]?'disabled':''}>${n} ticket<br>${fmt(P[k])}</button>`).join('')+'</div>';
+    const cv=Math.floor(+GR.custom||0);h+=`<div class="row lbf"><label>Ticket au choix : ta mise (${CUR()})<input class="lbin grin" data-gr="1" type="number" inputmode="numeric" min="1" step="1" placeholder="Ex. ${Math.max(1,Math.floor(S.cash/10))}" value="${GR.custom}"></label>`+
+      `<div class="bets" style="grid-template-columns:repeat(4,1fr)">`+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis']].map(([q,l])=>`<button class="tab" type="button" data-act="grat:pct:${q}">${l}</button>`).join('')+'</div>'+
+      `<button class="chunky" type="button" data-act="grat:buy:perso" id="grbuy" ${cv>=1&&cv<=S.cash?'':'disabled'}>Acheter ce ticket${cv>=1?' · '+fmt(cv):''}</button></div>`}
   return h+'<p class="foot">Glisse le doigt ou la souris sur les cases pour gratter. Argent fictif du jeu, aucune vraie mise.</p>'}
 function bkUpdate(dt){if(!BK.run)return;BK.t+=dt/5;const t=Math.min(1,BK.t),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
   const pos=BK.tg.map((g,i)=>Math.min(100,g*e+Math.sin(BK.t*9+BK.wob[i])*2*(1-t)));
@@ -2269,7 +2272,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='bksel'){if(BK.run)return;BK.sel=+v;BK.msg='Tu mises sur '+HORSES[+v][0]+' (x'+HORSES[+v][1]+').';BK.mc='';snd('pick')}
   if(a==='bkbet'){bkStart(+v)}
   if(a==='bktab'){BK.tab=v;return renderPanel()}
-  if(a==='grat'){if(v==='buy')gratBuy(+w);else gratReveal(null);return renderPanel()}
+  if(a==='grat'){if(v==='buy')gratBuy(w==='perso'?'perso':+w);else if(v==='pct')GR.custom=String(Math.max(1,Math.floor(S.cash*+w)));else gratReveal(null);return renderPanel()}
   if(a==='equip'){if(!S.arms[v])return;S.weapon=S.weapon===v?null:v;const am=ARMS.find(x=>x.k===v);snd('buy');toast(S.weapon?am.n+' équipé. Attention dehors !':am.n+' rangé à l\'armurerie')}
   if(a==='heist'){if(bqBlock())return;BQ.st='pick';BQ.res=null;BQ.msg='';openPanel('braq');lbLoad();return}
   if(a==='fire2'){const i=+v;if(i>=S.emp)return;const c=sev(i);if(!pay(c))return;const n=S.staff[i].n;pid='biz';if(lastHire&&lastHire.n===n)lastHire=null;S.staff.splice(i,1);S.emp--;emps.splice(i,1);freeClaims();toast(n+' a été licencié. Il part en claquant la porte')}
@@ -3221,7 +3224,7 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
   else h+='<div class="lbt">'+LB.rows.map(r=>`<div class="lbr${r.is_me?' me':''}"><span class="rk">#${r.rank}</span><span class="nm"><i class="dot${r.online?' on':''}" title="${r.online?'En ligne':'Hors ligne'}"></i>${lbEsc(r.pseudo)}</span><span class="sc">${lbf(r.score)}</span>${r.is_me?'<span></span>':r.private?'<span class="lbv" title="Rue privée">🔒</span>':`<button class="buy sm lbv" type="button" data-act="lb:visit:${lbEsc(r.pseudo)}" title="Visiter la rue de ${lbEsc(r.pseudo)}">Visiter</button>`}</div>`).join('')+'</div>';
   return h+'<button class="chunky alt" type="button" data-act="lb:refresh">Actualiser</button>'}
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
-$('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();e.target.dataset.f==='n'?lbRename():lbAuth()}});
+$('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();if(e.target.dataset.gr){const b=$('grbuy');if(b&&!b.disabled)b.click()}else e.target.dataset.f==='n'?lbRename():lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
 // ---- Remarques des joueurs : envoyées dans la table feedback de Supabase
 const FB={kind:'bug',msg:'',busy:false,res:'',err:false};
@@ -3246,6 +3249,7 @@ async function fbAct(v,w){if(v==='kind'){FB.kind=w;FB.res='';return fbRedraw()}
 {let gDown=false;const gHit=e=>{const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest('[data-gi]');if(c&&!GR.shown[+c.dataset.gi]){const i=+c.dataset.gi;gratReveal(i);if(GR.done)renderPanel();else{c.classList.add('on');c.textContent=GRAT_SYM[GR.grid[i]][0]}}};// on ne redessine qu'à la fin, pour gratter d'un seul geste
   $('pbody').addEventListener('pointerdown',e=>{if(e.target.closest('[data-gi]')){gDown=true;gHit(e)}});
   $('pbody').addEventListener('pointermove',e=>{if(gDown)gHit(e)});addEventListener('pointerup',()=>gDown=false)}
+$('pbody').addEventListener('input',e=>{if(!e.target.dataset||!e.target.dataset.gr)return;GR.custom=e.target.value;const v=Math.floor(+GR.custom||0),b=$('grbuy');if(b){b.disabled=!(v>=1&&v<=S.cash);b.textContent='Acheter ce ticket'+(v>=1?' · '+fmt(v):'')}});
 $('pbody').addEventListener('input',e=>{if(!e.target.classList.contains('fbin'))return;FB.msg=e.target.value;const n=$('fbn');if(n)n.textContent=FB.msg.length});
 $('pbody').addEventListener('keydown',e=>{if(e.target.classList.contains('fbin')&&e.key!=='Escape')e.stopPropagation()});
 $('btnFb').addEventListener('click',()=>{FB.res='';openPanel('fb')});

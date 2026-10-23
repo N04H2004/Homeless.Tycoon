@@ -136,6 +136,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #hint{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));color:var(--paper);font-size:12px;opacity:.8;text-align:right}
 #tuto{position:absolute;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(440px,calc(100% - 32px));background:var(--sun);display:flex;flex-direction:column;gap:6px;z-index:2}
 #tuto.top{z-index:61}
+#tuto.hi{bottom:auto;top:calc(8px + env(safe-area-inset-top,0px))}
 #tuto .tbar{height:10px;border:2px solid var(--ink);border-radius:6px;background:#fff;overflow:hidden}#tuto .tbar i{display:block;height:100%;width:0;background:var(--cash);transition:width .3s}
 #tarrow{position:fixed;z-index:66;width:46px;height:54px;margin-left:-23px;transform:translateY(-100%);pointer-events:none;animation:tarb .6s ease-in-out infinite alternate}
 #tarrow svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 0 rgba(42,31,61,.4))}
@@ -1069,7 +1070,6 @@ const STEPS=[
  {k:'tenue',skip:[1],cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
  {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (le costume de baron londonien ou le costume trois-pièces aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
  {k:'peaky',only:1,cost:()=>20000,n:'Acheter le costume de baron londonien (pour le PMU)',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed façon Peaky Blinders t\'ouvrent les portes du bookmaker (PMU). Porte-le pour entrer.',acts:['outfit:peaky']},
- {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
  {k:'bar',c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
  {k:'band',c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
@@ -1079,6 +1079,7 @@ const STEPS=[
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
  {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
+ {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
@@ -1375,10 +1376,10 @@ const offerJob=()=>{const L=SHOPS.filter(x=>x.job).map(x=>x.job).concat(CI()<1?[
 const DRINKS=[['Une pinte !',76,89],["Un demi, s'il vous plaît.",42,55],['Juste un fond, je conduis.',16,28],['Un grand verre, à ras bord !',87,96],['Un trois-quarts, pas plus.',64,76]];
 let JOB=null;
 const ARMS=[
- {k:'lance',n:'Lance-pierre',d:'+6 % de réussite',p:1500,b:.06,m:1},
- {k:'revolver',n:'Revolver rouillé',d:'+14 % de réussite, butin x1,5',p:6000,b:.14,m:1.5},
- {k:'pompe',n:'Fusil à pompe',d:'+22 % de réussite, butin x2',p:18000,b:.22,m:2},
- {k:'confetti',n:'Bazooka à confettis',d:'+30 % de réussite, butin x3. Personne ne comprend ce qui se passe',p:60000,b:.3,m:3},
+ {k:'lance',n:'Lance-pierre',d:'Tire des cailloux. Suffit pour lancer un casse',p:1500,b:.06,m:1},
+ {k:'revolver',n:'Revolver rouillé',d:'Braquage de passants : butin x1,5',p:6000,b:.14,m:1.5},
+ {k:'pompe',n:'Fusil à pompe',d:'Braquage de passants : butin x2',p:18000,b:.22,m:2},
+ {k:'confetti',n:'Bazooka à confettis',d:'Braquage de passants : butin x3. Personne ne comprend ce qui se passe',p:60000,b:.3,m:3},
 ];
 const bestArm=()=>[...ARMS].reverse().find(a=>S.arms[a.k]);
 const freeBands=()=>bands.filter(b=>b.jail<=0).length;
@@ -2690,6 +2691,7 @@ function drawRoom(){
   // halos chauds
   for(const lx of [170,470,840]){const g=cx.createRadialGradient(lx,90,10,lx,300,330);g.addColorStop(0,'rgba(255,214,120,.22)');g.addColorStop(1,'rgba(255,214,120,0)');cx.fillStyle=g;cx.fillRect(lx-340,60,680,H)}
   const rs=roomSpot();if(rs){const x=RSPOTS[rs][0],y=rs==='exit'?110:rs==='pc'?172:rs==='armory'?50:225;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
+  drawGuideRoom();
 }
 const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'?(!!S.local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
 let casWarn=0;
@@ -2918,15 +2920,69 @@ function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=dist
   tutoText()}
 // flèche HTML au-dessus des boutons (Business, achat...) avec un halo sur la cible
 let tutoTgt=null;
-function tutoUI(){const a=$('tarrow');const st=tutoOn()&&!(typeof BOOT!=='undefined'&&BOOT)&&!JOB&&TUTO[S.meta.tuto||0],el=st&&st.ui?st.ui():null,r=el&&el.getBoundingClientRect();
+function tutoUI(){const a=$('tarrow'),ok=!(typeof BOOT!=='undefined'&&BOOT)&&!JOB;const st=ok&&(tutoOn()?TUTO[S.meta.tuto||0]:gStep()),el=st&&st.ui?st.ui():null,r=el&&el.getBoundingClientRect();
   if(tutoTgt&&tutoTgt!==el)tutoTgt.classList.remove('tglow');tutoTgt=el;
-  if(!el||!r.width||(!$('panel').hidden&&!$('pbody').contains(el))){a.hidden=true;return}
+  if(!el||!r.width||(!$('panel').hidden&&!$('panel').contains(el))){a.hidden=true;return}
   el.classList.add('tglow');a.hidden=false;const up=r.top<90;a.classList.toggle('up',up);
   a.style.left=(r.left+r.width/2)+'px';a.style.top=(up?r.bottom+6:r.top-6)+'px'}
-function drawTutoArrow(){tutoUI();if(!tutoOn())return;const st=TUTO[S.meta.tuto||0];if(!st.tg)return;const g=st.tg();if(!g)return;let [x,y]=g;const b=Math.sin(T*6)*6;
+function drawTutoArrow(){tutoUI();const st=tutoOn()?TUTO[S.meta.tuto||0]:gStep();if(!st||!st.tg||INSIDE)return;const g=st.tg();if(!g)return;let [x,y]=g;const b=Math.sin(T*6)*6;
   if(x<camX+30||x>camX+viewW-30){const left=x<camX+30,ax=left?camX+40:camX+viewW-40,ay=330;cx.save();cx.translate(ax,ay);if(left)cx.scale(-1,1);cx.lineWidth=4;cx.beginPath();cx.moveTo(-26+b,-16);cx.lineTo(4+b,-16);cx.lineTo(4+b,-30);cx.lineTo(30+b,0);cx.lineTo(4+b,30);cx.lineTo(4+b,16);cx.lineTo(-26+b,16);cx.closePath();fs('#ffd23f');cx.restore();return}
   cx.save();cx.translate(x,y+22);const k=(T*1.4)%1;cx.globalAlpha=1-k;cx.lineWidth=4;cx.strokeStyle='#ffd23f';cx.beginPath();cx.ellipse(0,0,18+k*26,7+k*10,0,0,7);cx.stroke();cx.globalAlpha=1;cx.restore();
   cx.save();cx.translate(x,y-36+b);cx.lineWidth=4;cx.beginPath();cx.moveTo(-12,-34);cx.lineTo(12,-34);cx.lineTo(12,-14);cx.lineTo(24,-14);cx.lineTo(0,10);cx.lineTo(-24,-14);cx.lineTo(-12,-14);cx.closePath();fs('#ffd23f');cx.restore()}
+// ---- Guides pas à pas (après le tutoriel) : bar clandestin, première arme, premier casse, PMU
+const nearRoom=x=>INSIDE&&Math.abs(RP.x-x)<70&&RP.y<470;
+const barDoor=()=>BID.bar&&[BID.bar.door,150],inPanel=k=>!$('panel').hidden&&pid===k;
+const enterBarStep={t:()=>'Va au <b>bar Le Pigeon Borgne</b> (la flèche) et appuie sur <b>E</b> pour entrer.',tg:barDoor,done:()=>!!INSIDE};
+const GUIDES={
+ bar:{n:'Le bar clandestin',start:()=>S.owned.bar&&CI()>=1,steps:[
+  {t:()=>'Le Pigeon Borgne est à toi : c\'est un <b>bar clandestin</b>, le QG de tes bandits. Va à sa porte (la flèche) et appuie sur <b>E</b>.',tg:barDoor,done:()=>!!INSIDE},
+  {t:()=>'Le <b>comptoir</b> : un verre pour reprendre faim et vie. Approche-toi (flèche jaune).',rx:390,done:()=>nearRoom(390)},
+  {t:()=>'L\'<b>armurerie</b> : c\'est ici que tu équipes tes armes pour tirer dans la rue.',rx:710,done:()=>nearRoom(710)},
+  {t:()=>'L\'<b>ordinateur du fond</b> : le marché noir (armes, munitions), le comptable et <b>Le casse</b>. Tout se passe ici. La sortie est à gauche.',rx:950,done:()=>nearRoom(950)}]},
+ arm:{n:'Ta première arme',start:()=>{const c=stepCur();return c&&c.x.k==='arme'},steps:[
+  enterBarStep,
+  {t:()=>'Va à l\'<b>ordinateur du fond</b> et appuie sur <b>E</b>.',rx:950,done:()=>inPanel('pc')},
+  {t:()=>'Achète ta première arme au <b>marché noir</b> (le lance-pierre est la moins chère).',ui:()=>document.querySelector('#pbody [data-act^="arm:"]:not(:disabled)')||document.querySelector('#pbody [data-act^="arm:"]'),done:()=>Object.values(S.arms||{}).some(v=>v)},
+  {t:()=>'Ferme l\'ordinateur (<b>X</b>), puis va à l\'<b>armurerie</b> et appuie sur <b>E</b>.',rx:710,ui:()=>inPanel('pc')?$('pclose'):null,done:()=>inPanel('armory')},
+  {t:()=>'Clique sur <b>Équiper</b> : ton arme est prête. Dans la rue, <b>G</b> ou le bouton Tirer.',ui:()=>document.querySelector('#pbody [data-act^="equip:"]'),done:()=>!!S.weapon}]},
+ heist:{n:'Ton premier casse',start:()=>{const c=stepCur();return c&&c.x.k==='heist'&&!bqBlock()},steps:[
+  enterBarStep,
+  {t:()=>'Va à l\'<b>ordinateur du fond</b> et appuie sur <b>E</b>.',rx:950,done:()=>inPanel('pc')||inPanel('braq')},
+  {t:()=>'À la ligne <b>Le casse</b>, clique sur <b>Choisir</b>.',ui:()=>document.querySelector('#pbody [data-act="heist"]'),done:()=>inPanel('braq')},
+  {t:()=>'Choisis ta cible dans le classement : clique sur <b>Braquer</b>. Plus elle est riche par rapport à toi, plus c\'est dur.',ui:()=>document.querySelector('#pbody [data-act^="braq:go:"]'),done:()=>BQ.st!=='pick'},
+  {t:()=>'Choisis combien de bandits partent (chacun en plus pardonne 0,5 raté), puis <b>Lance le casse</b>.',ui:()=>$('pbody').querySelector('[data-act="braq:start"]'),done:()=>BQ.st==='play'||BQ.st==='send'||BQ.st==='done'},
+  {t:()=>'Clique sur chaque <b>🎯</b> avant qu\'elle disparaisse. Sous 50 % de précision, tu repars bredouille !',done:()=>BQ.st==='done'}]},
+ pmu:{n:'Le PMU',start:()=>CK()==='london'&&S.meta.wardrobe.includes('peaky'),steps:[
+  {t:()=>'Pour entrer au PMU, <b>porte ton costume de baron</b> : va au cloakroom (collé au casino), <b>E</b>, puis <b>Porter</b>.',tg:()=>BID.vest&&[BID.vest.door,150],ui:()=>document.querySelector('#pbody [data-act="wear:peaky"]'),done:()=>S.meta.outfit==='peaky'},
+  {t:()=>'Va au <b>bookmaker Lucky Pigeon</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>BID.bookie&&[BID.bookie.door,150],ui:()=>inPanel('vest')?$('pclose'):null,done:()=>inPanel('bookie')},
+  {t:()=>'Choisis un cheval : le <b>favori</b> gagne une course sur deux, le tocard rapporte plus. Puis mise <b>10 %</b> pour commencer.',ui:()=>document.querySelector('#pbody [data-act="bkbet:0.1"]'),done:()=>BK.run||!!BK.fin},
+  {t:()=>'Regarde la course !',done:()=>!BK.run&&!!BK.fin},
+  {t:()=>'Le PMU a aussi des <b>jeux à gratter</b> : ouvre l\'onglet 🎟️.',ui:()=>document.querySelector('#pbody [data-act="bktab:grat"]'),done:()=>BK.tab==='grat'},
+  {t:()=>'Achète un <b>petit ticket</b> (ou choisis ta mise plus bas).',ui:()=>document.querySelector('#pbody [data-act="grat:buy:0"]'),done:()=>!!GR.grid},
+  {t:()=>'Gratte les 9 cases en glissant le doigt ou la souris : <b>3 symboles identiques</b> = gagné !',ui:()=>document.querySelector('#pbody .grat'),done:()=>!!GR.grid&&GR.done}]},
+};
+const GD={k:null,i:0,tx:''};
+const gStep=()=>GD.k&&!VISIT?GUIDES[GD.k].steps[GD.i]:null;
+function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if(GD.k&&!tutoOn())$('tuto').hidden=true;return}
+  const gd=S.meta.gd||(S.meta.gd={});
+  if(!GD.k){for(const k in GUIDES)if(!gd[k]&&GUIDES[k].start()){GD.k=k;GD.i=0;GD.tx='';snd('event');break}if(!GD.k)return}
+  const G=GUIDES[GD.k];
+  // on avance tant que l'étape est faite ; si on ressort du bar, on revient à l'étape d'entrée
+  while(GD.i<G.steps.length&&G.steps[GD.i].done())GD.i++;
+  if(GD.k!=='bar'&&GD.i>0&&G.steps[0]===enterBarStep&&!INSIDE&&!(GD.k==='heist'&&inPanel('braq')))GD.i=0;
+  if(GD.k==='pmu'&&GD.i>=2&&GD.i<6&&!inPanel('bookie')&&!BK.run)GD.i=1;
+  if(GD.i>=G.steps.length){gd[GD.k]=1;toast('Guide terminé : '+G.n+' !');snd('ach');GD.k=null;$('tuto').hidden=true;return}
+  guideCard()}
+function guideCard(){const el=$('tuto'),G=GUIDES[GD.k],st=G.steps[GD.i],t=st.t(),key=GD.k+GD.i+t;el.hidden=false;el.classList.toggle('top',!$('panel').hidden);
+  {const u=st.ui&&st.ui(),r=u&&u.getBoundingClientRect();el.classList.toggle('hi',!!(r&&r.width&&r.bottom>innerHeight-230))}// la carte passe en haut si elle cacherait sa cible
+  if(GD.tx===key)return;GD.tx=key;
+  el.innerHTML=`<div class="tt"><span>Guide · ${G.n} · ${GD.i+1} / ${G.steps.length}</span><button type="button" id="gskip">Passer</button></div><div class="tx">${t}</div>`;
+  $('gskip').onclick=()=>{(S.meta.gd||(S.meta.gd={}))[GD.k]=1;GD.k=null;el.hidden=true;refocus()}}
+setInterval(guideUpdate,250);
+// flèche dans la salle du bar
+function drawGuideRoom(){tutoUI();const st=!tutoOn()&&gStep();if(!st||st.rx==null)return;const b=Math.sin(T*6)*6,x=st.rx,y=250;
+  if(x<roomCam+30||x>roomCam+viewW-30){const left=x<roomCam+30,ax=left?roomCam+40:roomCam+viewW-40;cx.save();cx.translate(ax,470);if(left)cx.scale(-1,1);cx.lineWidth=4;cx.beginPath();cx.moveTo(-26+b,-16);cx.lineTo(4+b,-16);cx.lineTo(4+b,-30);cx.lineTo(30+b,0);cx.lineTo(4+b,30);cx.lineTo(4+b,16);cx.lineTo(-26+b,16);cx.closePath();fs('#ffd23f');cx.restore();return}
+  cx.save();cx.translate(x,y+b);cx.lineWidth=4;cx.beginPath();cx.moveTo(-12,-34);cx.lineTo(12,-34);cx.lineTo(12,-14);cx.lineTo(24,-14);cx.lineTo(0,10);cx.lineTo(-24,-14);cx.lineTo(-12,-14);cx.closePath();fs('#ffd23f');cx.restore()}
 // fiches : s'ouvrent une seule fois, à la première rencontre
 const TIPS=[
  ['tools','Les outils de Brico Dédé',()=>Object.values(S.up).some(v=>v>0),['<b>Pince</b> : attrape les déchets de plus loin.','<b>Sac XXL</b> : moins d\'allers-retours à la poubelle.','<b>Baskets</b> : plus rapide, pratique pour semer la police.','<b>Œil de lynx</b> : booste tous les revenus automatiques.','Chaque outil se voit sur ton perso !']],

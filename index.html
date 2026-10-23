@@ -967,7 +967,7 @@ function checkObj(){
   if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+sc.x.w,gp=$('goalp');if(gp.hidden)gp.hidden=false;
     $('goalh').textContent='Étape '+(sc.i+1)+' / '+L.length+' · '+CITY().n;$('goalpb').style.width=Math.round(sc.i/L.length*100)+'%';
     const need=sc.x.cost?sc.x.cost():0,poor=need>S.cash,gt=$('goalt');
-    const tt=poor?t+` Il te faut ${fmt(need)} : achète d'autres distributeurs (Business) pour gagner de l'argent tout seul, ou ramasse des déchets et fais des CDD.`:t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
+    const tt=poor?t+` Il te faut ${fmt(need)} : tu peux ${passiveTip()} (Business) pour gagner de l'argent tout seul, ou ramasser des déchets et faire des CDD.`:t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
     $('goalps').textContent=poor?'Argent : '+fmt(S.cash)+' / '+fmt(need):'Ensuite : '+fmt(20000)+' gagnés pour la ville suivante ('+fmt(S.total)+')';return}
   const early=S.total<20000&&!tutoOn(),gp=$('goalp');if(gp.hidden===early)gp.hidden=!early;
   if(early){const a=advice(),t=a;if($('goalt').textContent!==t)$('goalt').textContent=t;
@@ -1045,6 +1045,9 @@ const STEPS=[
  {k:'bar',c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
  {k:'band',c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
 ];
+// ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
+const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
+  return L.length>1?L.slice(0,-1).join(', ')+' ou '+L[L.length-1]:L[0]};
 const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci);
 const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
 // une étape est ouverte si elle est déjà faite ou si toutes les précédentes le sont
@@ -1058,7 +1061,7 @@ const featMiss=ci=>featList(ci).filter(f=>!f[1]);
 function stepHTML(i){const L=stepsFor(CI());
   if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné 20 000 ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
   const x=L[i],need=x.cost?x.cost():0;return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${x.w}</p>`+
-    (need>S.cash?`<div class="row" style="display:block;background:#fff3b0"><b>Il te faut ${fmt(need)} (tu as ${fmt(S.cash)})</b><small style="display:block">Achète d'autres distributeurs dans Business : ils rapportent de l'argent tout seul, même quand tu ne fais rien. Tu peux aussi ramasser des déchets, réparer des objets et refaire tes CDD.</small></div>`:'')+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}
+    (need>S.cash?`<div class="row" style="display:block;background:#fff3b0"><b>Il te faut ${fmt(need)} (tu as ${fmt(S.cash)})</b><small style="display:block">Dans Business, tu peux ${passiveTip()} : ça rapporte de l'argent tout seul, même quand tu ne fais rien. Tu peux aussi ramasser des déchets, réparer des objets et refaire tes CDD.</small></div>`:'')+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}
 
 function checkAch(){for(const [k,n,,f] of ACH){if(S.meta.ach[k])continue;try{if(f()){S.meta.ach[k]=Date.now();toast('Succès débloqué : '+n);snd('ach')}}catch(e){}}}
 

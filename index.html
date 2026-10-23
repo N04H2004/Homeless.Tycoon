@@ -49,7 +49,6 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 @media (prefers-reduced-motion:reduce){.bar.low{animation:none;box-shadow:0 0 0 3px rgba(214,40,57,.6)}}#fdb{background:var(--food)}#htb{background:#9d4edd}#htb.hot{background:#d62839}
 .num{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
 .btns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-@media (min-width:760px){.btns{margin-top:44px}}
 .chunky{font-family:var(--display);font-size:16px;letter-spacing:.02em;color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:12px;
   box-shadow:0 4px 0 var(--ink);padding:7px 12px;cursor:pointer}
 .chunky:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
@@ -2708,7 +2707,7 @@ function drawWeatherAndNight(){
   cx.restore();
 }
 function drawMini(){
-  const hb=$('hud').getBoundingClientRect(),mw=Math.min(320,cssW*.55),mh=34,mx=cssW-mw-12,my=cssW>=760?hb.top+10:hb.bottom+8;
+  const hb=document.querySelector('#hud .btns').getBoundingClientRect(),mw=Math.min(320,cssW*.55),mh=34,mx=cssW-mw-12,my=hb.bottom+8;// la carte sous les boutons
   cx.setTransform(dpr,0,0,dpr,0,0);
   cx.globalAlpha=.94;cx.lineWidth=2.5;rr(mx,my,mw,mh,8);fs('#fff6df');cx.globalAlpha=1;
   const ix=mx+5,iw=mw-10,sx=x=>ix+x/W*iw,sy=y=>my+5+clamp((y-200)/440,0,1)*(mh-10);

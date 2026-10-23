@@ -1059,12 +1059,12 @@ const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
 const STEPS=[
  {k:'cdd',n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
- {k:'distrib',n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
+ {k:'distrib',cost:()=>distCost(),n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
  {k:'outil',need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
  {k:'veh',need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : la trottinette est la moins chère.',acts:['veh:']},
  {k:'local',cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
  {k:'frigo',skip:[1],cost:()=>C(600),n:'Installer le frigo connecté',ok:()=>S.frigo,w:'Menu Business › Frigo connecté : il te nourrit tout seul.',acts:['biz:frigo']},
- {k:'emp',n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
+ {k:'emp',cost:()=>empCost(),n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
  {k:'manager',skip:[1],cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
  {k:'tenue',skip:[1],cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
  {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (le costume de baron londonien ou le costume trois-pièces aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
@@ -1076,7 +1076,7 @@ const STEPS=[
  {k:'arme',c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
    w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
  {k:'heist',c:1,n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
-   w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec 5 à 30 % de son argent.',acts:['heist']},
+   w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
  {k:'compta',c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
 ];

@@ -529,6 +529,7 @@ const OUTFITS=[
  {k:'armure',n:'Armure médiévale',d:'Inutile, mais imposant',p:2500},
  {k:'peignoir',n:'Peignoir de luxe',d:'Tenue officielle des rentiers',p:8000},
  {k:'astro',n:"Combinaison d'astronaute",d:'Pour viser la Lune',p:30000},
+ {k:'peaky',n:'Tenue Peaky Blinders',d:'Casquette gavroche et costume en tweed : à Londres, le bookmaker (PMU) te laisse entrer',p:20000},
 ];
 const VEH=[
  {k:'trott',n:'Trottinette',d:'+40 % de vitesse',p:300,b:.4},
@@ -982,7 +983,7 @@ function checkObj(){
   if(n>S.done){S.done=n;const nx=OBJ.find(o=>!o[2]());if(!sc)toast(nx?'Objectif réussi ! Prochaine phase : '+nx[0]:'Tous les objectifs sont faits. Vise Tokyo !')}
   const nx=OBJ.find(o=>!o[2]());
   // tant qu'il reste des étapes dans la ville, la carte montre l'étape en cours
-  if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+sc.x.w,gp=$('goalp');if(gp.hidden)gp.hidden=false;
+  if(sc){const L=stepsFor(CI()),t=sc.x.n+' · '+stepW(sc.x),gp=$('goalp');if(gp.hidden)gp.hidden=false;
     $('goalh').textContent='Étape '+(sc.i+1)+' / '+L.length+' · '+CITY().n;$('goalpb').style.width=Math.round(sc.i/L.length*100)+'%';
     const need=sc.x.cost?sc.x.cost():0,poor=need>S.cash,gt=$('goalt');
     const tt=poor?t+` Il te faut ${fmt(need)} : tu peux ${passiveTip()} (Business) pour gagner de l'argent tout seul, ou ramasser des déchets et faire des CDD.`:t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
@@ -1057,7 +1058,8 @@ const STEPS=[
  {k:'emp',n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
  {k:'manager',cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
  {k:'tenue',cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
- {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
+ {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
+ {k:'peaky',only:1,cost:()=>20000,n:'Acheter la tenue Peaky Blinders',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed t\'ouvrent les portes du bookmaker (PMU). Porte-la pour entrer.',acts:['outfit:peaky']},
  {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
  {k:'bar',c:1,cost:()=>C(ESTDEF.bar.p),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
@@ -1066,7 +1068,8 @@ const STEPS=[
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
   return L.length>1?L.slice(0,-1).join(', ')+' ou '+L[L.length-1]:L[0]};
-const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci);
+const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci&&(x.only==null||x.only===ci));
+const stepW=x=>typeof x.w==='function'?x.w():x.w;
 const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
 // une étape est ouverte si elle est déjà faite ou si toutes les précédentes le sont
 function stepState(){let open=true;return stepsFor(CI()).map((x,i)=>{const d=stepDone(x),o=d||open;if(!d)open=false;return {x,i,d,o}})}
@@ -1078,7 +1081,7 @@ const featList=ci=>stepsFor(ci).map(x=>[x.n,stepDone(x)]);
 const featMiss=ci=>featList(ci).filter(f=>!f[1]);
 function stepHTML(i){const L=stepsFor(CI());
   if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné 20 000 ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
-  const x=L[i],need=x.cost?x.cost():0;return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${x.w}</p>`+
+  const x=L[i],need=x.cost?x.cost():0;return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${stepW(x)}</p>`+
     (need>S.cash?`<div class="row" style="display:block;background:#fff3b0"><b>Il te faut ${fmt(need)} (tu as ${fmt(S.cash)})</b><small style="display:block">Dans Business, tu peux ${passiveTip()} : ça rapporte de l'argent tout seul, même quand tu ne fais rien. Tu peux aussi ramasser des déchets, réparer des objets et refaire tes CDD.</small></div>`:'')+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}
 
 function checkAch(){for(const [k,n,,f] of ACH){if(S.meta.ach[k])continue;try{if(f()){S.meta.ach[k]=Date.now();toast('Succès débloqué : '+n);snd('ach')}}catch(e){}}}
@@ -1772,10 +1775,12 @@ function doAct(){
     if(Math.random()<.08){earn(C(20),p.x,p.y-50,'#ffd23f');say('Il m\'a rapporté une pièce !')}return}
   if(s==='rival'&&S.rivalBought)return openPanel('biz');
   if(s==='casino'){const L=lockByKey('casino');if(L){toast(lockText(L));snd('err');return}
-    if(!hasCostume()){casWarn++;
+    if(!casinoOk()){casWarn++;
       if(casWarn>=2){casWarn=0;callSquad('Le videur a appelé la police !',.1,true);
         S.heat=Math.min(100,S.heat+5);snd('siren');say('Oups, le videur a appelé les flics !');toast('Le videur a appelé la police ! Cours !');return}}
     else casWarn=0}
+  if(s==='bookie'&&S.meta.outfit!=='peaky'){const own=S.meta.wardrobe.includes('peaky');say('« Pas de casquette, pas de pari ! »');snd('err');
+    toast(own?'Le bookmaker ne laisse entrer que les Peaky Blinders : porte ta tenue (cloakroom du casino, bouton Porter).':'Le bookmaker ne laisse entrer que les Peaky Blinders : achète la tenue au cloakroom du casino ('+fmt(20000)+') et porte-la.');return}
   openPanel(s==='local'||s==='lot'?'biz':s);
 }
 function doSteal(){if(VISIT)return visitMsg();if(INSIDE)return;const p=spotPick();if(p)pickpocket(p)}
@@ -1924,7 +1929,7 @@ function rouRender(){const h="<p class=\"lead\">24 cases. Case verte (14) : ta m
 // ================= Boutiques =================
 const outfitRow=o=>{const own=S.meta.wardrobe.includes(o.k),on=S.meta.outfit===o.k;return `<div class="row"><div class="info"><b>${o.n}</b>${on?'<span class="lvl">portée</span>':''}<small>${o.d}</small></div>`+
   (own?(on?'':`<button class="buy gold" type="button" data-act="wear:${o.k}">Porter</button>`):`<button class="buy" type="button" data-act="outfit:${o.k}" data-cost="${o.p}" ${S.cash<o.p?'disabled':''}>${fmt(o.p)}</button>`)+'</div>'};
-function vestHTML(){return `<p class="lead">${ib('fripe')} Un petit vestiaire collé au casino. « Tenue correcte exigée » : ici on loue la dignité au prix fort.</p>`+OUTFITS.filter(o=>o.k==='costume').map(outfitRow).join('')+
+function vestHTML(){return `<p class="lead">${ib('fripe')} Un petit vestiaire collé au casino. « Tenue correcte exigée » : ici on loue la dignité au prix fort.</p>`+OUTFITS.filter(o=>o.k==='costume'||(o.k==='peaky'&&CK()==='london')).map(outfitRow).join('')+
   (S.meta.outfit!=='classic'&&S.meta.outfit!=='costume'?`<div class="row"><div class="info"><b>Ta tenue habituelle</b><small>Reprendre ton look de base</small></div><button class="buy gold" type="button" data-act="wear:classic">Porter</button></div>`:'')+
   '<p class="foot">Le costume te suit à vie, dans toutes les villes. Les tenues fun se vendent chez Fripe & Chic, à New York.</p>'}
 function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=x.job==='kebab'?FSK():null;let h='';
@@ -1936,7 +1941,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
   if(x.svc==='motors')h+='<p class="lead">'+ib('motors')+' Plus de vitesse, moins de sueur. Tes véhicules te suivent <b>à vie</b>.'+(l?' Remise du proprio : -20 %.':'')+'</p>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
       return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
         (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('');
-  if(x.svc==='fripe')h+='<p class="lead">'+ib('fripe')+' Tes tenues te suivent à vie. Le costume, lui, se trouve au vestiaire du casino.</p>'+OUTFITS.filter(o=>o.k!=='costume').map(outfitRow).join('');
+  if(x.svc==='fripe')h+='<p class="lead">'+ib('fripe')+' Tes tenues te suivent à vie. Le costume, lui, se trouve au vestiaire du casino.</p>'+OUTFITS.filter(o=>o.k!=='costume'&&o.k!=='peaky').map(outfitRow).join('');
   if(x.svc==='bookie')h+=bkHTML();
   if(!x.job&&!x.svc)h+=`<p class="lead">${x.d}. Le patron cherchera bientôt du monde pour un CDD ici.</p>`;
   h+='<div class="sec">La boutique'+ib('shops')+'</div>'+row(l?'Ta boutique':'Racheter '+x.n,l?'niv. '+l:'',(S.local?'':"Il faut d'abord le petit local · ")+`Loyer : +${String(x.inc).replace('.',',')} ${CUR()} de base par seconde et par niveau`+(l?` · actuellement +${fmt2(x.inc*l*gm())}/s`:''),'shop:'+k,mx?0:shopCost(x),mx?'MAX':(l?'Niveau '+(l+1)+' · '+fmt(shopCost(x)):'Racheter · '+fmt(shopCost(x))),!S.local||mx);
@@ -2016,7 +2021,7 @@ function renderPanel(){
   else if(pid==='brico'){t='Brico Dédé';hd='#f4a261';
     h='<p class="lead">'+ib('tools')+' Chaque outil se voit sur ton perso. Dédé appelle ça le "look pro".</p>'+UP.map(u=>{const l=S.up[u.k];const mx=l>=u.max;return row(u.n,'niv. '+l,u.d,'up:'+u.k,mx?0:upCost(u),mx?'MAX':null,mx)}).join('');}
   else if(pid==='fripe'){t='Fripe & Chic';hd='#ff8fab';
-    h='<p class="lead">'+ib('fripe')+' Tes tenues te suivent à vie, même quand tu plaques tout.</p>'+OUTFITS.map(o=>{const own=S.meta.wardrobe.includes(o.k),on=S.meta.outfit===o.k;
+    h='<p class="lead">'+ib('fripe')+' Tes tenues te suivent à vie, même quand tu plaques tout.</p>'+OUTFITS.filter(o=>o.k!=='peaky').map(o=>{const own=S.meta.wardrobe.includes(o.k),on=S.meta.outfit===o.k;
       return `<div class="row"><div class="info"><b>${o.n}</b>${on?'<span class="lvl">portée</span>':''}<small>${o.d}</small></div>`+
         (own?(on?'':`<button class="buy gold" type="button" data-act="wear:${o.k}">Porter</button>`):`<button class="buy" type="button" data-act="outfit:${o.k}" data-cost="${o.p}" ${S.cash<o.p?'disabled':''}>${fmt(o.p)}</button>`)+'</div>'}).join('');}
   else if(pid==='motors'){t='Pigeon Motors';hd='#4cc9f0';
@@ -2063,7 +2068,8 @@ function renderPanel(){
       (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',C(5000),null,S.emp<2))+
       `<p class="foot">Les montants "de base" sont multipliés par ta ville (x${String(CITY().m).replace('.',',')}) et tes bonus. Salaires actuels : ${fmt(wages())} / jour.</p>`;}
   else if(pid==='casino'){t="Casino du Pigeon d'Or";hd='#c77dff';
-    if(!hasCostume()){const own=S.meta.wardrobe.includes('costume');
+    if(!casinoOk()&&CK()==='london'){h="<p class=\"lead\">Le videur croise les bras. « Ici, on ne reçoit que les gens qui ont pignon sur rue, mon gars. »</p><p class=\"lead\">À Londres, pas besoin de costume : achète ton <b>petit local</b> (menu Business) et reviens.</p><div class=\"msg ko\">Attention : si tu insistes, il appelle la police.</div>"}
+    else if(!casinoOk()){const own=S.meta.wardrobe.includes('costume');
       h=(own?"<p class=\"lead\">Le videur te barre la route. « Va te changer, et ne reviens pas habillé comme ça ! »</p><p class=\"lead\">Enfile ton costume au <b>vestiaire</b>, le petit bâtiment collé au casino (bouton Porter).</p>"
         :"<p class=\"lead\">Le videur te regarde de haut en bas. « Tenue correcte exigée, mon gars. Va te changer. »</p><p class=\"lead\">Achète le costume trois-pièces au <b>vestiaire</b>, le petit bâtiment collé au casino ("+fmt(1000)+") et porte-le pour entrer.</p>")+
         "<div class=\"msg ko\">Attention : si tu reviens sans costume, il appelle la police.</div><p class=\"lead\">"+ib('fripe')+" Les tenues et le costume</p>";}
@@ -2641,7 +2647,7 @@ function drawRoom(){
   for(const lx of [170,470,840]){const g=cx.createRadialGradient(lx,90,10,lx,300,330);g.addColorStop(0,'rgba(255,214,120,.22)');g.addColorStop(1,'rgba(255,214,120,0)');cx.fillStyle=g;cx.fillRect(lx-340,60,680,H)}
   const rs=roomSpot();if(rs){const x=RSPOTS[rs][0],y=rs==='exit'?110:rs==='pc'?172:rs==='armory'?50:225;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
 }
-const hasCostume=()=>S.meta.outfit==='costume';
+const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'?!!S.local:hasCostume();
 let casWarn=0;
 const OUTLOOK={hotdog:['#e9c46a','#e9c46a'],pigeon:['#9aa5b1','#8090a0'],armure:['#adb5bd','#6c757d'],peignoir:['#fff','#fff'],astro:['#f1faee','#f1faee']};
 function playerLook(){
@@ -2650,6 +2656,7 @@ function playerLook(){
   const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:'#f1c27d',ride:S.ride,lift:S.ride==='scooter'?10:S.ride==='voiture'?14:S.ride==='trott'?5:0,
     g:{pince:S.up.pince,sac:S.up.sac,basket:S.up.basket,cle:S.up.cle,oeil:S.up.oeil},gun:armed()?S.weapon:null};
   if(out==='costume')return Object.assign(base,{shirt:'#22223b',pants:'#22223b',suit:true,tie:'#d62839',hat:null});
+  if(out==='peaky')return Object.assign(base,{shirt:'#6b5b45',pants:'#4a3f35',suit:true,tie:'#2a1f3d',hat:'#3b3127'});
   if(out!=='classic'&&OUTLOOK[out])return Object.assign(base,{outfit:out,shirt:OUTLOOK[out][0],pants:OUTLOOK[out][1]});
   return Object.assign(base,{shirt:['#06d6a0','#118ab2','#22223b'][tier],pants:['#3d405b','#3d405b','#22223b'][tier],suit:tier===2,tie:'#ffd23f',
     hat:tri>=1?'#2a9d5c':'#ef476f',hatMark:tri>=1&&tri<5?'TRI':'',tophat:tri>=5});

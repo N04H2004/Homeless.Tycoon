@@ -2922,6 +2922,7 @@ function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=dist
 let tutoTgt=null;
 function tutoUI(){const a=$('tarrow'),ok=!(typeof BOOT!=='undefined'&&BOOT)&&!JOB;const st=ok&&(tutoOn()?TUTO[S.meta.tuto||0]:gStep()),el=st&&st.ui?st.ui():null,r=el&&el.getBoundingClientRect();
   if(tutoTgt&&tutoTgt!==el)tutoTgt.classList.remove('tglow');tutoTgt=el;
+  if(el&&!$('panel').hidden&&!$('panel').contains(el)&&!tutoOn()&&GD.k){const x=$('pclose');if(tutoTgt&&tutoTgt!==x)tutoTgt.classList.remove('tglow');tutoTgt=x;x.classList.add('tglow');const rx=x.getBoundingClientRect();a.hidden=false;a.classList.add('up');a.style.left=(rx.left+rx.width/2)+'px';a.style.top=(rx.bottom+6)+'px';return}// une autre fenêtre est ouverte : on montre la croix
   if(!el||!r.width||(!$('panel').hidden&&!$('panel').contains(el))){a.hidden=true;return}
   el.classList.add('tglow');a.hidden=false;const up=r.top<90;a.classList.toggle('up',up);
   a.style.left=(r.left+r.width/2)+'px';a.style.top=(up?r.bottom+6:r.top-6)+'px'}
@@ -2933,7 +2934,24 @@ function drawTutoArrow(){tutoUI();const st=tutoOn()?TUTO[S.meta.tuto||0]:gStep()
 const nearRoom=x=>INSIDE&&Math.abs(RP.x-x)<70&&RP.y<470;
 const barDoor=()=>BID.bar&&[BID.bar.door,150],inPanel=k=>!$('panel').hidden&&pid===k;
 const enterBarStep={t:()=>'Va au <b>bar Le Pigeon Borgne</b> (la flèche) et appuie sur <b>E</b> pour entrer.',tg:barDoor,done:()=>!!INSIDE};
+const inTab=t=>inPanel('plus')&&ptab===t,nxt=()=>({next:true}),q=sel=>()=>document.querySelector(sel);
 const GUIDES={
+ prest:{n:'Ton premier prestige',start:()=>CURI()===0&&!S.meta.gerOn?.[0]&&!featMiss(0).length&&pg()>=1,steps:[
+  {t:()=>'Tu as tout débloqué à Paris et gagné assez : place au <b>prestige</b> ! Ouvre le <b>Menu</b>.',ui:()=>$('btnMenu'),done:()=>inPanel('plus')},
+  {t:()=>'Va dans l\'onglet <b>Prestige</b>.',ui:q('#pbody [data-act="ptab:prestige"]'),done:()=>inTab('prestige')},
+  {t:()=>'Les <b>Pigeons d\'Or</b> 🐦 : tu en gagnes en partant, selon le total gagné dans la ville (1 à 20 000, 2 à 80 000, 3 à 180 000…). Ils achètent des <b>bonus permanents</b>, pour toujours.',ui:q('#pbody .gold'),...nxt()},
+  {t:()=>'Paris ne disparaît pas : elle passe <b>en gérance</b> et continue de rapporter <b>20 %</b> de ses revenus à ta holding. À Londres, tu repars de zéro pour l\'argent et l\'entreprise, mais tu gardes Pigeons d\'Or, bonus, tenues, véhicules et héritage.',...nxt()},
+  {t:()=>'Clique sur <b>Mettre Paris en gérance et ouvrir Londres</b>.',ui:q('#pbody [data-act="prestige"]'),done:()=>inPanel('prest2')||CURI()>=1},
+  {t:()=>'Confirme ton départ pour Londres !',ui:q('#pbody [data-act="prestige2"]'),done:()=>CURI()>=1},
+  {t:()=>'Bienvenue à <b>Londres</b> ! Tout rapporte <b>1,6 fois plus</b>, mais coûte bien plus cher. Ouvre le <b>Menu</b> pour découvrir ta holding.',ui:()=>$('btnMenu'),done:()=>inPanel('plus')},
+  {t:()=>'Va dans l\'onglet <b>Holding</b>.',ui:q('#pbody [data-act="ptab:holding"]'),done:()=>inTab('holding')},
+  {t:()=>'La <b>trésorerie</b> se remplit toute seule avec les 20 % de Paris (et des prochaines villes en gérance), même quand tu ne fais rien.',ui:q('#pbody [data-act="hold:conv"]'),...nxt()},
+  {t:()=>'Le <b>PigeonCoin</b> (PGC) est la crypto du jeu. Son <b>cours</b> monte et descend toutes les 2 secondes (la courbe) : convertis ta trésorerie en PGC <b>quand le cours est bas</b>, avec ce bouton (5 % de frais).',ui:q('#pbody .stk'),...nxt()},
+  {t:()=>'Avec tes PGC, le <b>marché crypto</b> vend des <b>Pigeons d\'Or</b> (pour les bonus permanents) et du <b>capital de départ</b> pour démarrer vite dans ta ville. Le prix monte à chaque achat.',ui:q('#pbody [data-act="hold:po"]'),...nxt()},
+  {t:()=>'L\'<b>Héritage</b> : frigo, manager et trottinette, une fois débloqués, te suivent dans chaque nouvelle ville.',...nxt()},
+  {t:()=>'Le bouton <b>🌍 Carte des villes</b> te permet de retourner visiter Paris quand tu veux (en lecture seule, ta filiale tourne sans toi).',ui:q('#pbody [data-act="worldmap"]'),...nxt()},
+  {t:()=>'Dernier point : retourne dans l\'onglet <b>Prestige</b>.',ui:q('#pbody [data-act="ptab:prestige"]'),done:()=>inTab('prestige')},
+  {t:()=>'Ici, dépense tes <b>Pigeons d\'Or</b> dans les <b>bonus permanents</b> : plus d\'argent, meilleur départ, sac plus grand, employés moins chers… Ils comptent dans toutes les villes, pour toujours.',ui:q('#pbody [data-act^="perk:"]'),...nxt()}]},
  bar:{n:'Le bar clandestin',start:()=>S.owned.bar&&CI()>=1,steps:[
   {t:()=>'Le Pigeon Borgne est à toi : c\'est un <b>bar clandestin</b>, le QG de tes bandits. Va à sa porte (la flèche) et appuie sur <b>E</b>.',tg:barDoor,done:()=>!!INSIDE},
   {t:()=>'Le <b>comptoir</b> : un verre pour reprendre faim et vie. Approche-toi (flèche jaune).',rx:390,done:()=>nearRoom(390)},
@@ -2968,7 +2986,7 @@ function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if
   if(!GD.k){for(const k in GUIDES)if(!gd[k]&&GUIDES[k].start()){GD.k=k;GD.i=0;GD.tx='';snd('event');break}if(!GD.k)return}
   const G=GUIDES[GD.k];
   // on avance tant que l'étape est faite ; si on ressort du bar, on revient à l'étape d'entrée
-  while(GD.i<G.steps.length&&G.steps[GD.i].done())GD.i++;
+  while(GD.i<G.steps.length&&(G.steps[GD.i].next?GD.nx===GD.k+GD.i:G.steps[GD.i].done()))GD.i++;
   if(GD.k!=='bar'&&GD.i>0&&G.steps[0]===enterBarStep&&!INSIDE&&!(GD.k==='heist'&&inPanel('braq')))GD.i=0;
   if(GD.k==='pmu'&&GD.i>=2&&GD.i<6&&!inPanel('bookie')&&!BK.run)GD.i=1;
   if(GD.i>=G.steps.length){gd[GD.k]=1;toast('Guide terminé : '+G.n+' !');snd('ach');GD.k=null;$('tuto').hidden=true;return}
@@ -2976,7 +2994,8 @@ function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if
 function guideCard(){const el=$('tuto'),G=GUIDES[GD.k],st=G.steps[GD.i],t=st.t(),key=GD.k+GD.i+t;el.hidden=false;el.classList.toggle('top',!$('panel').hidden);
   {const u=st.ui&&st.ui(),r=u&&u.getBoundingClientRect();el.classList.toggle('hi',!!(r&&r.width&&r.bottom>innerHeight-230))}// la carte passe en haut si elle cacherait sa cible
   if(GD.tx===key)return;GD.tx=key;
-  el.innerHTML=`<div class="tt"><span>Guide · ${G.n} · ${GD.i+1} / ${G.steps.length}</span><button type="button" id="gskip">Passer</button></div><div class="tx">${t}</div>`;
+  el.innerHTML=`<div class="tt"><span>Guide · ${G.n} · ${GD.i+1} / ${G.steps.length}</span><button type="button" id="gskip">Passer</button></div><div class="tx">${t}</div>`+(st.next?'<button type="button" id="gnext" class="chunky" style="align-self:flex-end;font-size:15px;padding:5px 14px">Suivant ›</button>':'');
+  if(st.next)$('gnext').onclick=()=>{GD.nx=GD.k+GD.i;GD.tx='';guideUpdate();snd('tick')};
   $('gskip').onclick=()=>{(S.meta.gd||(S.meta.gd={}))[GD.k]=1;GD.k=null;el.hidden=true;refocus()}}
 setInterval(guideUpdate,250);
 // flèche dans la salle du bar

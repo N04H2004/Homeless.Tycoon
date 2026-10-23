@@ -1019,9 +1019,25 @@ const ACH=[
 // ville à partir de laquelle un succès est faisable (bar, bandits et braquage arrivent à Londres) ;
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
 const ACH_CITY={barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
-const achReq=ci=>ACH.filter(a=>(ACH_CITY[a[0]]||0)<=ci);
-const achMiss=ci=>achReq(ci).filter(a=>!S.meta.ach[a[0]]);
-const lvlReq=ci=>1+achReq(ci).length+3*ci+(ci>=1?1:0);// niveau atteint avec tous ces succès (+3 par ville en gérance, +1 pour « Nouveau départ »)
+// pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
+const FEAT=[
+ ['Acheter un outil chez Brico Dédé',()=>Object.values(S.up).some(v=>v>0)],
+ ['Installer un distributeur de boissons',()=>S.distrib>=1],
+ ['Acheter le petit local (QG)',()=>S.local],
+ ['Installer le frigo connecté',()=>S.frigo],
+ ['Embaucher un employé',()=>S.emp>=1],
+ ['Engager le manager',()=>S.manager],
+ ['Racheter une boutique de la rue',()=>Object.values(S.shops).some(v=>v>0)],
+ ['Acheter un véhicule chez Pigeon Motors',()=>Object.values(S.veh).some(v=>v)],
+ ['Acheter une tenue au vestiaire',()=>S.meta.wardrobe.length>=2],
+ ['Jouer au casino',()=>S.stats.casino>=1],
+ ['Acheter une action en Bourse',()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0)],
+ ['Faire chaque CDD de la rue',()=>tutoJobs().every(j=>j.ok)],
+ ['Racheter le bar Le Pigeon Borgne',()=>!!S.owned.bar,1],
+ ['Recruter un bandit',()=>S.band>=1,1],
+];
+const featList=ci=>FEAT.filter(f=>(f[2]||0)<=ci).map(([n,f])=>{let ok=false;try{ok=!!f()}catch(e){}return [n,ok]});
+const featMiss=ci=>featList(ci).filter(f=>!f[1]);
 function checkAch(){for(const [k,n,,f] of ACH){if(S.meta.ach[k])continue;try{if(f()){S.meta.ach[k]=Date.now();toast('Succès débloqué : '+n);snd('ach')}}catch(e){}}}
 
 // ================= Jour, nuit, événements =================
@@ -2043,14 +2059,14 @@ function renderPanel(){
           ['Déchets ramassés',S.stats.trash],['Objets réparés',S.stats.repairs],['Pickpockets réussis',S.stats.pick],['Vols des bandits',S.stats.bpick],['Amendes',S.stats.fines],
           ['Descentes de police',S.stats.raids],['Police semée',S.meta.escapes],['Pigeons nourris',S.meta.fed],['Pigeons légendaires',S.meta.legend],['Temps de jeu total',playTime()],['Argent blanchi',fmt(S.meta.laundered||0)],['Gagné au casino',fmt(S.meta.casinoWon||0)],['Perdu au casino',fmt(S.meta.casinoLost)],['Bilan casino',(()=>{const b=(S.meta.casinoWon||0)-S.meta.casinoLost;return (b>=0?'+':'')+fmt(b)})()],['CDD effectués',S.stats.cdd],['Kebabs servis',S.meta.kebabs],['Monnaie rendue juste',S.meta.changes],['Bières tirées',S.meta.beers],['Braquages réussis',S.meta.heists],['Prestiges',S.meta.prestige]]
           .map(([a,b])=>`<span>${a}</span><span>${b}</span>`).join('')+'</div>';}
-    else if(ptab==='prestige'){gerSeed();const g=pg(),ci=CURI(),done=ci>=3||!!S.meta.gerOn[ci],last=done,nx=CITIES[Math.min(ci+1,3)],nr=netRate(),miss=last?[]:achMiss(ci),req=achReq(ci),lv=plLevel().l;
+    else if(ptab==='prestige'){gerSeed();const g=pg(),ci=CURI(),done=ci>=3||!!S.meta.gerOn[ci],last=done,nx=CITIES[Math.min(ci+1,3)],nr=netRate(),miss=last?[]:featMiss(ci),req=featList(ci);
       h+=(last?`<p class="lead">${ib('prestige')} ${ci>=3?'Tokyo est la dernière ville pour l\'instant. De nouvelles villes arriveront bientôt.':CITY().n+' tourne déjà en gérance : '+nx.n+' est débloquée.'} Tu peux quand même encaisser les Pigeons d'Or gagnés ici.</p>`:
         `<p class="lead">${ib('prestige')} Ouvre une filiale à <b>${nx.n}</b> (${nx.cur}, gains x${String(nx.m).replace('.',',')}). Ta rue de ${CITY().n} n'est pas perdue : elle passe <b>en gérance</b> et continue de tourner à 20 % (environ +${fmt2(nr*.2)}/s vers la trésorerie de ta holding, à convertir en PigeonCoin).</p>`)+
         `<p class="lead">Tu repars aussi avec ton Héritage : ${HER.filter(([k])=>S.meta.her[k]).map(x=>x[1].toLowerCase()).join(', ')||'rien pour l\'instant (frigo, manager, trottinette à débloquer)'}.</p>`+
         `<div class="row"><div class="info"><b>Pigeons d'Or</b><small>Tu en as ${S.meta.gold}. Cette ville t'en rapporterait ${g} de plus.</small></div><div class="gold">${S.meta.gold}</div></div>`+
-        (last?'':`<div class="sec">Pour ouvrir ${nx.n} · niveau ${lvlReq(ci)}</div><p class="lead">Débloque <b>tous les succès de ${CITY().n}</b> (${req.length-miss.length} / ${req.length}) : tu atteins alors le niveau ${lvlReq(ci)}. Tu es niveau ${lv}.</p>`+
-          (miss.length?'<div class="achs">'+miss.map(([k,n,d])=>`<div class="ach lock"><b>${n}</b>${d}</div>`).join('')+'</div>':'<p class="lead">✅ Tous les succès sont faits !</p>'))+
-        `<button class="chunky" type="button" data-act="prestige" ${g>=1&&!miss.length?'':'disabled'}>${miss.length?'Encore '+miss.length+' succès à débloquer':g<1?'Fais grimper le total gagné dans cette ville':last?'Encaisser · +'+g+" Pigeon"+(g>1?'s':'')+" d'Or":'Mettre '+CITY().n+' en gérance et ouvrir '+nx.n+' · +'+g+" Pigeons d'Or"}</button>`+
+        (last?'':`<div class="sec">Pour ouvrir ${nx.n} · ${req.length-miss.length} / ${req.length}</div><p class="lead">Essaie <b>toutes les fonctionnalités de ${CITY().n}</b>, une fois chacune suffit (pas besoin de tout améliorer) :</p>`+
+          req.map(([n,ok])=>`<div class="obj${ok?' ok':''}"><span class="ck">${ok?'✓':''}</span><span>${n}</span></div>`).join(''))+
+        `<button class="chunky" type="button" data-act="prestige" ${g>=1&&!miss.length?'':'disabled'}>${miss.length?'Encore '+miss.length+' fonctionnalité'+(miss.length>1?'s':'')+' à essayer':g<1?'Fais grimper le total gagné dans cette ville':last?'Encaisser · +'+g+" Pigeon"+(g>1?'s':'')+" d'Or":'Mettre '+CITY().n+' en gérance et ouvrir '+nx.n+' · +'+g+" Pigeons d'Or"}</button>`+
         '<div class="sec">Bonus permanents</div>'+
         PERKS.map(p=>{const l=S.meta.perk[p.k],c=l+1,mx=l>=p.max;return `<div class="row"><div class="info"><b>${p.n}</b><span class="lvl">niv. ${l}</span><small>${p.d}</small></div><button class="buy gold" type="button" data-act="perk:${p.k}" ${mx||S.meta.gold<c?'disabled':''}>${mx?'MAX':c+' P. d\'Or'}</button></div>`}).join('')+
         "<p class=\"foot\">Tu gardes : filiales, PigeonCoin, Pigeons d'Or, bonus, Héritage, tenues et succès. Dans la nouvelle ville, tu repars de zéro pour l'argent, les outils, l'entreprise et les actions. Pigeons d'Or : racine carrée de (total gagné / 20 000).</p>";}
@@ -2121,7 +2137,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='tab'){casTab=v;BJ.seen={p:0,d:0};return renderPanel()}
   if(a==='rsel'){rouSel=v;snd('tick');return renderPanel()}
   if(a==='ptab'){pid='plus';ptab=v;return renderPanel()}
-  if(a==='prestige'){if(pg()<1)return;gerSeed();if(CURI()<3&&!S.meta.gerOn[CURI()]&&achMiss(CURI()).length)return;if(CURI()>=3||S.meta.gerOn[CURI()]){const g=pg(),m=S.meta;S.pgClaimed=pgAll();m.gold+=g;save();snd('legend');toast('+'+g+" Pigeon"+(g>1?'s':'')+" d'Or encaissé"+(g>1?'s':''));return renderPanel()}pid='prest2';return renderPanel()}
+  if(a==='prestige'){if(pg()<1)return;gerSeed();if(CURI()<3&&!S.meta.gerOn[CURI()]&&featMiss(CURI()).length)return;if(CURI()>=3||S.meta.gerOn[CURI()]){const g=pg(),m=S.meta;S.pgClaimed=pgAll();m.gold+=g;save();snd('legend');toast('+'+g+" Pigeon"+(g>1?'s':'')+" d'Or encaissé"+(g>1?'s':''));return renderPanel()}pid='prest2';return renderPanel()}
   if(a==='prestige2'){const g=pg();if(g<1)return;const m=S.meta,ci=CURI();gerSeed();m.gk=m.gk||{};
     if(ci>=3||m.gerOn[ci]){S.pgClaimed=pgAll();m.gold+=g;save();snd('legend');toast('+'+g+" Pigeon"+(g>1?'s':'')+" d'Or encaissé"+(g>1?'s':''));return renderPanel()}
     m.gerOn[ci]=1;S.pgClaimed=pgAll();m.gold+=g;m.worlds.push({i:ci,rate:Math.round(netRate()*100)/100,g:m.gk[ci]??.2,snap:snapOf(S)});
@@ -2164,7 +2180,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='hire'&&SHIFT[v]){if(!canHire(v)){toast('Équipe de '+v+' complète');snd('err');return renderPanel()}if(!pay(empCost()))return;const st=newStaff(v);S.staff.push(st);S.emp++;syncEmps();lastHire=st;
     REV={st};pid='reveal';renderPanel();startReveal();updHud();save();return}
   if(a==='stk'){const mk=S.mkt[v],st=S.stk[v];let q=w==='max'?Math.floor(S.cash/mk.p):+w;q=Math.min(q,Math.floor(S.cash/mk.p));if(q<1){snd('err');return}
-    const c=q*mk.p;S.cash-=c;st.q+=q;st.cost+=c;snd('buy')}
+    const c=q*mk.p;S.cash-=c;st.q+=q;st.cost+=c;S.bourse=1;snd('buy')}
   if(a==='ana'){buyAna(+v);pid='plus';ptab='bourse';return renderPanel()}
   if(a==='info'){if(!INFO[v])return;infoBack={pid,parg,ptab};pid='info';parg=v;return renderPanel()}
   if(a==='infoback'){const b=infoBack||{pid:null};if(!b.pid){closePanel();return}pid=b.pid;parg=b.parg;ptab=b.ptab;return renderPanel()}

@@ -529,7 +529,7 @@ const OUTFITS=[
  {k:'armure',n:'Armure médiévale',d:'Inutile, mais imposant',p:2500},
  {k:'peignoir',n:'Peignoir de luxe',d:'Tenue officielle des rentiers',p:8000},
  {k:'astro',n:"Combinaison d'astronaute",d:'Pour viser la Lune',p:30000},
- {k:'peaky',n:'Tenue Peaky Blinders',d:'Casquette gavroche et costume en tweed : à Londres, le bookmaker (PMU) te laisse entrer',p:20000},
+ {k:'peaky',n:'Tenue Peaky Blinders',d:'Casquette gavroche et costume en tweed : à Londres, le bookmaker (PMU) et le casino te laissent entrer',p:20000},
 ];
 const VEH=[
  {k:'trott',n:'Trottinette',d:'+40 % de vitesse',p:300,b:.4},
@@ -1058,7 +1058,7 @@ const STEPS=[
  {k:'emp',n:'Embaucher un employé',ok:()=>S.emp>=1,tip:'staff',w:'Menu Business › Recruter. Pense à payer ton équipe toutes les 60 s !',acts:['hire:']},
  {k:'manager',cost:()=>C(2500),n:'Engager le manager',ok:()=>S.manager,w:'Menu Business › Manager : Gérard paie tes employés à ta place.',acts:['biz:manager']},
  {k:'tenue',cost:()=>OUTFITS.find(o=>o.k==='costume').p,n:'Acheter le costume au vestiaire',ok:()=>S.meta.wardrobe.includes('costume'),tip:'fripe',w:'Le vestiaire est collé au casino : le costume trois-pièces t\'en ouvre les portes.',acts:['outfit:']},
- {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
+ {k:'casino',n:'Jouer au casino',ok:()=>S.stats.casino>=1,tip:'casino',w:()=>CK()==='london'?'À Londres, ton local suffit pour entrer au casino (la tenue Peaky Blinders ou le costume aussi) : fais une partie de blackjack ou de roulette.':'Entre au casino avec le costume et fais une partie de blackjack ou de roulette.',acts:['bet:','bjdeal:']},
  {k:'peaky',only:1,cost:()=>20000,n:'Acheter la tenue Peaky Blinders',ok:()=>S.meta.wardrobe.includes('peaky'),w:'Au cloakroom (collé au casino) : la casquette et le tweed t\'ouvrent les portes du bookmaker (PMU). Porte-la pour entrer.',acts:['outfit:peaky']},
  {k:'bourse',n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'shop',cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
@@ -2068,7 +2068,7 @@ function renderPanel(){
       (S.secu?row('Agent de sécurité','engagé',"Raymond veille sur le QG et calme la chaleur."):row('Agent de sécurité','',S.emp>=2?"Protège le QG et fait retomber la chaleur plus vite":'Il faut au moins 2 employés','biz:secu',C(5000),null,S.emp<2))+
       `<p class="foot">Les montants "de base" sont multipliés par ta ville (x${String(CITY().m).replace('.',',')}) et tes bonus. Salaires actuels : ${fmt(wages())} / jour.</p>`;}
   else if(pid==='casino'){t="Casino du Pigeon d'Or";hd='#c77dff';
-    if(!casinoOk()&&CK()==='london'){h="<p class=\"lead\">Le videur croise les bras. « Ici, on ne reçoit que les gens qui ont pignon sur rue, mon gars. »</p><p class=\"lead\">À Londres, pas besoin de costume : achète ton <b>petit local</b> (menu Business) et reviens.</p><div class=\"msg ko\">Attention : si tu insistes, il appelle la police.</div>"}
+    if(!casinoOk()&&CK()==='london'){h="<p class=\"lead\">Le videur croise les bras. « Ici, on ne reçoit que les gens qui ont pignon sur rue, mon gars. »</p><p class=\"lead\">À Londres, il te faut ton <b>petit local</b> (menu Business), ou porter la <b>tenue Peaky Blinders</b> (cloakroom) ou le costume.</p><div class=\"msg ko\">Attention : si tu insistes, il appelle la police.</div>"}
     else if(!casinoOk()){const own=S.meta.wardrobe.includes('costume');
       h=(own?"<p class=\"lead\">Le videur te barre la route. « Va te changer, et ne reviens pas habillé comme ça ! »</p><p class=\"lead\">Enfile ton costume au <b>vestiaire</b>, le petit bâtiment collé au casino (bouton Porter).</p>"
         :"<p class=\"lead\">Le videur te regarde de haut en bas. « Tenue correcte exigée, mon gars. Va te changer. »</p><p class=\"lead\">Achète le costume trois-pièces au <b>vestiaire</b>, le petit bâtiment collé au casino ("+fmt(1000)+") et porte-le pour entrer.</p>")+
@@ -2647,7 +2647,7 @@ function drawRoom(){
   for(const lx of [170,470,840]){const g=cx.createRadialGradient(lx,90,10,lx,300,330);g.addColorStop(0,'rgba(255,214,120,.22)');g.addColorStop(1,'rgba(255,214,120,0)');cx.fillStyle=g;cx.fillRect(lx-340,60,680,H)}
   const rs=roomSpot();if(rs){const x=RSPOTS[rs][0],y=rs==='exit'?110:rs==='pc'?172:rs==='armory'?50:225;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
 }
-const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'?!!S.local:hasCostume();
+const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'?(!!S.local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
 let casWarn=0;
 const OUTLOOK={hotdog:['#e9c46a','#e9c46a'],pigeon:['#9aa5b1','#8090a0'],armure:['#adb5bd','#6c757d'],peignoir:['#fff','#fff'],astro:['#f1faee','#f1faee']};
 function playerLook(){

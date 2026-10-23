@@ -276,8 +276,8 @@ begin
   if pr.private then return pr.pseudo || ' a une rue privée'; end if;
   select coalesce((data ->> 'cash')::double precision, 0) into c from public.saves where user_id = pr.id;
   if p_amount > 0.5 * coalesce(c, 0) + 1 then return 'Maximum : 50 % de l''argent de ' || pr.pseudo; end if;
-  if exists (select 1 from public.tips where from_id = uid and to_id = pr.id and created_at > now() - interval '1 hour') then
-    return 'Tu as déjà laissé un pourboire à ' || pr.pseudo || ' il y a moins d''une heure'; end if;
+  if exists (select 1 from public.tips where from_id = uid and to_id = pr.id and created_at > now() - interval '24 hours') then
+    return 'Tu as déjà laissé un pourboire à ' || pr.pseudo || ' il y a moins de 24 h'; end if;
   insert into public.tips (from_id, to_id, amount) values (uid, pr.id, p_amount);
   return 'ok';
 end $$;

@@ -894,7 +894,12 @@ function spawnTrash(x,y){
   const t=pick(['canette','canette','bouteille','bouteille','carton','sac']);
   trash.push({x:x??rnd(40,W-40),y:y??(Math.random()<.5?rnd(232,292):rnd(458,622)),t,rot:rnd(-1,1),by:null,pop:0});
 }
-function richLook(){const r=Math.random()<Math.min(.7,richness()/50);return r?{rich:1,shirt:pick(['#22223b','#6d597a','#14213d']),top:Math.random()<.5,dog:Math.random()<.5,hair:pick(HAIRS)}:{}}
+// passants aisés : costard (poches x3) et millionnaire en haut-de-forme (x6), un peu plus nombreux quand la rue s'enrichit
+function richLook(){const q=Math.random(),rn=richness();
+  if(q<.04+Math.min(.08,rn/400))return {rich:2,shirt:'#14141a',top:1,dog:Math.random()<.6,hair:pick(HAIRS)};
+  if(q<.24+Math.min(.3,rn/100))return {rich:1,shirt:pick(['#22223b','#6d597a','#14213d','#495057']),top:0,dog:0,brief:1,hair:pick(HAIRS)};
+  return {}}
+const richM=p=>p.rich===2?6:p.rich?3:1;
 function spawnPpl(edge){const dir=Math.random()<.5?1:-1;
   const o={x:edge?(dir>0?-30:W+30):rnd(100,W-100),y:sideY(),v:dir*rnd(45,80),t:rnd(0,9),shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),
     robbed:false,flee:0,say:'',sayT:0,cd:rnd(5,15),...richLook(),...cityLook(),undercover:Math.random()<(S.heat>=75?.1:.05)};if(o.vm)o.v*=o.vm;ppl.push(o)}
@@ -1709,7 +1714,7 @@ function holdup(p){
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');say('Braquer un flic... bravo.');snd('siren');setTimeout(()=>snd('fail'),300);
     toast("Tu as braqué un policier en civil ! Amende de "+fmt(f)+' et une sacrée volée de matraque');
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
-  const g=rnd(40,90)*mult()*a.m*(p.rich?3:1);earn(g,p.x,p.y-85,'#ffd23f');
+  const g=rnd(40,90)*mult()*a.m*richM(p);earn(g,p.x,p.y-85,'#ffd23f');
   p.flee=5;p.say=pick(['Prenez tout !','Pitié, pas le visage !','AU SECOUUURS !','Mon portefeuille !']);p.sayT=2.5;
   say(a.k==='confetti'?'Haut les mains... et les confettis !':'Haut les mains !');snd('coin');
   S.heat=Math.min(100,S.heat+HEATX*(20));
@@ -1731,7 +1736,7 @@ function shoot(){
   for(const c of cops)if(c.active&&dist(c.x,c.y,P.x,P.y)<1100){c.chase=Math.max(c.chase,8);c.chaseB=null;c.fine=Math.max(40,Math.round(S.cash*fp));if(!c.stun){c.say='Arme ! Arme !';c.sayT=1.5}}
   updHud()}
 function stunHit(t,isCop){t.stun=isCop?4:3;t.say=isCop?pick(['Ouille...','Je vois des pigeons...','Mes étoiles !']):pick(['Aïe !','Ouch !']);t.sayT=1.6;float(t.x,t.y-100,'Sonné !','#ffd23f');
-  if(!isCop&&!t.robbed){t.robbed=true;earn(rnd(10,30)*mult()*(t.rich?3:1),t.x,t.y-80,'#ffd23f')}
+  if(!isCop&&!t.robbed){t.robbed=true;earn(rnd(10,30)*mult()*richM(t),t.x,t.y-80,'#ffd23f')}
   if(!isCop)t.flee=5}
 function shotsUpdate(dt){shootCD-=dt;
   for(let i=shots.length-1;i>=0;i--){const b=shots[i];b.life-=dt;b.x+=b.vx*dt;let hit=null;
@@ -1763,8 +1768,8 @@ function pickpocket(p){
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
   const copNear=nearCop(P.x,P.y,350);
   if(tutoPick||Math.random()>=.22+(copNear?.45:0)){
-    earn(rnd(5,25)*mult()*(p.rich?3:1)*(ev&&ev.k==='blackout'?2:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+HEATX*(2));snd('coin');
-    say(p.rich?pick(['Un portefeuille en croco !','Merci monsieur le riche.']):pick(['Merci du don !','Discret comme un pigeon.',"Personne n'a rien vu."]));
+    earn(rnd(5,25)*mult()*richM(p)*(ev&&ev.k==='blackout'?2:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+HEATX*(2));snd('coin');
+    say(p.rich===2?pick(['Une montre en or massif !','Merci, monsieur le millionnaire.','Ça, c\'est du gros poisson !']):p.rich?pick(['Un portefeuille en croco !','Merci monsieur le costard.']):pick(['Merci du don !','Discret comme un pigeon.',"Personne n'a rien vu."]));
   }else{
     p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+HEATX*(8));
     // un seul policier : celui de la rue s'il a tout vu, sinon un agent sort du commissariat
@@ -1777,7 +1782,7 @@ function bandAttempt(b,p){
   b.cd=rnd(6,10);
   if(p.undercover){p.robbed=true;p.revealed=true;p.say='Police ! Toi, au trou !';p.sayT=3;b.jail=60;b.tgt=null;S.heat=Math.min(100,S.heat+HEATX*(10));float(b.x,b.y-80,'Flic en civil !','#ef476f');snd('siren');toast("Un de tes bandits a volé un policier en civil : 60 s au trou");return}const copNear=nearCop(b.x,b.y,300),hm=1-.15*S.bandUp.pigeon;
   if(Math.random()<.62+.06*S.bandUp.nez+(isNight()?.1:0)-(copNear?.35:0)){
-    const dv=Math.max(rnd(8,30)*mult()*lynx()*gm(),autoRate()*rnd(4,10))*(p.rich?2:1);S.dirty=(S.dirty||0)+dv;float(b.x,b.y-80,'+'+fmt(dv)+' sale','#9d4edd');b.lootT=5;snd('coin');p.robbed=true;S.stats.bpick++;S.heat=Math.min(100,S.heat+HEATX*(3*hm));
+    const dv=Math.max(rnd(8,30)*mult()*lynx()*gm(),autoRate()*rnd(4,10))*(p.rich===2?4:p.rich?2:1);S.dirty=(S.dirty||0)+dv;float(b.x,b.y-80,'+'+fmt(dv)+' sale','#9d4edd');b.lootT=5;snd('coin');p.robbed=true;S.stats.bpick++;S.heat=Math.min(100,S.heat+HEATX*(3*hm));
   }else{
     p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+HEATX*(12*hm));
     const c=closestCop(b.x,b.y);
@@ -3005,6 +3010,10 @@ function draw(){
     if(p.ny==='dogs'){cx.strokeStyle='rgba(42,31,61,.6)';cx.lineWidth=1.5;cx.beginPath();for(let k=0;k<6;k++){cx.moveTo(p.x+fc*14,p.y-26);cx.lineTo(p.x+fc*(34+k%3*16),p.y+(k-2.5)*7)}cx.stroke();for(let k=0;k<6;k++)drawDog(p.x+fc*(34+k%3*16),p.y+(k-2.5)*7,fc,p.t+k*.3)}
     drawGuy(p.x,p.y,{s:.92,t:p.t,moving:true,face:fc,shirt:p.shirt,pants:p.rich?'#22223b':p.pants,skin:p.skin,hair:p.top||p.guard||p.bowler?null:p.hair,tophat:p.top&&!p.guard&&!p.revealed,suit:p.rich&&!p.guard,hat:p.revealed?'#14213d':p.cap,badge:p.revealed,ride:p.ny==='bike'?'bike':undefined,lift:p.ny==='bike'?18:0,tie:'#ffd23f',sad:p.flee>0,beret:p.beret,stripes:p.stripes,baguette:p.baguette,bowler:p.bowler&&!p.top,bearskin:p.guard,umbrella:p.umbrella||(p.bowler&&ev&&ev.k==='pluie')});
     if(p.ny)nyAcc(p,fc);
+    if(p.rich&&!p.guard&&!p.revealed&&p.ny!=='trader'){cx.save();cx.translate(p.x,p.y);cx.scale(.92,.92);cx.lineWidth=2.5;cx.strokeStyle=INK;
+      if(p.rich===2){cx.strokeStyle='#ffd23f';cx.lineWidth=2;cx.beginPath();cx.arc(0,-40,9,.15*Math.PI,.85*Math.PI);cx.stroke();if(Math.floor(p.t*2)%3===0)txt('✦',fc*14,-78,12,'#ffd23f',true)}
+      else if(p.brief){rr(-fc*18-9,-22,18,14,3);fs('#7f5539');cx.beginPath();cx.moveTo(-fc*18-4,-22);cx.lineTo(-fc*18-4,-26);cx.lineTo(-fc*18+4,-26);cx.lineTo(-fc*18+4,-22);cx.stroke()}
+      cx.restore()}
     if(p.sayT>0)drawBubble(p.x,p.y-74,p.say,p.flee>0?'#ffccd5':'#fff')}]);
   for(const q of squad)if(q.delay<=0&&inV(q.x))L.push([q.y,()=>{drawGuy(q.x,q.y,{t:q.t,moving:q.moving,face:q.face,shirt:'#1d3557',pants:'#14213d',skin:SKINS[(squad.indexOf(q)+1)%5],hat:'#14213d',hatMark:CK()==='ny'?'NYPD':'',badge:1,s:1});
     if(q.mode==='chase')txt('!',q.x,q.y-92+Math.sin(T*14+q.t)*3,22,'#ef476f',true);if(q.sayT>0)drawBubble(q.x,q.y-80,q.say,'#cdeefd')}]);
@@ -3028,7 +3037,7 @@ function draw(){
   L.sort((a,b)=>a[0]-b[0]);for(const [,f] of L)f();
   drawWeatherAndNight();
   cx.strokeStyle='rgba(255,255,255,.35)';cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.ellipse(P.x,P.y-4,pickR(),pickR()*.45,0,0,7);cx.stroke();cx.setLineDash([]);
-  if(pickTarget&&!pickTarget.robbed)txt('$',pickTarget.x,pickTarget.y-82+Math.sin(T*8)*3,20,'#c77dff',true);
+  if(pickTarget&&!pickTarget.robbed)txt(pickTarget.rich===2?'$$$':pickTarget.rich?'$$':'$',pickTarget.x,pickTarget.y-82+Math.sin(T*8)*3,20,'#c77dff',true);
   if(feedTarget)txt('♥',feedTarget.x,feedTarget.y-34+Math.sin(T*8)*3,16,'#ff8fa3',true);
   for(const s of sparks){const k=s.t/.5;txt(s.star?'✦':'✧',s.x,s.y-k*20,14,s.star?'#ffd23f':'#fff',true)}
   if(P.sayT>0)drawBubble(P.x,P.y-(S.up.tri>=5||S.meta.outfit==='hotdog'?112:88)-(S.ride==='voiture'?10:0),P.say);
@@ -3211,7 +3220,7 @@ const TIPS=[
  ['staff','Tes employés',()=>S.emp>=1,['Chaque recrue est <b>tirée au sort</b> : commune, rare ou légendaire (7 %).','<b>Équipe de jour</b> le jour, <b>équipe de nuit</b> la nuit.','Paie toutes les 60 s, sinon <b>grève</b>. Le <b>manager</b> paie tout seul.','Licencier coûte 3 jours de salaire.']],
  ['shops','Ta première boutique',()=>SHOPS.some(x=>S.shops[x.k]>0),['Une boutique rachetée verse un <b>loyer</b> chaque seconde.','Chaque niveau augmente le loyer, la vitrine évolue jusqu\'au luxe au niveau 10.','Chaque ville a ses 4 boutiques à racheter.']],
  ['night','La nuit',()=>isNight(),['Un <b>deuxième policier</b> patrouille.','Tes <b>bandits</b> sortent, ton <b>équipe de nuit</b> prend le relais.','Plus de déchets, et les cryptos s\'affolent en bourse.']],
- ['pick','Faire les poches',()=>S.stats.pick+S.stats.fines>=1,['Touche <b>F</b> (bouton violet) près d\'un passant.','Si tu rates, <b>toute la brigade</b> sort du commissariat : tiens 20 s pour la semer.','1 passant sur 20 est un <b>policier en civil</b> : amende et matraque assurées.','Chaque vol fait monter la <b>chaleur</b>.']],
+ ['pick','Faire les poches',()=>S.stats.pick+S.stats.fines>=1,['Touche <b>F</b> (bouton violet) près d\'un passant.','Vise les <b>costards</b> (mallette, <b>$$</b>) : poches <b>x3</b>. Le <b>millionnaire</b> en haut-de-forme et chaîne en or (<b>$$$</b>) : <b>x6</b>.','Si tu rates, <b>toute la brigade</b> sort du commissariat : tiens 20 s pour la semer.','1 passant sur 20 est un <b>policier en civil</b> : amende et matraque assurées.','Chaque vol fait monter la <b>chaleur</b>.']],
  ['bandits','Bandits et chaleur',()=>S.band>=1,['Débloqués à <b>Londres</b>, tes bandits volent <b>la nuit</b> à ta place. Leur butin est de l\'<b>argent sale</b>, stocké au coffre du QG.','Chaque vol fait monter la <b>chaleur</b>. 50 : un flic de plus. 75 : plus de flics en civil. 100 : descente, coffre saisi.','Blanchis avec la <b>laverie</b> ou l\'ordinateur du bar. L\'<b>avocat</b> (5 niveaux) calme la chaleur.','Clique sur <b>Chaleur</b> ou <b>Sale</b> en haut à gauche pour l\'explication complète.']],
  ['casino','Le casino',()=>S.meta.wardrobe.includes('costume')||S.stats.casino>0,['Le costume se vend au <b>vestiaire</b>, collé au casino. Le videur exige que tu le <b>portes</b>. Deuxième refus : il appelle la police.','<b>Blackjack</b> : le croupier tire jusqu\'à 17. 21 en 2 cartes : mise x2,5 (gain 3:2). 21 en 3 cartes ou plus : mise x2 (gain 1:1). Croupier aussi à 21 : égalité possible.','<b>Roulette</b> : vert x1,5 (14 cases sur 24), case dorée x5, rouge perdu (9 cases).']],
  ['bar','Le bar et le marché noir',()=>S.owned.bar,['Touche <b>E</b> devant le bar pour <b>entrer</b> : tu te promènes dans la salle.','<b>Comptoir</b> : un verre pour la faim. <b>Ordinateur</b> : marché noir, munitions, comptable, blanchiment et braquage des autres joueurs.','<b>Armurerie</b> : équipe une arme pour tirer dans la rue (touche G).','Le braquage a lieu <b>la nuit</b>, le butin est versé <b>le lendemain matin</b>.']],

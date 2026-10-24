@@ -3183,18 +3183,18 @@ const GUIDES={
   {t:()=>'Le bouton <b>🌍 Carte des villes</b> te permet de retourner visiter Paris quand tu veux (en lecture seule, ta filiale tourne sans toi).',ui:q('#pbody [data-act="worldmap"]'),...nxt()},
   {t:()=>'Dernier point : retourne dans l\'onglet <b>Prestige</b>.',ui:q('#pbody [data-act="ptab:prestige"]'),done:()=>inTab('prestige')},
   {t:()=>'Ici, dépense tes <b>Pigeons d\'Or</b> dans les <b>bonus permanents</b> : plus d\'argent, meilleur départ, sac plus grand, employés moins chers… Ils comptent dans toutes les villes, pour toujours.',ui:q('#pbody [data-act^="perk:"]'),...nxt()}]},
- bar:{n:'Le bar clandestin',start:()=>S.owned.bar&&CI()>=1,steps:[
+ bar:{n:'Le bar clandestin',start:()=>S.owned.bar&&CK()==='london',steps:[
   {t:()=>'Le Pigeon Borgne est à toi : c\'est un <b>bar clandestin</b>, le QG de tes bandits. Va à sa porte (la flèche) et appuie sur <b>E</b>.',tg:barDoor,done:()=>!!INSIDE},
   {t:()=>'Le <b>comptoir</b> : un verre pour reprendre faim et vie. Approche-toi (flèche jaune).',rx:390,done:()=>nearRoom(390)},
   {t:()=>'L\'<b>armurerie</b> : c\'est ici que tu équipes tes armes pour tirer dans la rue.',rx:710,done:()=>nearRoom(710)},
   {t:()=>'L\'<b>ordinateur du fond</b> : le marché noir (armes, munitions), le comptable et <b>Le casse</b>. Tout se passe ici. La sortie est à gauche.',rx:950,done:()=>nearRoom(950)}]},
- arm:{n:'Ta première arme',start:()=>{const c=stepCur();return c&&c.x.k==='arme'},steps:[
+ arm:{n:'Ta première arme',start:()=>{const c=stepCur();return CK()==='london'&&c&&c.x.k==='arme'},steps:[
   enterBarStep,
   {t:()=>'Va à l\'<b>ordinateur du fond</b> et appuie sur <b>E</b>.',rx:950,done:()=>inPanel('pc')},
   {t:()=>'Achète ta première arme au <b>marché noir</b> (le lance-pierre est la moins chère).',ui:()=>document.querySelector('#pbody [data-act^="arm:"]:not(:disabled)')||document.querySelector('#pbody [data-act^="arm:"]'),done:()=>Object.values(S.arms||{}).some(v=>v)},
   {t:()=>'Ferme l\'ordinateur (<b>X</b>), puis va à l\'<b>armurerie</b> et appuie sur <b>E</b>.',rx:710,ui:()=>inPanel('pc')?$('pclose'):null,done:()=>inPanel('armory')},
   {t:()=>'Clique sur <b>Équiper</b> : ton arme est prête. Dans la rue, <b>G</b> ou le bouton Tirer.',ui:()=>document.querySelector('#pbody [data-act^="equip:"]'),done:()=>!!S.weapon}]},
- heist:{n:'Ton premier casse',start:()=>{const c=stepCur();return c&&c.x.k==='heist'&&!bqBlock()},steps:[
+ heist:{n:'Ton premier casse',start:()=>{const c=stepCur();return CK()==='london'&&c&&c.x.k==='heist'&&!bqBlock()},steps:[
   enterBarStep,
   {t:()=>'Va à l\'<b>ordinateur du fond</b> et appuie sur <b>E</b>.',rx:950,done:()=>inPanel('pc')||inPanel('braq')},
   {t:()=>'À la ligne <b>Le casse</b>, clique sur <b>Choisir</b>.',ui:()=>document.querySelector('#pbody [data-act="heist"]'),done:()=>inPanel('braq')},
@@ -3217,6 +3217,7 @@ const GUIDES={
   {t:()=>'Achète un <b>petit ticket</b> (ou choisis ta mise plus bas).',ui:()=>document.querySelector('#pbody [data-act="grat:buy:0"]'),done:()=>!!GR.grid},
   {t:()=>'Gratte les 9 cases en glissant le doigt ou la souris : <b>3 symboles identiques</b> = gagné !',ui:()=>document.querySelector('#pbody .grat'),done:()=>!!GR.grid&&GR.done}]},
 };
+// les guides du bar, de l'arme et du casse ne se jouent qu'à Londres (déjà vus avant New York)
 const GD={k:null,i:0,tx:''};
 const gStep=()=>GD.k&&!VISIT?GUIDES[GD.k].steps[GD.i]:null;
 function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if(GD.k&&!tutoOn())$('tuto').hidden=true;return}

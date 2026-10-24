@@ -1140,6 +1140,15 @@ function checkAch(){for(const [k,n,,f] of ACH){if(S.meta.ach[k])continue;try{if(
 const DAY=240;
 function darkness(){const c=S.clock%DAY;if(c<150)return 0;if(c<170)return (c-150)/20;if(c<225)return 1;return 1-(c-225)/15}
 const isNight=()=>darkness()>.5;
+// chances de chaque événement dans la ville actuelle (même tirage que startEvent)
+function evOdds(){const k=CK(),nt=isNight();let L=[['pluie',.4],['manif',.2],['marche',.2],['controle',.2]];
+  if(k==='london')L=L.map(([e,p])=>[e,p*.55+(e==='pluie'?.45:0)]);
+  if(k==='ny'){L=L.map(([e,p])=>[e,p*.4]);L.push(['rush',.6*(nt?.25:.5)],['neige',.15],['parade',.15]);if(nt)L.push(['blackout',.15])}
+  return L}
+function evGuideHTML(){const d=e=>e==='controle'?['Contrôle fiscal','le fisc prend 10 % de l\'argent que tu as en poche (moins avec l\'avocat), seulement si tu as plus de '+fmt(C(3000)),0]:[EVENTS[e].n,EVENTS[e].d,EVENTS[e].dur];
+  const rows=evOdds().sort((a,b)=>b[1]-a[1]).map(([e,p])=>{const [n,txt,dur]=d(e),on=ev&&ev.k===e;return `<li${on?' style="background:#fff3b0;border-radius:6px"':''}><b>${n}</b> · ~${Math.round(p*100)} %${dur?' · '+dur+' s':''}${on?' · <b>en cours !</b>':''}<br><small>${txt}</small></li>`}).join('');
+  return `<details class="guide" open><summary>Événements possibles à ${CITY().n}</summary><div class="tip" style="margin-top:6px"><p style="margin:0 0 6px">Un événement tombe toutes les 1 min 30 à 2 min 30 environ. Voici ce qui peut arriver ici, et à quelle fréquence :</p><ul>${rows}</ul>`+
+    (CK()==='ny'?'<p style="margin:6px 0 0"><small>Le blackout ne tombe que la nuit.</small></p>':'')+'</div></details>'}
 function startEvent(){
   let k=pick(['pluie','manif','marche','controle','pluie']);if(CK()==='london'&&Math.random()<.45)k='pluie';
   if(CK()==='ny'&&Math.random()<.6)k=pick(['rush','neige','parade',isNight()?'blackout':'rush']);
@@ -2240,7 +2249,7 @@ function renderPanel(){
         PERKS.map(p=>{const l=S.meta.perk[p.k],c=l+1,mx=l>=p.max;return `<div class="row"><div class="info"><b>${p.n}</b><span class="lvl">niv. ${l}</span><small>${p.d}</small></div><button class="buy gold" type="button" data-act="perk:${p.k}" ${mx||S.meta.gold<c?'disabled':''}>${mx?'MAX':c+' P. d\'Or'}</button></div>`}).join('')+
         "<p class=\"foot\">Tu gardes : filiales, PigeonCoin, Pigeons d'Or, bonus, Héritage, tenues et succès. Dans la nouvelle ville, tu repars de zéro pour l'argent, les outils, l'entreprise et les actions. Pigeons d'Or : racine carrée de (total gagné / 20 000).</p>";}
     else if(ptab==='guide'){const m=S.meta,seen=TIPS.filter(x=>m.tips[x[0]]),n=TIPS.length;
-      h+=`<p class="lead">Les fiches se débloquent au fil du jeu : ${seen.length} sur ${n}.</p><div class="guide" style="display:flex;flex-direction:column;gap:8px">`+
+      h+=evGuideHTML()+`<p class="lead">Les fiches se débloquent au fil du jeu : ${seen.length} sur ${n}.</p><div class="guide" style="display:flex;flex-direction:column;gap:8px">`+
         TIPS.map(([k,ti,,pts])=>m.tips[k]?`<details><summary>${ti}</summary><div class="tip" style="margin-top:6px"><ul>${pts.map(x=>`<li>${x}</li>`).join('')}</ul></div></details>`:'<div class="lock">??? · se débloque en jouant</div>').join('')+
         `</div><button class="chunky alt" type="button" data-act="tutoagain">Refaire le tutoriel</button>`}
     else if(ptab==='options'){

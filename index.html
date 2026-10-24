@@ -449,7 +449,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 const W=5100,H=640,INK='#2a1f3d';
 const HEATX=1.6;// la chaleur monte 60 % plus vite à chaque méfait
 let VISIT=null,INSIDE=null,roomCam=0;
-const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const cv=document.getElementById('cv');let cx=cv.getContext('2d');// let : l'aperçu du vestiaire dessine un instant sur son propre canvas
 const $=id=>document.getElementById(id);
 let cssW=0,cssH=0,dpr=1,scale=1,camX=0,viewW=800,T=0;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -2045,7 +2045,23 @@ function rouRender(){const h="<p class=\"lead\">24 cases. Case verte (14) : ta m
 // ================= Boutiques =================
 const outfitRow=o=>{const own=S.meta.wardrobe.includes(o.k),on=S.meta.outfit===o.k;return `<div class="row"><div class="info"><b>${o.n}</b>${on?'<span class="lvl">portée</span>':''}<small>${o.d}</small></div>`+
   (own?(on?'':`<button class="buy gold" type="button" data-act="wear:${o.k}">Porter</button>`):`<button class="buy" type="button" data-act="outfit:${o.k}" data-cost="${o.p}" ${S.cash<o.p?'disabled':''}>${fmt(o.p)}</button>`)+'</div>'};
-function vestHTML(){return `<p class="lead">${ib('fripe')} Un petit vestiaire collé au casino. « Tenue correcte exigée » : ici on loue la dignité au prix fort.</p>`+OUTFITS.filter(o=>o.k==='costume'||(o.k==='peaky'&&CK()==='london')).map(outfitRow).join('')+
+let vestTab=null;// par défaut : Costumes tant que le costume n'est pas acheté, sinon Personnaliser
+function lookHTML(){const L=myLook(),own=myPieces(),sw=(act,c,on)=>`<button type="button" data-act="${act}" aria-label="Couleur" style="width:30px;height:30px;border-radius:50%;background:${c};border:3px solid ${on?'#ffd23f':'var(--ink)'};box-shadow:${on?'0 0 0 2px var(--ink)':'none'};cursor:pointer"></button>`,
+    chip=(act,lab,on)=>`<button class="ing${on?' on':''}" type="button" style="background:${on?'#ffd23f':'#fff'}" data-act="${act}">${lab}</button>`;
+  let h=`<div style="display:flex;gap:12px;align-items:center"><canvas id="lookpv" width="150" height="190" style="flex:0 0 auto;background:#e7dcf3;border:3px solid var(--ink);border-radius:14px"></canvas><p class="lead" style="margin:0">Personnalise ton perso à 100 % : peau, coiffure, et toutes les pièces achetées chez <b>Fripe & Chic</b> (New York). Tout te suit à vie, dans toutes les villes.</p></div>`;
+  h+='<div class="sec">Peau</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_SKIN.map(c=>sw('look:skin:'+c,c,(L.skin||'#f1c27d')===c)).join('')+'</div>';
+  h+='<div class="sec">Coiffure</div><div class="ings" style="grid-template-columns:repeat(3,1fr)">'+LOOK_HAIR.map(([k,n])=>chip('look:hair:'+k,n,(L.hair||'court')===k)).join('')+'</div>';
+  h+='<div class="sec">Couleur des cheveux</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_HC.map(c=>sw('look:hc:'+c,c,(L.hc||'#2b2118')===c)).join('')+'</div>';
+  for(const [sl,sn] of LSLOTS){const mine=PIECES.filter(x=>x.s===sl&&own.includes(x.k)),cur=L[sl]||(sl==='hat'?'auto':'none');
+    h+=`<div class="sec">${sn}</div><div class="ings" style="grid-template-columns:repeat(3,1fr)">`+(sl==='hat'?chip('look:hat:auto','Selon tes outils',cur==='auto')+chip('look:hat:none','Tête nue',cur==='none'):chip('look:'+sl+':none','Par défaut',cur==='none'))+
+      mine.map(x=>chip('look:'+sl+':'+x.k,x.n,cur===x.k)).join('')+'</div>'+(mine.length?'':'<p class="foot" style="margin:2px 0 0">Aucune pièce : direction Fripe & Chic, à New York.</p>')}
+  const fl=S.meta.wardrobe.filter(k=>k!=='classic'),on=S.meta.outfit;
+  h+='<div class="sec">Tenue complète (remplace les pièces)</div><div class="ings" style="grid-template-columns:repeat(2,1fr)">'+chip('wear:classic','Mon look perso',on==='classic')+fl.map(k=>{const o=OUTFITS.find(x=>x.k===k);return o?chip('wear:'+k,o.n,on===k):''}).join('')+'</div>';
+  return h}
+function drawLookPreview(){const c=$('lookpv');if(!c)return;const g=c.getContext('2d'),keep=cx,dpr2=window.devicePixelRatio||1;c.width=150*dpr2;c.height=190*dpr2;c.style.width='150px';c.style.height='190px';
+  g.setTransform(dpr2*1.7,0,0,dpr2*1.7,0,0);cx=g;try{const lk=Object.assign(playerLook(),{moving:false,ride:null,lift:0,bag:0,gun:null,face:1});drawGuy(44,104,lk)}finally{cx=keep}}
+function vestHTML(){const t=vestTab||(S.meta.wardrobe.includes('costume')?'perso':'costume');return tabs(t,[['perso','Personnaliser'],['costume','Costumes']],'vtab')+(t==='perso'?lookHTML():vestShopHTML())}
+function vestShopHTML(){return `<p class="lead">${ib('fripe')} Un petit vestiaire collé au casino. « Tenue correcte exigée » : ici on loue la dignité au prix fort.</p>`+OUTFITS.filter(o=>o.k==='costume'||(o.k==='peaky'&&CK()==='london')).map(outfitRow).join('')+
   (S.meta.outfit!=='classic'&&S.meta.outfit!=='costume'?`<div class="row"><div class="info"><b>Ta tenue habituelle</b><small>Reprendre ton look de base</small></div><button class="buy gold" type="button" data-act="wear:classic">Porter</button></div>`:'')+
   '<p class="foot">Le costume te suit à vie, dans toutes les villes. Les tenues fun se vendent chez Fripe & Chic, à New York.</p>'}
 function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=x.job==='kebab'?FSK():null;let h='';
@@ -2057,7 +2073,10 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
   if(x.svc==='motors')h+='<p class="lead">'+ib('motors')+' Plus de vitesse, moins de sueur. Tes véhicules te suivent <b>à vie</b>.'+(l?' Remise du proprio : -20 %.':'')+'</p>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
       return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
         (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('');
-  if(x.svc==='fripe')h+='<p class="lead">'+ib('fripe')+' Tes tenues te suivent à vie. Le costume, lui, se trouve au vestiaire du casino.</p>'+OUTFITS.filter(o=>o.k!=='costume'&&o.k!=='peaky').map(outfitRow).join('');
+  if(x.svc==='fripe'){const own=myPieces(),L=myLook();h+='<p class="lead">'+ib('fripe')+' Hauts, bas, chapeaux, lunettes, chaussures : tout se combine. Ce que tu achètes te suit à vie, et tu le portes comme tu veux au <b>vestiaire du casino</b>, dans toutes les villes.</p>';
+    for(const [sl,sn] of LSLOTS)h+='<div class="sec">'+sn+'</div>'+PIECES.filter(p=>p.s===sl).map(p=>{const has=own.includes(p.k),on=L[sl]===p.k;return `<div class="row"><div class="info"><b>${p.n}</b>${on?'<span class="lvl">portée</span>':''}</div>`+
+      (has?(on?'':`<button class="buy gold" type="button" data-act="look:${sl}:${p.k}">Porter</button>`):`<button class="buy" type="button" data-act="piece:${p.k}" data-cost="${p.p}" ${S.cash<p.p?'disabled':''}>${fmt(p.p)}</button>`)+'</div>'}).join('');
+    h+='<div class="sec">Tenues complètes</div>'+OUTFITS.filter(o=>o.k!=='costume'&&o.k!=='peaky').map(outfitRow).join('')}
   if(x.svc==='bookie')h+=bkHTML();
   if(!x.job&&!x.svc)h+=`<p class="lead">${x.d}. Le patron cherchera bientôt du monde pour un CDD ici.</p>`;
   h+='<div class="sec">La boutique'+ib('shops')+'</div>'+row(l?'Ta boutique':'Racheter '+x.n,l?'niv. '+l:'',(S.local?'':"Il faut d'abord le petit local · ")+`Loyer : +${String(x.inc).replace('.',',')} ${CUR()} de base par seconde et par niveau`+(l?` · actuellement +${fmt2(x.inc*l*gm())}/s`:''),'shop:'+k,mx?0:shopCost(x),mx?'MAX':(l?'Niveau '+(l+1)+' · '+fmt(shopCost(x)):'Racheter · '+fmt(shopCost(x))),!S.local||mx);
@@ -2279,6 +2298,7 @@ function renderPanel(){
   if(pid==='tipn'){t='💰 Pourboire reçu !';hd='#7ee08a';h=tipnHTML(parg)}
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
+  if(pid==='vest')drawLookPreview();
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
   for(const b of $('pbody').querySelectorAll('[data-act]')){const L=lockOf(b.dataset.act);if(L){b.disabled=true;b.textContent='🔒';b.title=lockText(L)}}
   if(pid==='casino'&&casTab==='rou')drawWheel();
@@ -2350,6 +2370,9 @@ $('pbody').addEventListener('click',e=>{
   if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(estP(es)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
+  if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='look'){const L=myLook();if(['top','bot','hat','gl','sh'].includes(v)){if(w!=='none'&&w!=='auto'&&!myPieces().includes(w))return;L[v]=w;S.meta.outfit='classic'}else if(['skin','hair','hc'].includes(v))L[v]=w;snd('pick')}
+  if(a==='piece'){const pc=PC(v);if(!pc||myPieces().includes(v)||!pay(pc.p))return;myPieces().push(v);myLook()[pc.s]=v;S.meta.outfit='classic';toast(pc.n+' : achetée et portée ! Change de look au vestiaire du casino.')}
   if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achet'+(vv.g||'é')+', en route !')}
   if(a==='ride'){S.ride=v||'';S.meta.ride=S.ride;snd('buy')}
   if(a==='rival'){
@@ -2801,7 +2824,8 @@ function drawGuy(x,y,o){
   cx.translate(0,-spring*1.6-(o.lift||0));
   if(out==='astro'){rr(-f*20,-40,10,24,4);fs('#adb5bd')}
   rr(-9+lg,-15,8,15,3);fs(o.pants);rr(1-lg,-15,8,15,3);fs(o.pants);
-  if(g){const sc=out==='peignoir'?'#ff8fab':out==='armure'?'#6c757d':g.basket>=6?'#ffd23f':g.basket>0?'#ef476f':'#5c4b73';rr(-11+lg,-5,12,6,3);fs(sc);rr(0-lg,-5,12,6,3);fs(sc)}
+  if(o.botS==='camo'){cx.fillStyle='#283618';for(const [dx,dy] of [[-7,-12],[-4,-6],[3,-11],[6,-5]])circ(dx+(dx<0?lg:-lg),dy,2),cx.fill()}
+  if(g||o.shoes){const sc=o.shoes||(out==='peignoir'?'#ff8fab':out==='armure'?'#6c757d':g.basket>=6?'#ffd23f':g.basket>0?'#ef476f':'#5c4b73');rr(-11+lg,-5,12,6,3);fs(sc);rr(0-lg,-5,12,6,3);fs(sc)}
   cx.translate(0,-bob);
   if(o.bag){const r=7+o.bag*1.6;const bc=g?(g.sac>=6?'#ffd23f':g.sac>=3?'#2a9d5c':'#8d99ae'):'#8d99ae';
     cx.beginPath();cx.ellipse(-f*13,-30,r*.75,r,0,0,7);fs(bc);cx.beginPath();cx.moveTo(-f*13-3,-30-r);cx.lineTo(-f*13,-34-r);cx.lineTo(-f*13+3,-30-r);cx.strokeStyle='#ffd23f';cx.stroke();cx.strokeStyle=INK}
@@ -2811,6 +2835,9 @@ function drawGuy(x,y,o){
   if(out==='peignoir'){cx.fillStyle='#ffd23f';cx.fillRect(-12,-24,24,3);cx.beginPath();cx.moveTo(-5,-42);cx.lineTo(0,-30);cx.lineTo(5,-42);cx.strokeStyle='#ffd23f';cx.lineWidth=2;cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
   if(out==='armure'){circ(-13,-38,7);fs('#ced4da');circ(13,-38,7);fs('#ced4da');cx.fillStyle='#d62839';cx.fillRect(-3,-36,6,16)}
   if(o.stripes){cx.fillStyle='rgba(255,255,255,.75)';for(const yy of [-36,-28,-20])cx.fillRect(-11,yy,22,3)}
+  if(o.topS==='dots'){cx.fillStyle=o.shirt==='#ffd23f'?'#fff3b0':'rgba(255,255,255,.85)';for(const [dx,dy] of [[-6,-36],[5,-32],[-3,-24],[7,-20],[-8,-18]])circ(dx,dy,2.2),cx.fill()}
+  if(o.topS==='zip'){cx.strokeStyle='#adb5bd';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(0,-41);cx.lineTo(0,-14);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
+  if(o.topS==='num')txt('23',0,-27,10,'#fff');
   if(o.vest){cx.fillStyle='#fff';cx.fillRect(-12,-28,24,4);cx.strokeRect(-12,-28,24,4)}
   if(o.suit){cx.beginPath();cx.moveTo(-4,-42);cx.lineTo(0,-31);cx.lineTo(4,-42);cx.closePath();cx.fillStyle='#fff';cx.fill();cx.fillStyle=o.tie||'#ef476f';cx.fillRect(-1.5,-39,3,9)}
   if(o.badge){circ(-6*f,-33,3.5);fs('#ffd23f')}
@@ -2819,21 +2846,32 @@ function drawGuy(x,y,o){
   if(out==='pigeon'){cx.beginPath();cx.moveTo(-18,-36);cx.lineTo(-26,-22);cx.lineTo(-16,-24);cx.closePath();fs('#b8c2cc');cx.beginPath();cx.moveTo(18,-36);cx.lineTo(26,-22);cx.lineTo(16,-24);cx.closePath();fs('#b8c2cc')}
   if(g&&g.pince>0){const L=16+g.pince*3,hx=f*15,hy=-22-sw/2*f;cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(hx+f*L,hy+10);cx.strokeStyle=g.pince>=6?'#ffd23f':'#6c757d';cx.lineWidth=3.5;cx.stroke();
     cx.beginPath();cx.moveTo(hx+f*L,hy+10);cx.lineTo(hx+f*(L+6),hy+5);cx.moveTo(hx+f*L,hy+10);cx.lineTo(hx+f*(L+6),hy+15);cx.strokeStyle=INK;cx.lineWidth=2.5;cx.stroke();cx.lineWidth=3}
+  if(o.topS==='hood'){circ(0,-54,19);fs(o.shirt)}
+  if(o.hair&&o.hairS==='afro'){circ(0,-63,21);fs(o.hair)}
+  if(o.hair&&o.hairS==='queue'){cx.beginPath();cx.ellipse(-f*17,-58,6,12,-f*.4,0,7);fs(o.hair)}
   circ(0,-56,15);fs(o.skin);
   const ex=f*4;cx.fillStyle='#fff';circ(ex-5,-58,5);cx.fill();cx.stroke();circ(ex+6,-58,5);cx.fill();cx.stroke();
   cx.fillStyle=INK;circ(ex-4+f*1.5,-58,2.2);cx.fill();circ(ex+7+f*1.5,-58,2.2);cx.fill();
-  if(o.shades){cx.fillStyle=INK;rr(ex-11,-62,24,8,3);cx.fill()}
+  if(o.shades||o.glass==='shades'){cx.fillStyle=INK;rr(ex-11,-62,24,8,3);cx.fill()}
+  else if(o.glass==='round'){cx.lineWidth=2;circ(ex-5,-58,6.5);cx.stroke();circ(ex+6,-58,6.5);cx.stroke();cx.lineWidth=3}
+  else if(o.glass==='heart'){cx.fillStyle='#f72585';for(const hx of [ex-5,ex+6]){cx.beginPath();cx.moveTo(hx,-53);cx.bezierCurveTo(hx-9,-59,hx-4,-66,hx,-61);cx.bezierCurveTo(hx+4,-66,hx+9,-59,hx,-53);cx.fill()}}
+  else if(o.glass==='mono'){cx.lineWidth=2;circ(ex+6,-58,6.5);cx.stroke();cx.strokeStyle='#ffd23f';cx.beginPath();cx.moveTo(ex+12,-56);cx.quadraticCurveTo(ex+14,-46,ex+8,-40);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
+  else if(o.glass==='3d'){cx.fillStyle='#ef476f';cx.fillRect(ex-11,-62,11,8);cx.fillStyle='#4cc9f0';cx.fillRect(ex,-62,12,8);cx.lineWidth=2;cx.strokeRect(ex-11,-62,23,8);cx.lineWidth=3}
   if(g&&g.oeil>0){cx.strokeStyle=g.oeil>=6?'#ffd23f':INK;cx.lineWidth=2;circ(ex-5,-58,6.5);cx.stroke();circ(ex+6,-58,6.5);cx.stroke();cx.beginPath();cx.moveTo(ex-.5,-58);cx.lineTo(ex+.5,-58);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
   cx.beginPath();if(o.sad)cx.arc(ex,-45,4,Math.PI*1.15,Math.PI*1.85);else cx.arc(ex,-50,4,.15*Math.PI,.85*Math.PI);cx.lineWidth=2.5;cx.stroke();cx.lineWidth=3;
   if(o.nose){circ(ex+f*3,-52,5);fs('#ff8fa3');cx.beginPath();cx.moveTo(ex-9,-46);cx.quadraticCurveTo(ex,-50,ex+9,-46);cx.lineWidth=4;cx.stroke();cx.lineWidth=3}
   else if(o.mask){rr(ex-13,-53,26,10,4);fs('#d62839')}
-  if(o.hair){cx.beginPath();cx.arc(0,-62,14,Math.PI*1.05,-.05);cx.lineTo(10,-66);cx.closePath();fs(o.hair)}
+  if(o.hair&&o.hairS!=='afro'){if(o.hairS==='crete'){rr(-4,-88,8,26,3);fs(o.hair)}else{cx.beginPath();cx.arc(0,-62,14,Math.PI*1.05,-.05);cx.lineTo(10,-66);cx.closePath();fs(o.hair)}
+    if(o.hairS==='long'){rr(-17,-64,6,26,3);fs(o.hair);rr(11,-64,6,26,3);fs(o.hair)}}
   if(out==='armure'){cx.beginPath();cx.arc(0,-60,17,Math.PI,0);cx.closePath();fs('#ced4da');cx.fillStyle=INK;cx.fillRect(-14,-62,28,3);cx.beginPath();cx.moveTo(0,-77);cx.quadraticCurveTo(-f*14,-96,-f*24,-80);cx.strokeStyle='#d62839';cx.lineWidth=5;cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK}
   else if(out==='peignoir'){cx.beginPath();cx.ellipse(0,-70,16,10,0,0,7);fs('#fff');cx.beginPath();cx.arc(f*4,-72,5,0,Math.PI*1.5);cx.stroke()}
   else if(out==='astro'){circ(0,-56,21);cx.fillStyle='rgba(180,220,255,.3)';cx.fill();cx.stroke();cx.beginPath();cx.moveTo(-f*8,-75);cx.lineTo(-f*12,-90);cx.stroke();circ(-f*12,-92,3);fs('#ef476f');cx.beginPath();cx.arc(f*8,-64,8,-Math.PI*.9,-Math.PI*.5);cx.strokeStyle='rgba(255,255,255,.8)';cx.stroke();cx.strokeStyle=INK}
   else if(out==='hotdog'){}
   else if(o.pigeon||out==='pigeon'){cx.beginPath();cx.arc(0,-62,16,Math.PI,0);cx.closePath();fs('#9aa5b1');cx.beginPath();cx.moveTo(f*8,-74);cx.lineTo(f*20,-70);cx.lineTo(f*8,-67);fs('#f4a261');cx.fillStyle=INK;circ(f*3,-71,2);cx.fill()}
   else if(o.bearskin){cx.beginPath();cx.ellipse(0,-80,15,26,0,0,7);fs('#14110f');cx.strokeStyle='#ffd23f';cx.lineWidth=2;cx.beginPath();cx.moveTo(-12,-60);cx.quadraticCurveTo(0,-50,12,-60);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
+  else if(o.hatT==='cowboy'){cx.beginPath();cx.ellipse(0,-68,26,6,0,0,7);fs(o.hatC);rr(-12,-86,24,20,7);fs(o.hatC);cx.fillStyle='#6f4518';cx.fillRect(-12,-72,24,4)}
+  else if(o.hatT==='beanie'){cx.beginPath();cx.arc(0,-62,15,Math.PI,0);cx.closePath();fs(o.hatC);rr(-16,-66,32,7,3);fs(mix(o.hatC,'#ffffff',.3));circ(0,-79,5);fs('#fff')}
+  else if(o.hatT==='crown'){cx.beginPath();cx.moveTo(-14,-68);cx.lineTo(-14,-86);cx.lineTo(-7,-76);cx.lineTo(0,-90);cx.lineTo(7,-76);cx.lineTo(14,-86);cx.lineTo(14,-68);cx.closePath();fs(o.hatC);circ(0,-76,2.5);fs('#ef476f')}
   else if(o.beret){cx.beginPath();cx.ellipse(-f*2,-68,17,7,-f*.15,0,7);fs('#1b1b1e');cx.beginPath();cx.moveTo(-f*2,-75);cx.lineTo(-f*1,-80);cx.stroke()}
   else if(o.bowler){cx.beginPath();cx.arc(0,-66,12,Math.PI,0);cx.closePath();fs('#1b1b1e');rr(-18,-68,36,5,2);fs('#1b1b1e')}
   else if(o.tophat){rr(-11,-92,22,24,3);fs(INK);cx.fillStyle='#ffd23f';cx.fillRect(-11,-74,22,4);rr(-17,-70,34,5,2);fs(INK)}
@@ -2912,17 +2950,40 @@ function drawRoom(){
 }
 const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'||CK()==='ny'?(!!S.local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
 let casWarn=0;
+// garde-robe en pièces (vendues chez Fripe & Chic à New York) et personnalisation libre au vestiaire
+const LSLOTS=[['top','Hauts'],['bot','Bas'],['hat','Chapeaux'],['gl','Lunettes'],['sh','Chaussures']];
+const PIECES=[
+ {k:'tee_bl',s:'top',n:'T-shirt blanc',c:'#f8f9fa',p:3000},{k:'tee_no',s:'top',n:'T-shirt noir',c:'#22223b',p:3000},{k:'mari',s:'top',n:'Marinière',c:'#1d3557',st:'stripes',p:6000},
+ {k:'hawai',s:'top',n:'Chemise hawaïenne',c:'#ff8fab',st:'dots',p:9000},{k:'noel',s:'top',n:'Pull de Noël',c:'#c1121f',st:'dots',p:8000},{k:'hood',s:'top',n:'Sweat à capuche',c:'#8338ec',st:'hood',p:10000},
+ {k:'maillot',s:'top',n:'Maillot NY n° 23',c:'#1d4e89',st:'num',p:12000},{k:'cuir',s:'top',n:'Veste en cuir',c:'#2b2118',st:'zip',p:15000},{k:'paillet',s:'top',n:'Veste à paillettes',c:'#ffd23f',st:'dots',p:40000},
+ {k:'jean',s:'bot',n:'Jean',c:'#3a5a99',p:4000},{k:'jog',s:'bot',n:'Jogging gris',c:'#adb5bd',p:3000},{k:'short',s:'bot',n:'Short rouge',c:'#ef476f',p:3500},
+ {k:'treillis',s:'bot',n:'Treillis',c:'#606c38',st:'camo',p:8000},{k:'cuirp',s:'bot',n:'Pantalon en cuir',c:'#14141a',p:12000},{k:'dorep',s:'bot',n:'Pantalon doré',c:'#e9b800',p:35000},
+ {k:'cap_r',s:'hat',n:'Casquette rouge',t:'cap',c:'#ef476f',p:2500},{k:'cap_ny',s:'hat',n:'Casquette NY',t:'cap',c:'#14213d',m:'NY',p:6000},{k:'bonnet',s:'hat',n:'Bonnet',t:'beanie',c:'#f4a261',p:4000},
+ {k:'beret',s:'hat',n:'Béret',t:'beret',p:5000},{k:'melon',s:'hat',n:'Chapeau melon',t:'bowler',p:9000},{k:'cowboy',s:'hat',n:'Chapeau de cowboy',t:'cowboy',c:'#a0673a',p:12000},
+ {k:'tophat',s:'hat',n:'Haut-de-forme',t:'tophat',p:20000},{k:'crown',s:'hat',n:'Couronne',t:'crown',c:'#ffd23f',p:80000},
+ {k:'soleil',s:'gl',n:'Lunettes de soleil',t:'shades',p:3000},{k:'rondes',s:'gl',n:'Lunettes rondes',t:'round',p:4000},{k:'l3d',s:'gl',n:'Lunettes 3D',t:'3d',p:6000},
+ {k:'coeur',s:'gl',n:'Lunettes cœur',t:'heart',p:7000},{k:'monocle',s:'gl',n:'Monocle',t:'mono',p:15000},
+ {k:'tongs',s:'sh',n:'Tongs',c:'#4cc9f0',p:2000},{k:'bask_bl',s:'sh',n:'Baskets blanches',c:'#f8f9fa',p:4000},{k:'bask_rg',s:'sh',n:'Baskets rouges',c:'#ef476f',p:4000},
+ {k:'bottes',s:'sh',n:'Bottes de cowboy',c:'#7f5539',p:9000},{k:'sn_or',s:'sh',n:'Sneakers en or',c:'#ffd23f',p:50000}];
+const PC=k=>PIECES.find(x=>x.k===k);
+const LOOK_SKIN=['#ffdbac','#f1c27d','#e0ac69','#c68642','#8d5524','#5c3a21'],LOOK_HAIR=[['court','Courte'],['long','Longue'],['queue','Queue'],['crete','Crête'],['afro','Afro'],['chauve','Chauve']],
+  LOOK_HC=['#2b2118','#6f4518','#a0522d','#f6bd60','#d62828','#6c757d','#f8f9fa','#8338ec','#4cc9f0','#06d6a0'];
+const myLook=()=>S.meta.look||(S.meta.look={hat:'auto'}),myPieces=()=>S.meta.pieces||(S.meta.pieces=[]);
 const OUTLOOK={hotdog:['#e9c46a','#e9c46a'],pigeon:['#9aa5b1','#8090a0'],armure:['#adb5bd','#6c757d'],peignoir:['#fff','#fff'],astro:['#f1faee','#f1faee']};
 function playerLook(){
   const n=S.done,tri=S.up.tri,out=S.meta.outfit;
   const tier=n>=9?2:n>=5?1:0;
-  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:'#f1c27d',ride:S.ride,lift:S.ride==='voiture'?10:S.ride==='scooter'?5:S.ride==='trott'?6:0,
+  const L=myLook(),pt=k=>L[k]&&L[k]!=='auto'&&L[k]!=='none'?PC(L[k]):null,gl=pt('gl'),sh=pt('sh');
+  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:L.skin||'#f1c27d',hair:L.hair==='chauve'?null:(L.hc||'#2b2118'),hairS:L.hair||'court',glass:gl&&gl.t,shoes:sh&&sh.c,ride:S.ride,lift:S.ride==='voiture'?10:S.ride==='scooter'?5:S.ride==='trott'?6:0,
     g:{pince:S.up.pince,sac:S.up.sac,basket:S.up.basket,cle:S.up.cle,oeil:S.up.oeil},gun:armed()?S.weapon:null};
   if(out==='costume')return Object.assign(base,{shirt:'#22223b',pants:'#22223b',suit:true,tie:'#d62839',hat:null});
   if(out==='peaky')return Object.assign(base,{shirt:'#6b5b45',pants:'#4a3f35',suit:true,tie:'#2a1f3d',hat:'#3b3127'});
   if(out!=='classic'&&OUTLOOK[out])return Object.assign(base,{outfit:out,shirt:OUTLOOK[out][0],pants:OUTLOOK[out][1]});
-  return Object.assign(base,{shirt:['#06d6a0','#118ab2','#22223b'][tier],pants:['#3d405b','#3d405b','#22223b'][tier],suit:tier===2,tie:'#ffd23f',
-    hat:tri>=1?'#2a9d5c':'#ef476f',hatMark:tri>=1&&tri<5?'TRI':'',tophat:tri>=5});
+  const tp=pt('top'),bt=pt('bot'),ht=pt('hat'),o=Object.assign(base,{shirt:tp?tp.c:['#06d6a0','#118ab2','#22223b'][tier],pants:bt?bt.c:['#3d405b','#3d405b','#22223b'][tier],suit:!tp&&tier===2,tie:'#ffd23f',
+    stripes:tp&&tp.st==='stripes',topS:tp&&tp.st,botS:bt&&bt.st});
+  if(L.hat==='none')return o;
+  if(ht)return Object.assign(o,ht.t==='cap'?{hat:ht.c,hatMark:ht.m||''}:ht.t==='tophat'?{tophat:true}:ht.t==='beret'?{beret:true}:ht.t==='bowler'?{bowler:true}:{hatT:ht.t,hatC:ht.c});
+  return Object.assign(o,{hat:tri>=1?'#2a9d5c':'#ef476f',hatMark:tri>=1&&tri<5?'TRI':'',tophat:tri>=5});
 }
 function drawRide(k,x,y,f,front){if(!k)return;cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;
   if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();circ(-14,-2,4);fs('#333');circ(14,-2,4);fs('#333')}

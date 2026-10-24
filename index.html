@@ -1030,7 +1030,10 @@ function checkObj(){
     $('goalh').textContent='Étape '+(sc.i+1)+' / '+L.length+' · '+CITY().n;$('goalpb').style.width=Math.round(sc.i/L.length*100)+'%';
     const need=sc.x.cost?sc.x.cost():0,poor=need>S.cash,gt=$('goalt');
     const tt=t;if(gt.textContent!==tt)gt.textContent=tt;if(poor)$('goalpb').style.width=Math.round(S.cash/need*100)+'%';
-    $('goalps').textContent=poor?'Argent : '+fmt(S.cash)+' / '+fmt(need)+' · Business rapporte tout seul':'Ensuite : '+fmt(PGB())+' gagnés pour la ville suivante ('+fmt(S.total)+')';return}
+    $('goalps').textContent=poor?'Argent : '+fmt(S.cash)+' / '+fmt(need)+' · Business rapporte tout seul':'Ensuite : '+fmt(PGB())+' gagnés pour la ville suivante ('+fmt(S.total)+')';
+    if(sc.x.k==='cdd'){const J=tutoJobs(),d=J.filter(j=>j.ok).length,left=J.filter(j=>!j.ok).map(j=>j.sh.n);$('goalpb').style.width=Math.round(d/Math.max(1,J.length)*100)+'%';
+      $('goalps').textContent='CDD faits : '+d+' / '+J.length+(left.length?' · reste : '+left.join(', '):'')}
+    return}
   const early=S.total<PGB()&&!tutoOn(),gp=$('goalp');if(gp.hidden===early)gp.hidden=!early;
   if(early){const a=advice(),t=a;if($('goalt').textContent!==t)$('goalt').textContent=t;
     $('goalh').textContent='Priorité · '+CITY().n+' · '+(isNight()?'Nuit':'Jour');

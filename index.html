@@ -395,6 +395,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
       <button class="chunky danger" id="pay" type="button" hidden>Payer</button>
       <button class="chunky alt" id="snd" type="button">Son</button>
       <button class="chunky alt" id="btnObj" type="button">Objectifs</button>
+      <button class="chunky" id="btnDay" type="button" hidden>Missions</button>
       <button class="chunky" id="back" type="button" hidden>Retour</button>
       <button class="chunky" id="btnBiz" type="button">Business</button>
       <button class="chunky" id="btnSk" type="button" hidden>Compétences</button>
@@ -1923,10 +1924,11 @@ $('btnBiz').addEventListener('click',()=>VISIT?visitMsg():openPanel('biz'));
 $('btnSk').addEventListener('click',()=>VISIT?visitMsg():openPanel('skills'));
 $('back').addEventListener('click',()=>leaveVisit());
 $('btnObj').addEventListener('click',()=>openPanel('obj'));
+$('btnDay').addEventListener('click',()=>VISIT?visitMsg():openPanel('daily'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
-for(const id of ['btnBiz','btnSk','btnLb','btnFb','btnObj','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
+for(const id of ['btnBiz','btnSk','btnLb','btnFb','btnObj','btnDay','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
 function updSnd(){$('snd').textContent=S.meta.snd?'Son : oui':'Son : non';$('snd').classList.toggle('off',!S.meta.snd)}
 updSnd();
 function payNow(){
@@ -2294,6 +2296,8 @@ function renderPanel(){
         row('Musique',S.meta.mus?'oui':'non','Petit jazz de rue','opt:mus',0,S.meta.mus?'Couper':'Activer')+
         '<div class="sec">Zone dangereuse</div>'+
         `<button class="chunky alt" type="button" data-act="reset">Effacer toute la progression</button>`;}}
+  else if(pid==='daily'){t='Missions du jour';hd='#ff9f1c';h=dailyHTML()}
+  else if(pid==='login'){t='Récompense de connexion';hd='#ffd23f';h=loginHTML()}
   else if(pid==='obj'){t='Objectifs';
     let ph='';h='<p class="lead">De ramasseur de canettes à magnat de Tokyo.</p>';
     OBJ.forEach((o,i)=>{if(o[0]!==ph){ph=o[0];h+=`<div class="sec">${ph}</div>`}const ok=o[2]();h+=`<div class="obj${ok?' ok':''}"><div class="ck">${ok?'✓':''}</div><span>${o[1]}</span></div>`});
@@ -2387,6 +2391,8 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='dclaim'){dailyClaim(v);return renderPanel()}
+  if(a==='lclaim'){loginClaim();return renderPanel()}
   if(a==='look'){const L=myLook();if(['top','bot','hat','gl','sh'].includes(v)){if(w!=='none'&&w!=='auto'&&!myPieces().includes(w))return;L[v]=w;S.meta.outfit='classic'}else if(['skin','hair','hc'].includes(v))L[v]=w;snd('pick')}
   if(a==='piece'){const pc=PC(v);if(!pc||myPieces().includes(v)||!pay(pc.p))return;myPieces().push(v);myLook()[pc.s]=v;S.meta.outfit='classic';toast(pc.n+' : achetée et portée ! Change de look au vestiaire du casino.')}
   if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achet'+(vv.g||'é')+', en route !')}
@@ -3533,6 +3539,49 @@ function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSe
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
 function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready){LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
   BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
+// ===== missions du jour (3 par jour, mêmes pour tout le monde) et récompenses de connexion =====
+const dayKey=(o=0)=>new Date(Date.now()+o*864e5).toLocaleDateString('fr-CA');
+const DM={trash:['Ramasser {g} déchets',()=>S.stats.trash,25],pick:['Faire les poches de {g} passants',()=>S.stats.pick,5],cdd:['Signer {g} CDD',()=>S.stats.cdd,2],repair:['Réparer {g} objets',()=>S.stats.repairs,3],
+  eat:['Manger {g} fois',()=>S.stats.ate,3],fed:['Nourrir {g} pigeons',()=>S.meta.fed||0,5],casino:['Jouer {g} parties au casino',()=>S.stats.casino,3],sells:['Revendre {g} fois en Bourse',()=>S.meta.sells||0,2],
+  bpick:['Tes bandits volent {g} passants',()=>S.stats.bpick||0,5],earn:['Gagner {g}',()=>S.meta.life||0,0]};
+const nice=n=>{const p=Math.pow(10,Math.max(0,Math.floor(Math.log10(Math.max(1,n)))-1));return Math.ceil(n/p)*p};
+const dReward=()=>nice(Math.max(C(300),autoRate()*180));
+function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat','fed'];if(casinoOk())pool.push('casino');if(bourseOpen())pool.push('sells','sells');if(S.band>0)pool.push('bpick');
+  let h=0;for(const ch of day)h=(h*31+ch.charCodeAt(0))>>>0;const pk=[];while(pk.length<2){h=(h*1103515245+12345)>>>0;const k=pool[h%pool.length];if(!pk.includes(k))pk.push(k)}
+  const D=S.meta.daily||{},ms=['earn',...pk].map(k=>({k,g:k==='earn'?nice(Math.max(C(1000),autoRate()*600)):DM[k][2],p:0,b:DM[k][1](),c:CURI(),cl:false}));
+  S.meta.daily={day,ms,rw:dReward(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
+function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
+  for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){toast('Mission accomplie : '+dTxt(m)+' ! Récupère ta récompense (Missions)');snd('ach')}}if(m.p>=m.g&&!m.cl)ready++}
+  if(D.ms.every(m=>m.cl)&&!D.chest)ready++;const L=S.meta.login||{};if(L.last!==dayKey())ready++;
+  const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
+  if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login')}}
+const dTxt=m=>DM[m.k][0].replace('{g}',m.k==='earn'?fmt(m.g):m.g);
+function dailyClaim(v){const D=S.meta.daily;if(!D)return;
+  if(v==='chest'){if(D.chest||!D.ms.every(m=>m.cl))return;D.chest=true;D.streak=D.lastAll===dayKey(-1)?(D.streak||0)+1:1;D.lastAll=dayKey();const amt=Math.round(D.rw*2*(1+.1*Math.min(D.streak-1,10)));S.cash+=amt;S.total+=amt;S.meta.life+=amt;let msg='Coffre du jour : +'+fmt(amt);if(D.streak%7===0){S.meta.gold++;msg+=' et 1 Pigeon d\'Or !'}toast(msg+' · série de '+D.streak+' jour'+(D.streak>1?'s':''));snd('legend');updHud();save();return}
+  const m=D.ms[+v];if(!m||m.cl||m.p<m.g)return;m.cl=true;S.cash+=D.rw;S.total+=D.rw;S.meta.life+=D.rw;toast('+'+fmt(D.rw)+' : '+dTxt(m));snd('coin');updHud();save()}
+function dailyHTML(){if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily,all=D.ms.every(m=>m.cl),nx=D.lastAll===dayKey(-1)||D.lastAll===dayKey()?D.streak||0:0,
+    left=Math.max(0,(new Date(dayKey(1)+'T00:00:00')-Date.now())/1000),hh=Math.floor(left/3600),mm=Math.floor(left%3600/60);
+  let h=`<div class="row" style="background:#fff3b0"><div class="info"><b>🔥 Série : ${nx} jour${nx>1?'s':''}</b><small>Termine les 3 missions chaque jour pour faire grimper ta série : le coffre rapporte +10 % par jour (jusqu'à +100 %), et tous les 7 jours tu gagnes un <b>Pigeon d'Or</b>.</small></div></div>`+
+    `<p class="foot" style="text-align:center">Nouvelles missions dans ${hh} h ${String(mm).padStart(2,'0')}</p>`;
+  D.ms.forEach((m,i)=>{const pc=Math.min(1,m.p/m.g),ok=m.p>=m.g;h+=`<div class="row"><div class="info"><b>${dTxt(m)}</b><small>${m.k==='earn'?fmt(Math.min(m.p,m.g)):Math.min(m.p,m.g)} / ${m.k==='earn'?fmt(m.g):m.g} · récompense ${fmt(D.rw)}</small>`+
+    `<div class="gp" style="height:8px;border:2px solid var(--ink);border-radius:5px;background:#fff;margin-top:4px;overflow:hidden"><i style="display:block;height:100%;width:${pc*100}%;background:${ok?'#1f9d5c':'#ff9f1c'}"></i></div></div>`+
+    (m.cl?'<button class="buy gold" type="button" disabled>✓</button>':`<button class="buy" type="button" data-act="dclaim:${i}" ${ok?'':'disabled'}>${ok?'Récupérer':'En cours'}</button>`)+'</div>'});
+  const amt=Math.round(D.rw*2*(1+.1*Math.min((D.lastAll===dayKey(-1)?(D.streak||0)+1:1)-1,10)));
+  h+=`<div class="row" style="background:#ffe5b4"><div class="info"><b>🎁 Coffre du jour</b><small>${D.chest?'Déjà ouvert. Reviens demain !':'Les 3 missions récupérées : +'+fmt(amt)+((D.lastAll===dayKey(-1)?(D.streak||0)+1:1)%7===0?' et 1 Pigeon d\'Or':'')}</small></div>`+
+    (D.chest?'<button class="buy gold" type="button" disabled>✓</button>':`<button class="buy gold" type="button" data-act="dclaim:chest" ${all?'':'disabled'}>Ouvrir</button>`)+'</div>';
+  const L=S.meta.login||{};if(L.last!==dayKey())h+='<button class="chunky" type="button" data-act="lclaim" style="width:100%;margin-top:8px">🎁 Récompense de connexion du jour</button>';
+  return h}
+const LOGIN_S=[60,120,180,300,420,600,0];
+const loginN=()=>{const L=S.meta.login||{};return L.last===dayKey()?L.n||1:L.last===dayKey(-1)?((L.n||0)%7)+1:1};
+const loginAmt=d=>nice(Math.max(C(200*d),autoRate()*LOGIN_S[d-1]));
+function loginHTML(){const L=S.meta.login||{},got=L.last===dayKey(),n=loginN();
+  let h=`<p class="lead">Connecte-toi chaque jour pour remplir le calendrier. Un jour manqué et tu recommences au jour 1. ${got?'<b>Récompense du jour récupérée !</b> Reviens demain.':''}</p><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">`;
+  for(let d=1;d<=7;d++){const past=d<n||(d===n&&got),cur=d===n&&!got;h+=`<div style="text-align:center;padding:8px 4px;border:3px solid var(--ink);border-radius:12px;background:${cur?'#ffd23f':past?'#d8f3dc':'#fff'};${d===7?'grid-column:span 2':''}">`+
+    `<div style="font-size:12px;opacity:.75">Jour ${d}</div><div style="font-size:24px">${d===7?'🐦':past?'✅':'💰'}</div><b style="font-size:13px">${d===7?'1 Pigeon d\'Or':fmt(loginAmt(d))}</b></div>`}
+  h+='</div>'+(got?'':`<button class="chunky" type="button" data-act="lclaim" style="width:100%;margin-top:10px">Récupérer le jour ${n}</button>`);return h}
+function loginClaim(){const L=S.meta.login||{};if(L.last===dayKey())return;const n=loginN();S.meta.login={last:dayKey(),n,seen:dayKey()};
+  if(n===7){S.meta.gold++;toast('Jour 7 : +1 Pigeon d\'Or ! Le calendrier recommence demain.')}else{const a=loginAmt(n);S.cash+=a;S.total+=a;S.meta.life+=a;toast('Récompense de connexion, jour '+n+' : +'+fmt(a))}snd('legend');updHud();save()}
+setInterval(dailyTick,1000);
 let lastInput=Date.now(),AFK=false;
 function afkWake(){lastInput=Date.now();if(AFK){AFK=false;$('afk').hidden=true;last=performance.now()}}
 for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);

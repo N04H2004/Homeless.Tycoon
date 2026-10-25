@@ -606,6 +606,18 @@ function anaInfoHTML(l){const c=anaCost(l),st=l===1?[
   return `<p class="lead">${l===1?'Pas cher, mais pas toujours juste.':'Cher, mais sûr à 100 %.'} Voilà comment rentabiliser ${ANA[l].n.toLowerCase()} :</p>`+
     st.map(([a,b])=>`<div class="row" style="display:block"><b>${a}</b><small style="display:block">${b}</small></div>`).join('')+
     `<p class="foot">Plus tu mises, plus tu gagnes : une analyse à ${fmt(c)} vaut le coup si tu investis gros derrière.</p><div class="bets"><button class="chunky alt" type="button" data-act="ptab:bourse">Retour</button><button class="chunky" type="button" data-act="ana:${l}" ${S.cash<c?'disabled':''}>${S.cash<c?'Il faut '+fmt(c):'Acheter · '+fmt(c)}</button></div>`}
+function bourseHTML(mode){let h='';
+      {const X=EXCH[CK()]||EXCH.paris,L=STOCKS_NOW(),iv=L.reduce((a,s)=>{const mk=S.mkt[s.k];return a+(mk?mk.p/(s.p0*cm()):1)},0)/L.length*1000,ich=L.reduce((a,s)=>{const mk=S.mkt[s.k],h0=mk&&mk.h[0]||mk&&mk.p;return a+(mk?(mk.p/h0-1):0)},0)/L.length*100;
+        h+=`<div class="stk" style="background:#22223b;color:#fff6df"><div><b>${X.n}</b><small style="display:block;font-size:12px;opacity:.8">${X.d}</small></div><div class="pr">${X.idx}<small style="display:block;font-size:13px" class="${ich>=0?'up':'dn'}">${Math.round(iv).toLocaleString('fr-FR')} pts · ${ich>=0?'+':''}${ich.toFixed(1).replace('.',',')} %</small></div></div>`+
+          '<p class="lead">Les cours bougent toutes les 2 secondes et suivent des tendances cachées de 30 à 80 s. La rue les influence aussi : la pluie dope les valeurs "pluie", une manif fait grimper la nourriture, la nuit affole les cryptos. Paie un analyste pour savoir où ça va.</p>'+(mode==='trade'?'':anaHTML())+'<div class="sec">Actions'+ib('bourse')+'</div>'}
+      for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k],h0=mk.h[0]||mk.p,ch=(mk.p/h0-1)*100,val=st.q*mk.p,pl=val-st.cost,mxq=Math.floor(S.cash/mk.p);
+        h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${s.d} · ${st.q?`${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span>`:'Aucune action'}</small></div>`+
+          `<div class="pr">${fmt2(mk.p)}<small style="display:block;font-size:12px" class="${ch>=0?'up':'dn'}">${ch>=0?'+':''}${ch.toFixed(1).replace('.',',')} %</small></div>`+
+          spark(mk.h,ch>=0?'#1f9d5c':'#d62839')+
+          `<div class="btnz"><button class="buy sm" type="button" data-act="stk:${s.k}:1" data-cost="${Math.ceil(mk.p)}">+1</button><button class="buy sm" type="button" data-act="stk:${s.k}:10" data-cost="${Math.ceil(mk.p*10)}">+10</button>`+
+          `<button class="buy sm" type="button" data-act="stk:${s.k}:max" data-cost="${Math.ceil(mk.p)}">Max (${mxq})</button><button class="buy sm red" type="button" data-act="sell:${s.k}" ${st.q?'':'disabled'}>Tout vendre</button></div></div>`}
+      h+='<p class="foot">Argent fictif du jeu. Chaque ville a sa propre bourse : tes actions restent dans la ville où tu les as achetées.</p>';
+  return h}
 function anaHTML(){let h='<div class="sec">Analystes · le savoir a un prix</div>'+
   anaRow(1,'fiable à 75 %','Un stagiaire regarde les courbes : la tendance de chaque action. Il se trompe 1 fois sur 4.')+
   anaRow(2,'fiable à 100 %','Un vrai analyste : tendance exacte, force et durée restante pour chaque action, et il te déniche une pépite.')+
@@ -1116,7 +1128,7 @@ const STEPS=[
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
  {k:'compta',h:"Bar › ordinateur › comptable.",c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
- {k:'bourse',h:"Au NYSE (E) ou Menu › Bourse.",c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E), ou Menu › Bourse : achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'bourse',h:"Entre au NYSE (E), ordinateur de trading.",c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E) : les analystes au fond à droite, l\'ordinateur de trading au centre. Achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
@@ -1364,7 +1376,7 @@ function update(dt){
       mk.p=Math.max(.2,mk.p*Math.exp(shock+.02*Math.log(base/mk.p)+bias+mk.tr.d));
       if(mk.ev){mk.ev.in--;if(mk.ev.in<=0){mk.p*=1+mk.ev.j;toast('OPA surprise sur '+s.n+' ! L\'action bondit de +'+Math.round(mk.ev.j*100)+' %');snd('event');mk.insT=1;mk.ev=null}}
       mk.h.push(mk.p);if(mk.h.length>60)mk.h.shift()}
-    if(pid==='plus'&&ptab==='bourse')renderPanel()}
+    if(pid==='plus'&&ptab==='bourse'||pid==='trade'||pid==='anadesk')renderPanel()}
   histTimer-=dt;if(histTimer<=0){histTimer=10;S.hist.push(Math.round(S.cash));if(S.hist.length>180)S.hist.shift()}
   tutoUpdate();tipCD-=dt;
   achTimer-=dt;if(achTimer<=0){achTimer=1;checkAch();checkTips()}
@@ -1762,16 +1774,20 @@ function shotsUpdate(dt){shootCD-=dt;
       shots.splice(i,1)}}}
 const chased=()=>squad.some(q=>q.mode==='chase')||cops.some(c=>c.active&&c.chase>0);
 function enterBar(){if(chased()){say('Pas avec les flics aux trousses !');snd('err');return}
-  INSIDE={t:0};RP.x=110;RP.y=430;RP.tx=null;RP.face=1;P.tx=null;for(const k in keys)keys[k]=false;snd('event');
+  INSIDE={t:0,k:'bar'};RP.x=110;RP.y=430;RP.tx=null;RP.face=1;P.tx=null;for(const k in keys)keys[k]=false;snd('event');
   if(!S.meta.barIn){S.meta.barIn=1;toast('Bienvenue au Pigeon Borgne ! Comptoir, armurerie et ordinateur du marché noir. La sortie est à gauche.')}}
-function exitBar(){INSIDE=null;P.x=BID.bar.door;P.y=245;P.tx=null;for(const k in keys)keys[k]=false;snd('event');
+function enterNyse(){if(chased()){say('Pas avec les flics aux trousses !');snd('err');return}
+  INSIDE={t:0,k:'nyse'};RP.x=110;RP.y=430;RP.tx=null;RP.face=1;P.tx=null;for(const k in keys)keys[k]=false;snd('event');
+  if(!S.meta.nyseIn){S.meta.nyseIn=1;toast('Bienvenue au New York Stock Exchange ! Ordinateur de trading au centre, bureau des analystes à droite. La sortie est à gauche.')}}
+function exitBar(){const ny=INSIDE&&INSIDE.k==='nyse';INSIDE=null;P.x=ny?NYSE.door:BID.bar.door;P.y=245;P.tx=null;for(const k in keys)keys[k]=false;snd('event');
   const a=armed();if(a)setTimeout(()=>toast(a.n+' en main : G pour tirer. La police te tombera dessus aussitôt !'),60)}
 function roomMove(dx,dy,dt){RP.t+=dt;
   if(dx||dy)RP.tx=null;else if(RP.tx!=null){const d=dist(RP.x,RP.y,RP.tx,RP.ty);if(d<6)RP.tx=null;else{dx=(RP.tx-RP.x)/d;dy=(RP.ty-RP.y)/d}}
   const m=Math.hypot(dx,dy);RP.moving=m>0;if(m){RP.x+=dx/m*210*dt;RP.y+=dy/m*210*dt;if(Math.abs(dx)>.1)RP.face=dx>0?1:-1}
   RP.x=clamp(RP.x,40,RW-40);RP.y=clamp(RP.y,375,610)}
-const RSPOTS={exit:[95,'Sortir dans la rue'],counter:[390,null],armory:[710,'Armurerie'],pc:[950,'Ordinateur · marché noir']};
-function roomSpot(){if(RP.y>470)return null;let best=null,bd=95;for(const k in RSPOTS){const d=Math.abs(RP.x-RSPOTS[k][0]);if(d<bd){bd=d;best=k}}return best}
+const RSPOTS={exit:[95,'Sortir dans la rue'],counter:[390,null],armory:[710,'Armurerie'],pc:[950,'Ordinateur · marché noir']},
+  NSPOTS={exit:[95,'Sortir dans la rue'],trade:[470,'Ordinateur de trading'],anadesk:[880,'Bureau des analystes']},curSpots=()=>INSIDE&&INSIDE.k==='nyse'?NSPOTS:RSPOTS;
+function roomSpot(){if(RP.y>470)return null;let best=null,bd=95;const SP=curSpots();for(const k in SP){const d=Math.abs(RP.x-SP[k][0]);if(d<bd){bd=d;best=k}}return best}
 function pickpocket(p){
   if(pickCD>0)return;pickCD=1.2;const tutoPick=tutoOn()&&S.meta.tuto===4;
   if(p.undercover&&!tutoPick){p.robbed=true;p.revealed=true;p.v=0;p.say='Police ! Pas un geste !';p.sayT=3;
@@ -1828,7 +1844,7 @@ let lastAct='',lastSteal=null,lastShoot=null;
 function updAct(){
   {const ar=!!armed()&&!INSIDE&&!VISIT,lb=ar?'Tirer · '+ammo()+'<kbd>G</kbd>':'';if(lb!==lastShoot){lastShoot=lb;$('shoot').hidden=!ar;$('shoot').innerHTML=lb}}
   if(INSIDE){if(lastSteal!==''){lastSteal='';$('steal').hidden=true}pickTarget=null;feedTarget=null;
-    const rs=roomSpot(),lb=rs?(rs==='counter'?'Boire un coup · '+fmt(C(8)):RSPOTS[rs][1]):'';
+    const rs=roomSpot(),lb=rs?(rs==='counter'?'Boire un coup · '+fmt(C(8)):curSpots()[rs][1]):'';
     if(lb!==lastAct){lastAct=lb;$('act').hidden=!lb;$('act').innerHTML=lb?lb+'<kbd>E</kbd>':''}
     if($('hint').hidden!==true)$('hint').hidden=true;return}
   const pt=spotPick(),ar=false,sk=pt?'p':'';if(sk!==lastSteal){lastSteal=sk;$('steal').hidden=!pt;$('steal').innerHTML=ar?'Braquer<kbd>F</kbd>':'Faire les poches<kbd>F</kbd>';$('steal').classList.toggle('armed',ar)}
@@ -1837,7 +1853,7 @@ function updAct(){
   if(s==='local')lbl=S.local?'Entrer dans ton QG':'Visiter le local';
   else if(s==='rival')lbl=S.rivalBought?'Entrer dans ton 2e QG':'Entrer chez Déchets Corp';
   else if(s==='snack')lbl='Snack du distrib · '+fmt(foodP(3));
-  else if(s==='nyse')lbl='Entrer au NYSE (Bourse)';
+  else if(s==='nyse')lbl='Entrer au New York Stock Exchange';
   else if(s==='feed')lbl='Nourrir le pigeon · '+fmt(C(1));
   else if(SHOPDEF[s])lbl='Entrer : '+SHOPDEF[s].n;
   else if(s==='vest')lbl='Entrer au vestiaire';
@@ -1874,7 +1890,7 @@ function doAct(){
     return openPanel(r)}
   const s=spot();if(!s)return;
   if(s==='bar'&&S.owned.bar)return enterBar();
-  if(s==='nyse'){ptab='bourse';return openPanel('plus')}
+  if(s==='nyse')return enterNyse();
   if(s==='snack'){const p=foodP(3);
     if(S.cash>=p){S.cash-=p;S.food=Math.min(100,S.food+18);S.stats.ate++;float(SNACK.x,SNACK.y-60,(SNACKS[CK()]||['Barre Choco-Douteuse !'])[0],'#ff9f1c');snd('eat')}
     else{float(SNACK.x,SNACK.y-60,'Pas assez de sous','#ef476f');snd('err')}
@@ -2109,6 +2125,8 @@ function spark(h,col){if(h.length<2)return '<svg viewBox="0 0 100 30" preserveAs
 function renderPanel(){
   let t='',h='',hd='#ffd23f';
   if(SHOPDEF[pid]&&SHOPS.some(x=>x.k===pid)){const r=shopPanel(pid);t=r[0];hd=r[1];h=r[2]}
+  else if(pid==='trade'){t='Ordinateur de trading';hd='#38b000';h=bourseHTML('trade')+'<p class="foot">Les analyses s\'achètent au bureau des analystes, au fond à droite.</p>'}
+  else if(pid==='anadesk'){t='Bureau des analystes';hd='#118ab2';h='<p class="lead">« Asseyez-vous. Le café est offert, les infos non. » Les analystes te disent où vont les actions de New York. Ensuite, direction l\'ordinateur de trading.</p>'+anaHTML()}
   else if(pid==='vest'){t=CK()==='london'?'Cloakroom du casino':'Vestiaire du casino';hd='#c77dff';h=vestHTML()}
   else if(pid==='job'){t=JOBS[JOB.k].n;hd=JOBS[JOB.k].hd;h=renderJob()}
   else if(pid==='jobend'){const r=parg;t=r.early?'Service écourté':'Fin du service';hd=JOBS[r.k].hd;
@@ -2246,17 +2264,7 @@ function renderPanel(){
       h+='<p class="lead" style="text-align:center;font-size:18px">🔒 La Bourse ouvre à <b>New York</b>.</p><p class="lead">Wall Street n\'accepte pas encore les petits joueurs : continue de développer ta rue, puis ouvre ta filiale à New York (Menu › Prestige).</p>';
       for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k];if(!st||!st.q)continue;const val=st.q*mk.p,pl=val-st.cost;// anciennes actions : on peut encore les revendre
         h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span></small></div><div class="btnz"><button class="buy sm red" type="button" data-act="sell:${s.k}">Tout vendre</button></div></div>`}}
-    else if(ptab==='bourse'){
-      {const X=EXCH[CK()]||EXCH.paris,L=STOCKS_NOW(),iv=L.reduce((a,s)=>{const mk=S.mkt[s.k];return a+(mk?mk.p/(s.p0*cm()):1)},0)/L.length*1000,ich=L.reduce((a,s)=>{const mk=S.mkt[s.k],h0=mk&&mk.h[0]||mk&&mk.p;return a+(mk?(mk.p/h0-1):0)},0)/L.length*100;
-        h+=`<div class="stk" style="background:#22223b;color:#fff6df"><div><b>${X.n}</b><small style="display:block;font-size:12px;opacity:.8">${X.d}</small></div><div class="pr">${X.idx}<small style="display:block;font-size:13px" class="${ich>=0?'up':'dn'}">${Math.round(iv).toLocaleString('fr-FR')} pts · ${ich>=0?'+':''}${ich.toFixed(1).replace('.',',')} %</small></div></div>`+
-          '<p class="lead">Les cours bougent toutes les 2 secondes et suivent des tendances cachées de 30 à 80 s. La rue les influence aussi : la pluie dope les valeurs "pluie", une manif fait grimper la nourriture, la nuit affole les cryptos. Paie un analyste pour savoir où ça va.</p>'+anaHTML()+'<div class="sec">Actions'+ib('bourse')+'</div>'}
-      for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k],h0=mk.h[0]||mk.p,ch=(mk.p/h0-1)*100,val=st.q*mk.p,pl=val-st.cost,mxq=Math.floor(S.cash/mk.p);
-        h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${s.d} · ${st.q?`${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span>`:'Aucune action'}</small></div>`+
-          `<div class="pr">${fmt2(mk.p)}<small style="display:block;font-size:12px" class="${ch>=0?'up':'dn'}">${ch>=0?'+':''}${ch.toFixed(1).replace('.',',')} %</small></div>`+
-          spark(mk.h,ch>=0?'#1f9d5c':'#d62839')+
-          `<div class="btnz"><button class="buy sm" type="button" data-act="stk:${s.k}:1" data-cost="${Math.ceil(mk.p)}">+1</button><button class="buy sm" type="button" data-act="stk:${s.k}:10" data-cost="${Math.ceil(mk.p*10)}">+10</button>`+
-          `<button class="buy sm" type="button" data-act="stk:${s.k}:max" data-cost="${Math.ceil(mk.p)}">Max (${mxq})</button><button class="buy sm red" type="button" data-act="sell:${s.k}" ${st.q?'':'disabled'}>Tout vendre</button></div></div>`}
-      h+='<p class="foot">Argent fictif du jeu. Chaque ville a sa propre bourse : tes actions restent dans la ville où tu les as achetées.</p>';}
+    else if(ptab==='bourse'){h+=bourseHTML('all')}
     else if(ptab==='succes'){const got=ACH.filter(a=>S.meta.ach[a[0]]).length;
       h+=`<p class="lead">${got} / ${ACH.length} succès débloqués. Ils te suivent à vie.</p><div class="achs">`+
         ACH.map(([k,n,d])=>{const c=ACH_CITY[k]||0;return `<div class="ach ${S.meta.ach[k]?'got':'lock'}"><b>${S.meta.ach[k]?n:'???'}</b>${d}<small style="display:block;opacity:.7;margin-top:2px">${c>=9?'Prestige':'Dès '+CITIES[c].n}</small></div>`}).join('')+'</div>';}
@@ -2306,6 +2314,7 @@ function renderPanel(){
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='vest')drawLookPreview();
   if(document.querySelector('#pbody canvas[data-pv]'))drawPieceThumbs();
+  if(pid==='trade'||pid==='anadesk'){const L=lockByKey('bourse');if(L)$('pbody').innerHTML=`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
   for(const b of $('pbody').querySelectorAll('[data-act]')){const L=lockOf(b.dataset.act);if(L){b.disabled=true;b.textContent='🔒';b.title=lockText(L)}}
   if(pid==='casino'&&casTab==='rou')drawWheel();
@@ -2406,7 +2415,7 @@ $('pbody').addEventListener('click',e=>{
   if((a==='stk'||a==='ana')&&!bourseOpen()){snd('err');return}
   if(a==='stk'){const mk=S.mkt[v],st=S.stk[v];let q=w==='max'?Math.floor(S.cash/mk.p):+w;q=Math.min(q,Math.floor(S.cash/mk.p));if(q<1){snd('err');return}
     const c=q*mk.p;S.cash-=c;st.q+=q;st.cost+=c;S.bourse=1;snd('buy')}
-  if(a==='ana'){buyAna(+v);pid='plus';ptab='bourse';return renderPanel()}
+  if(a==='ana'){buyAna(+v);if(pid!=='anadesk'){pid='plus';ptab='bourse'}return renderPanel()}
   if(a==='info'){if(!INFO[v])return;infoBack={pid,parg,ptab};pid='info';parg=v;return renderPanel()}
   if(a==='infoback'){const b=infoBack||{pid:null};if(!b.pid){closePanel();return}pid=b.pid;parg=b.parg;ptab=b.ptab;return renderPanel()}
   if(a==='insconf'){pid='insider';return renderPanel()}
@@ -2889,7 +2898,7 @@ function drawGun(k,x,y,f,t){cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWid
   else if(k==='pompe'){rr(-12,-6,44,6,2);fs('#343a40');rr(-14,-4,14,10,3);fs('#8d5a3b');rr(10,-1,12,5,2);fs('#6c757d')}
   else{rr(-20,-12,52,14,6);fs('#ff70a6');rr(28,-14,8,18,3);fs('#ffd23f');for(let i=0;i<3;i++){const a=t*6+i*2.1;cx.fillStyle=['#06d6a0','#ffd23f','#4cc9f0'][i];cx.fillRect(40+Math.cos(a)*6,-6+Math.sin(a)*6,3,3)}}
   cx.restore()}
-function drawRoom(){
+function drawRoom(){if(INSIDE&&INSIDE.k==='nyse')return drawNyseRoom();
   viewW=cssW/scale;roomCam=RW<=viewW?(RW-viewW)/2:clamp(RP.x-viewW/2,0,RW-viewW);
   cx.setTransform(dpr*scale,0,0,dpr*scale,-roomCam*dpr*scale,0);
   cx.fillStyle='#120a14';cx.fillRect(roomCam-10,0,viewW+20,H);cx.lineWidth=3;cx.strokeStyle=INK;
@@ -2951,6 +2960,55 @@ function drawRoom(){
 }
 const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'||CK()==='ny'?(!!S.local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
 let casWarn=0;
+// ===== salle du New York Stock Exchange : écran géant des cours, postes de trading, bureau vitré des analystes =====
+function drawNyseRoom(){
+  viewW=cssW/scale;roomCam=RW<=viewW?(RW-viewW)/2:clamp(RP.x-viewW/2,0,RW-viewW);
+  cx.setTransform(dpr*scale,0,0,dpr*scale,-roomCam*dpr*scale,0);
+  cx.fillStyle='#0d1b2a';cx.fillRect(roomCam-10,0,viewW+20,H);cx.lineWidth=3;cx.strokeStyle=INK;
+  // murs en marbre et colonnes
+  cx.fillStyle='#e9e2d0';cx.fillRect(0,0,RW,330);cx.strokeStyle='rgba(120,100,70,.18)';cx.lineWidth=1.2;for(let i=0;i<14;i++){cx.beginPath();cx.moveTo(i*90,0);cx.quadraticCurveTo(i*90+40,120,i*90+10,330);cx.stroke()}
+  cx.lineWidth=3;cx.strokeStyle=INK;for(const x of [20,250,690,1060]){rr(x,0,26,330,2);fs('#f8f4ea');cx.fillStyle='rgba(0,0,0,.08)';cx.fillRect(x+16,0,10,330)}
+  cx.fillStyle='#1d3557';cx.fillRect(0,318,RW,14);
+  // sol : moquette bleue et allée
+  for(let y=332;y<H;y+=36)for(let x=0;x<RW;x+=72){cx.fillStyle=((x/72+y/36)|0)%2?'#1b263b':'#22304a';cx.fillRect(x,y,72,36)}
+  cx.fillStyle='rgba(255,210,63,.12)';cx.fillRect(0,330,RW,8);
+  // écran géant des cours
+  const L=STOCKS_NOW();rr(300,62,370,140,8);fs('#111');cx.save();rr(306,68,358,128,5);cx.clip();cx.fillStyle='#0a0f1c';cx.fillRect(306,68,358,128);
+  txt('NEW YORK STOCK EXCHANGE',485,82,13,'#ffd23f');
+  L.forEach((st,i)=>{const mk=S.mkt&&S.mkt[st.k];if(!mk)return;const h0=mk.h[0]||mk.p,ch=(mk.p/h0-1)*100,up=ch>=0,y=104+i*22;cx.font='13px "Lilita One","Trebuchet MS",sans-serif';cx.textBaseline='middle';
+    cx.textAlign='left';cx.fillStyle='#fff';cx.fillText(st.n.toUpperCase(),316,y);cx.textAlign='right';cx.fillStyle=up?'#38f07a':'#ff4d6d';cx.fillText(fmt2(mk.p)+'  '+(up?'▲':'▼')+Math.abs(ch).toFixed(1)+' %',560,y);
+    const hh=mk.h.slice(-20);if(hh.length>1){const mn=Math.min(...hh),mx=Math.max(...hh)||1;cx.strokeStyle=up?'#38f07a':'#ff4d6d';cx.lineWidth=1.5;cx.beginPath();hh.forEach((v,j)=>{const xx=572+j*4.3,yy=y+7-(v-mn)/((mx-mn)||1)*14;j?cx.lineTo(xx,yy):cx.moveTo(xx,yy)});cx.stroke()}});
+  cx.restore();cx.lineWidth=3;cx.strokeStyle=INK;
+  // bandeau défilant sous l'écran
+  rr(300,204,370,20,4);fs('#111');cx.save();rr(302,206,366,16,3);cx.clip();cx.font='12px "Lilita One","Trebuchet MS",sans-serif';cx.textBaseline='middle';cx.textAlign='left';let tx=302-((T*55)%600);
+  while(tx<680){for(const st of L){const mk=S.mkt&&S.mkt[st.k];if(!mk)continue;const up=mk.p>=(mk.h[0]||mk.p);cx.fillStyle=up?'#38f07a':'#ff4d6d';const t=st.n+' '+fmt2(mk.p)+(up?' ▲   ':' ▼   ');cx.fillText(t,tx,214);tx+=cx.measureText(t).width}}cx.restore();
+  // drapeaux et cloche
+  for(const fx of [150,680]){rr(fx,40,4,120,1);fs('#adb5bd');for(let k=0;k<7;k++){cx.fillStyle=k%2?'#fff':'#c1121f';cx.fillRect(fx+4,44+k*8,56,8)}cx.fillStyle='#1d3557';cx.fillRect(fx+4,44,24,32);cx.lineWidth=2;cx.strokeRect(fx+4,44,56,56);cx.lineWidth=3}
+  // porte de sortie
+  rr(55,160,82,170,6);fs('#6b4f2a');rr(66,175,60,60,4);fs('#8d6a3f');circ(122,255,5);fs('#ffd23f');rr(60,124,72,26,5);fs('#06d6a0');txt('EXIT',96,138,15,'#fff',true);
+  // poste de trading : bureau, 3 écrans avec courbes
+  rr(370,286,200,16,4);fs('#5c4033');rr(380,302,10,60,2);fs('#3e2a20');rr(550,302,10,60,2);fs('#3e2a20');
+  for(let k=0;k<3;k++){const mx=384+k*62;rr(mx,226,54,44,4);fs('#22223b');cx.save();rr(mx+4,230,46,36,2);cx.clip();cx.fillStyle='#0b132b';cx.fillRect(mx+4,230,46,36);
+    cx.strokeStyle=k===1?'#ff4d6d':'#38f07a';cx.lineWidth=2;cx.beginPath();for(let j=0;j<12;j++){const yy=250+Math.sin(T*1.5+j*.8+k*2)*8-(k===1?-j*.6:j*.6);j?cx.lineTo(mx+4+j*4,yy):cx.moveTo(mx+4,yy)}cx.stroke();cx.restore();cx.lineWidth=3;cx.strokeStyle=INK;rr(mx+22,270,10,14,2);fs('#495057')}
+  rr(430,284,80,6,2);fs('#1b1b1e');
+  // bureau vitré des analystes
+  rr(740,96,300,236,6);fs('rgba(200,230,255,.35)');cx.strokeStyle='#adb5bd';cx.lineWidth=2;for(const x of [840,940]){cx.beginPath();cx.moveTo(x,96);cx.lineTo(x,332);cx.stroke()}cx.lineWidth=3;cx.strokeStyle=INK;
+  rr(760,104,260,24,4);fs('#1d3557');txt('ANALYSTES · RESEARCH',890,116,12,'#ffd23f',true);
+  rr(800,276,170,14,4);fs('#8d6a3f');rr(810,290,10,60,2);fs('#5c4033');rr(950,290,10,60,2);fs('#5c4033');
+  rr(830,238,50,38,4);fs('#22223b');rr(834,242,42,30,2);fs('#e9f5db');cx.strokeStyle='#1f9d5c';cx.lineWidth=2;cx.beginPath();cx.moveTo(838,266);cx.lineTo(850,258);cx.lineTo(860,262);cx.lineTo(872,248);cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK;
+  for(let k=0;k<3;k++){rr(900+k*6,262-k*3,30,14,1);fs(k%2?'#fff':'#f1faee')}cx.beginPath();cx.moveTo(950,276);cx.lineTo(958,244);cx.stroke();cx.beginPath();cx.moveTo(950,244);cx.lineTo(966,244);cx.lineTo(962,236);cx.lineTo(954,236);cx.closePath();fs('#ffd23f');
+  // personnages : traders qui s'agitent, analyste au bureau, toi
+  const Lp=[],TL=['BUY ! BUY !','SELL !','Vends tout !','On monte !','Appelle Tokyo !','Mon bonus !'];
+  const tr=[[220,470,1,'#22223b'],[640,450,-1,'#14213d'],[300,580,1,'#495057'],[700,600,-1,'#6d597a'],[560,530,1,'#22223b']];
+  tr.forEach(([x,y,fc,col],i)=>Lp.push([y,()=>{const bx=x+Math.sin(T*1.3+i*2)*24;drawGuy(bx,y,{s:.95,t:T*1.4+i,moving:Math.sin(T*1.3+i*2)!==0,face:Math.cos(T*1.3+i*2)>0?1:-1,shirt:col,pants:'#22223b',skin:SKINS[(i+1)%5],hair:HAIRS[i%5],suit:true,tie:['#d62839','#ffd23f','#118ab2'][i%3]});
+    if(((T+i*1.7)%5)<1.8)drawBubble(bx,y-80,TL[(Math.floor(T/5)+i)%TL.length],'#fff')}]));
+  Lp.push([350,()=>drawGuy(905,350,{s:1,t:T,face:-1,shirt:'#fff',pants:'#3d405b',skin:'#8d5524',hair:'#2b2118',hairS:'chignon',tie:'#1d3557',suit:true,glass:'round'})]);
+  Lp.push([RP.y,()=>{const lk=Object.assign(playerLook(),{moving:RP.moving,face:RP.face,t:RP.t,ride:null,lift:0});drawGuy(RP.x,RP.y,lk);if(P.sayT>0)drawBubble(RP.x,RP.y-92,P.say)}]);
+  Lp.sort((a,b)=>a[0]-b[0]);for(const [,f] of Lp)f();
+  // lustres et lumière
+  for(const lx of [180,560,920]){cx.beginPath();cx.moveTo(lx,0);cx.lineTo(lx,40);cx.stroke();cx.beginPath();cx.ellipse(lx,48,26,8,0,0,7);fs('#ffd23f');const g=cx.createRadialGradient(lx,60,10,lx,300,320);g.addColorStop(0,'rgba(255,240,200,.18)');g.addColorStop(1,'rgba(255,240,200,0)');cx.fillStyle=g;cx.fillRect(lx-330,50,660,H)}
+  const rs=roomSpot();if(rs){const x=NSPOTS[rs][0],y=rs==='exit'?110:rs==='trade'?205:226;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
+  drawGuideRoom()}
 // garde-robe en pièces (vendues chez Fripe & Chic à New York) et personnalisation libre au vestiaire
 const LSLOTS=[['top','Hauts'],['bot','Bas'],['hat','Chapeaux'],['gl','Lunettes'],['sh','Chaussures']];
 const PIECES=[
@@ -3349,12 +3407,13 @@ const GUIDES={
   {t:()=>'Choisis combien de bandits partent (chacun en plus pardonne 0,5 raté), puis <b>Lance le casse</b>.',ui:()=>$('pbody').querySelector('[data-act="braq:start"]'),done:()=>BQ.st==='play'||BQ.st==='send'||BQ.st==='done'},
   {t:()=>'Clique sur chaque <b>🎯</b> avant qu\'elle disparaisse. Sous 50 % de précision, tu repars bredouille !',done:()=>BQ.st==='done'}]},
  bourse:{n:'La Bourse',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='bourse',steps:[
-  {t:()=>'La <b>Bourse</b> ouvre enfin ! Va au <b>New York Stock Exchange</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[NYSE.door,150],done:()=>inTab('bourse')},
-  {t:()=>'Chaque ligne est une <b>action</b>. Son cours bouge toutes les 2 s en suivant des tendances cachées : <b style="color:#1f9d5c">vert</b> ça monte, <b style="color:#d62839">rouge</b> ça baisse.',ui:q('#pbody .stk:not([style])'),...nxt()},
-  {t:()=>'Sans info, c\'est un pari. Paie l\'<b>analyse rapide</b> : elle te dit quelles actions vont monter.',ui:q('#pbody [data-act="ana:1"]'),done:()=>!!S.ana},
-  {t:()=>'Repère une action marquée <b style="color:#1f9d5c">▲ Hausse</b> dans l\'analyse, puis achète-en avec <b>+10</b> (ou <b>Max</b>).',ui:q('#pbody [data-act$=":10"]'),done:()=>Object.values(S.stk).some(x=>x&&x.q>0)},
+  {t:()=>'La <b>Bourse</b> ouvre enfin ! Va au <b>New York Stock Exchange</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[NYSE.door,150],done:()=>!!INSIDE&&INSIDE.k==='nyse'},
+  {t:()=>'Bienvenue sur le parquet ! Avant d\'acheter, renseigne-toi : va au <b>bureau des analystes</b> (au fond à droite) et appuie sur <b>E</b>.',rx:880,done:()=>inPanel('anadesk')},
+  {t:()=>'Paie l\'<b>analyse rapide</b> : elle te dit quelles actions vont monter.',ui:q('#pbody [data-act="ana:1"]'),done:()=>!!S.ana},
+  {t:()=>'Retiens les actions marquées <b style="color:#1f9d5c">▲ Hausse</b>. Ferme (<b>X</b>) et va à l\'<b>ordinateur de trading</b>, au centre.',rx:470,ui:()=>inPanel('anadesk')?$('pclose'):null,done:()=>inPanel('trade')},
+  {t:()=>'Chaque ligne est une <b>action</b> : son cours bouge toutes les 2 s. Achète une action en hausse avec <b>+10</b> (ou <b>Max</b>).',ui:q('#pbody [data-act$=":10"]'),done:()=>Object.values(S.stk).some(x=>x&&x.q>0)},
   {t:()=>'Attends qu\'elle monte (le bénéfice s\'affiche en vert sous son nom), puis clique <b>Tout vendre</b>.',ui:q('#pbody [data-act^="sell:"]:not([disabled])'),done:()=>(S.meta.sells||0)>=1},
-  {t:()=>'Bravo, premier trade ! Les <b>actions restent dans la ville</b> où tu les achètes. Le <b>délit d\'initié</b> (ton cousin) rapporte gros, mais le gendarme de la Bourse veille.',...nxt()}]},
+  {t:()=>'Bravo, premier trade ! Les <b>actions restent dans la ville</b> où tu les achètes. Le <b>délit d\'initié</b> (ton cousin, au bureau des analystes) rapporte gros, mais le gendarme de la Bourse veille.',...nxt()}]},
  pmu:{n:'Le PMU',start:()=>CK()==='london'&&S.meta.wardrobe.includes('peaky'),steps:[
   {t:()=>'Pour entrer au PMU, <b>porte ton costume de baron</b> : va au cloakroom (collé au casino), <b>E</b>, puis <b>Porter</b>.',tg:()=>BID.vest&&[BID.vest.door,150],ui:()=>document.querySelector('#pbody [data-act="wear:peaky"]'),done:()=>S.meta.outfit==='peaky'},
   {t:()=>'Va au <b>bookmaker Lucky Pigeon</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>BID.bookie&&[BID.bookie.door,150],ui:()=>inPanel('vest')?$('pclose'):null,done:()=>inPanel('bookie')},

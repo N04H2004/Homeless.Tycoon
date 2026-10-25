@@ -26,6 +26,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #hud,#goal,#act,#steal,#shoot,#evb,#hint{zoom:var(--ui,1)}
 .card{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);padding:6px 12px}
 .money{transform:rotate(-1.5deg)}
+#dlist{margin-top:5px;padding-top:4px;border-top:2px dashed rgba(42,31,61,.25);font-size:11px;line-height:1.4;cursor:pointer;max-width:210px}
+#dlist b{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#f77f00}#dlist div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dlist .ok{text-decoration:line-through;opacity:.5}#dlist .rd{color:#1f9d5c;font-weight:700}
 #hlvl{display:inline-block;font-family:var(--display);font-size:13px;background:var(--ink);color:var(--sun);border-radius:8px;padding:1px 8px;margin-bottom:3px;cursor:pointer}
 #cash{font-family:var(--display);font-size:30px;line-height:1;color:var(--cash);font-variant-numeric:tabular-nums;-webkit-text-stroke:1px var(--ink)}
 #rate,#payline{font-size:12px;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
@@ -383,7 +385,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 <div id="game">
   <canvas id="cv" tabindex="-1" aria-label="La rue : ton personnage, les passants, les déchets, les poubelles et les magasins"></canvas>
   <div id="hud">
-    <div class="card money"><div id="hlvl" role="button" tabindex="0" title="Voir tes succès">Niv. 1</div><div id="cash">20 €</div><div id="rate">aucun revenu auto</div><div id="payline"></div></div>
+    <div class="card money"><div id="hlvl" role="button" tabindex="0" title="Voir tes succès">Niv. 1</div><div id="cash">20 €</div><div id="rate">aucun revenu auto</div><div id="payline"></div><div id="dlist" hidden role="button" tabindex="0" title="Voir les missions du jour"></div></div>
     <div class="card bars">
       <span>Vie</span><div class="bar"><i id="hpb"></i></div><span class="num" id="hpn">100</span>
       <span>Faim</span><div class="bar"><i id="fdb"></i></div><span class="num" id="fdn">80</span>
@@ -1925,6 +1927,7 @@ $('btnSk').addEventListener('click',()=>VISIT?visitMsg():openPanel('skills'));
 $('back').addEventListener('click',()=>leaveVisit());
 $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnDay').addEventListener('click',()=>VISIT?visitMsg():openPanel('daily'));
+$('dlist').addEventListener('click',()=>VISIT?visitMsg():openPanel('daily'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
@@ -3553,6 +3556,9 @@ function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat'
 function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
   for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){toast('Mission accomplie : '+dTxt(m)+' ! Récupère ta récompense (Missions)');snd('ach')}}if(m.p>=m.g&&!m.cl)ready++}
   if(D.ms.every(m=>m.cl)&&!D.chest)ready++;const L=S.meta.login||{};if(L.last!==dayKey())ready++;
+  {const el=$('dlist'),off=tutoOn()||D.chest;if(el.hidden!==off)el.hidden=off;
+    if(!off){const sh=t=>t.length>26?t.slice(0,25)+'…':t,hm=`<b>Missions du jour</b>`+D.ms.map(m=>{const ok=m.p>=m.g;return `<div class="${m.cl?'ok':ok?'rd':''}">${m.cl||ok?'☑':'☐'} ${sh(dTxt(m))}${ok||m.cl?'':' · '+(m.k==='earn'?Math.floor(m.p/m.g*100)+' %':Math.min(m.p,m.g)+'/'+m.g)}${ok&&!m.cl?' · à récupérer':''}</div>`}).join('')+(D.ms.every(m=>m.cl)?'<div class="rd">🎁 Coffre à ouvrir !</div>':'');
+      if(el.innerHTML!==hm)el.innerHTML=hm}}
   const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
   if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login')}}
 const dTxt=m=>DM[m.k][0].replace('{g}',m.k==='earn'?fmt(m.g):m.g);

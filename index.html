@@ -26,8 +26,16 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #hud,#goal,#act,#steal,#shoot,#evb,#hint{zoom:var(--ui,1)}
 .card{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);padding:6px 12px}
 .money{transform:rotate(-1.5deg)}
-#dlist{margin-top:5px;padding-top:4px;border-top:2px dashed rgba(42,31,61,.25);font-size:11px;line-height:1.4;cursor:pointer;max-width:210px}
-#dlist b{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#f77f00}#dlist div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dlist .ok{text-decoration:line-through;opacity:.5}#dlist .rd{color:#1f9d5c;font-weight:700}
+.money{position:relative}
+#dlist{position:absolute;left:-3px;top:calc(100% + 10px);background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);padding:6px 12px;font-size:13.5px;line-height:1.45;cursor:pointer;width:max-content;max-width:290px}
+#dlist b{font-family:var(--display);font-weight:400;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#f77f00}#dlist div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#dlist .ok{text-decoration:line-through;opacity:.5}#dlist .rd{color:#1f9d5c;font-weight:700}
+#mdone{position:fixed;left:50%;top:30%;z-index:9000;background:#ffd23f;border:4px solid var(--ink);border-radius:20px;padding:14px 26px;text-align:center;box-shadow:0 8px 0 var(--ink);pointer-events:none;transform:translate(-50%,-50%) scale(0)}
+#mdone b{display:block;font-family:var(--display);font-weight:400;font-size:28px;color:var(--ink)}#mdone span{display:block;font-size:15px;margin-top:2px}
+#mdone.on{animation:mdpop 2.8s ease forwards}
+@keyframes mdpop{0%{transform:translate(-50%,-50%) scale(0) rotate(-10deg)}12%{transform:translate(-50%,-50%) scale(1.18) rotate(3deg)}20%{transform:translate(-50%,-50%) scale(1) rotate(0)}85%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-70%) scale(.9)}}
+.cfx{position:fixed;z-index:9001;pointer-events:none;font-size:24px;animation:cfx 1.5s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes cfx{0%{transform:translate(-50%,-50%) scale(.5);opacity:1}70%{opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--r)) scale(1.1);opacity:0}}
+.cash-pop{animation:cpop .5s ease}@keyframes cpop{40%{transform:scale(1.25)}}
 #hlvl{display:inline-block;font-family:var(--display);font-size:13px;background:var(--ink);color:var(--sun);border-radius:8px;padding:1px 8px;margin-bottom:3px;cursor:pointer}
 #cash{font-family:var(--display);font-size:30px;line-height:1;color:var(--cash);font-variant-numeric:tabular-nums;-webkit-text-stroke:1px var(--ink)}
 #rate,#payline{font-size:12px;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
@@ -383,6 +391,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <div id="game">
+  <div id="mdone"><b>Mission accomplie !</b><span></span></div>
   <canvas id="cv" tabindex="-1" aria-label="La rue : ton personnage, les passants, les déchets, les poubelles et les magasins"></canvas>
   <div id="hud">
     <div class="card money"><div id="hlvl" role="button" tabindex="0" title="Voir tes succès">Niv. 1</div><div id="cash">20 €</div><div id="rate">aucun revenu auto</div><div id="payline"></div><div id="dlist" hidden role="button" tabindex="0" title="Voir les missions du jour"></div></div>
@@ -2394,8 +2403,8 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
-  if(a==='dclaim'){dailyClaim(v);return renderPanel()}
-  if(a==='lclaim'){loginClaim();return renderPanel()}
+  if(a==='dclaim'){const r0=b.getBoundingClientRect();dailyClaim(v);coinFx(r0);if(v==='chest')burst(r0.left+r0.width/2,r0.top,30,['🎁','✨','🪙','🎉'],200);return renderPanel()}
+  if(a==='lclaim'){const r0=b.getBoundingClientRect();loginClaim();coinFx(r0);dailyShown=true;pid='daily';return renderPanel()}
   if(a==='look'){const L=myLook();if(['top','bot','hat','gl','sh'].includes(v)){if(w!=='none'&&w!=='auto'&&!myPieces().includes(w))return;L[v]=w;S.meta.outfit='classic'}else if(['skin','hair','hc'].includes(v))L[v]=w;snd('pick')}
   if(a==='piece'){const pc=PC(v);if(!pc||myPieces().includes(v)||!pay(pc.p))return;myPieces().push(v);myLook()[pc.s]=v;S.meta.outfit='classic';toast(pc.n+' : achetée et portée ! Change de look au vestiaire du casino.')}
   if(a==='veh'){const vv=VEH.find(x=>x.k===v);if(S.veh[v]||!pay(vehP(vv)))return;S.veh[v]=1;S.ride=v;S.meta.ride=v;toast(vv.n+' achet'+(vv.g||'é')+', en route !')}
@@ -3554,13 +3563,24 @@ function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat'
   const D=S.meta.daily||{},ms=['earn',...pk].map(k=>({k,g:k==='earn'?nice(Math.max(C(1000),autoRate()*600)):DM[k][2],p:0,b:DM[k][1](),c:CURI(),cl:false}));
   S.meta.daily={day,ms,rw:dReward(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
 function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
-  for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){toast('Mission accomplie : '+dTxt(m)+' ! Récupère ta récompense (Missions)');snd('ach')}}if(m.p>=m.g&&!m.cl)ready++}
+  for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){missionFx(m)}}if(m.p>=m.g&&!m.cl)ready++}
   if(D.ms.every(m=>m.cl)&&!D.chest)ready++;const L=S.meta.login||{};if(L.last!==dayKey())ready++;
   {const el=$('dlist'),off=tutoOn()||D.chest;if(el.hidden!==off)el.hidden=off;
     if(!off){const sh=t=>t.length>26?t.slice(0,25)+'…':t,hm=`<b>Missions du jour</b>`+D.ms.map(m=>{const ok=m.p>=m.g;return `<div class="${m.cl?'ok':ok?'rd':''}">${m.cl||ok?'☑':'☐'} ${sh(dTxt(m))}${ok||m.cl?'':' · '+(m.k==='earn'?Math.floor(m.p/m.g*100)+' %':Math.min(m.p,m.g)+'/'+m.g)}${ok&&!m.cl?' · à récupérer':''}</div>`}).join('')+(D.ms.every(m=>m.cl)?'<div class="rd">🎁 Coffre à ouvrir !</div>':'');
       if(el.innerHTML!==hm)el.innerHTML=hm}}
   const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
-  if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login')}}
+  if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login');return}
+  if(!hid&&!dailyShown&&!D.chest&&$('panel').hidden&&!JOB&&!INSIDE){dailyShown=true;openPanel('daily')}}
+// animations : bannière + confettis à la réussite, pièces qui filent vers l'argent quand on récupère
+function burst(x,y,n,chars,spread){for(let i=0;i<n;i++){const e=document.createElement('span');e.className='cfx';e.textContent=pick(chars);const a=Math.random()*Math.PI*2,d=(spread||160)*(.4+Math.random()*.8);
+  e.style.left=x+'px';e.style.top=y+'px';e.style.setProperty('--dx',Math.cos(a)*d+'px');e.style.setProperty('--dy',Math.sin(a)*d+60+'px');e.style.setProperty('--r',(Math.random()*720-360)+'deg');e.style.animationDelay=(Math.random()*.15)+'s';
+  document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}}
+function missionFx(m){const el=$('mdone');el.querySelector('span').textContent=dTxt(m);el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  const r=el.getBoundingClientRect();burst(innerWidth/2,innerHeight*.3,26,['🎉','✨','⭐','🪙','🎊'],220);snd('legend')}
+function coinFx(from){const c=$('cash').getBoundingClientRect(),tx=c.left+c.width/2,ty=c.top+c.height/2,fx=from?from.left+from.width/2:innerWidth/2,fy=from?from.top+from.height/2:innerHeight/2;
+  for(let i=0;i<14;i++){const e=document.createElement('span');e.className='cfx';e.textContent='🪙';e.style.left=fx+'px';e.style.top=fy+'px';e.style.setProperty('--dx',(tx-fx+(Math.random()*40-20))+'px');e.style.setProperty('--dy',(ty-fy+(Math.random()*30-15))+'px');e.style.setProperty('--r','0deg');e.style.animationDelay=(i*.04)+'s';e.style.animationDuration='.9s';
+    document.body.appendChild(e);setTimeout(()=>e.remove(),1500)}
+  setTimeout(()=>{const k=$('cash');k.classList.remove('cash-pop');void k.offsetWidth;k.classList.add('cash-pop')},800)}
 const dTxt=m=>DM[m.k][0].replace('{g}',m.k==='earn'?fmt(m.g):m.g);
 function dailyClaim(v){const D=S.meta.daily;if(!D)return;
   if(v==='chest'){if(D.chest||!D.ms.every(m=>m.cl))return;D.chest=true;D.streak=D.lastAll===dayKey(-1)?(D.streak||0)+1:1;D.lastAll=dayKey();const amt=Math.round(D.rw*2*(1+.1*Math.min(D.streak-1,10)));S.cash+=amt;S.total+=amt;S.meta.life+=amt;let msg='Coffre du jour : +'+fmt(amt);if(D.streak%7===0){S.meta.gold++;msg+=' et 1 Pigeon d\'Or !'}toast(msg+' · série de '+D.streak+' jour'+(D.streak>1?'s':''));snd('legend');updHud();save();return}
@@ -3587,6 +3607,7 @@ function loginHTML(){const L=S.meta.login||{},got=L.last===dayKey(),n=loginN();
   h+='</div>'+(got?'':`<button class="chunky" type="button" data-act="lclaim" style="width:100%;margin-top:10px">Récupérer le jour ${n}</button>`);return h}
 function loginClaim(){const L=S.meta.login||{};if(L.last===dayKey())return;const n=loginN();S.meta.login={last:dayKey(),n,seen:dayKey()};
   if(n===7){S.meta.gold++;toast('Jour 7 : +1 Pigeon d\'Or ! Le calendrier recommence demain.')}else{const a=loginAmt(n);S.cash+=a;S.total+=a;S.meta.life+=a;toast('Récompense de connexion, jour '+n+' : +'+fmt(a))}snd('legend');updHud();save()}
+let dailyShown=false;
 setInterval(dailyTick,1000);
 let lastInput=Date.now(),AFK=false;
 function afkWake(){lastInput=Date.now();if(AFK){AFK=false;$('afk').hidden=true;last=performance.now()}}

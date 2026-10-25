@@ -65,7 +65,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 @keyframes lowb{50%{background:#ffd6dc;box-shadow:0 0 0 4px rgba(214,40,57,.45)}}
 @media (prefers-reduced-motion:reduce){.bar.low{animation:none;box-shadow:0 0 0 3px rgba(214,40,57,.6)}}#fdb{background:var(--food)}#htb{background:#9d4edd}#htb.hot{background:#d62839}
 .num{font-variant-numeric:tabular-nums;min-width:2.2em;text-align:right}
-.btns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#hud .btns .chunky{font-size:15px;padding-left:10px;padding-right:10px}
 .chunky{font-family:var(--display);font-size:16px;letter-spacing:.02em;color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:12px;
   box-shadow:0 4px 0 var(--ink);padding:7px 12px;cursor:pointer}
 .chunky:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
@@ -730,6 +731,11 @@ function save(){if(NOSAVE)return;const R0=VISIT?VISIT.saved:S;if(R0.meta)R0.meta
 let frenzy=0,ev=null;
 const CURI=()=>S.meta.cur??Math.min(S.meta.prestige,3),CK=()=>CITIES[VISIT?VISIT.i:CURI()].k,FOODS_NOW=()=>FOODS_C[CK()]||FOODS,
       CI=()=>VISIT?VISIT.i:CURI(),HOME=()=>CITIES[CURI()],CITY=()=>CITIES[CI()],CUR=()=>CITY().cur,cm=()=>CMS[CI()],C=n=>Math.round(n*cm());
+// ===== Pigeon Tower (New York) : 50 étages à construire, chacun rapporte, paliers bonus =====
+const TW_MAX=50,twF=()=>CK()==='ny'?(S.tower||0):0,towerInc=()=>{const f=twF();return f*4+f*(f+1)*.3},towerM=()=>{const f=twF();return 1+(f>=10?.1:0)+(f>=25?.15:0)+(f>=50?.25:0)},
+  twCost=n=>C(Math.round(5000*Math.pow(1.13,n))),
+  TW_SP={5:['Salle de sport','#06d6a0'],10:['Restaurant panoramique','#f77f00'],15:['Piscine','#4cc9f0'],20:['Cinéma','#7209b7'],25:['Spa','#ff8fab'],30:['Club','#f72585'],35:['Bibliothèque','#8d5a3b'],40:['Héliport','#adb5bd'],45:['Observatoire','#118ab2'],50:['Penthouse','#ffd23f']},
+  TW_MS=[[10,'+10 % sur tous tes revenus auto'],[25,'+15 % de plus sur tes revenus auto'],[50,'Penthouse : +25 % de plus, 3 Pigeons d\'Or et le succès « Roi de Manhattan »']];
 const gm=()=>CITY().m*(1+.1*S.meta.perk.cash)*(frenzy>0?3:1);
 const fmt=n=>{const c=CUR();n=Math.floor(n);const s=n<0?'-':'';n=Math.abs(n);if(n>=1e9)return s+(n/1e9).toFixed(2).replace('.',',')+' Md'+c;if(n>=1e6)return s+(n/1e6).toFixed(2).replace('.',',')+' M'+c;if(n>=1e4)return s+(n/1e3).toFixed(1).replace('.',',')+' k'+c;return s+n.toLocaleString('fr-FR')+' '+c};
 const fmt2=n=>n.toFixed(2).replace('.',',')+' '+CUR();
@@ -752,8 +758,8 @@ const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac+2*S.meta.perk.sac, speed=
       empLine=st=>{const r=empOne(st)*lynx()*gm(),on=onShift(st);return S.pay.strike?'<b style="color:#d62839">en grève : 0 / s</b>':`<b>+${fmt2(r)} / s</b> ${on?'<span style="color:#1f9d5c">· en service</span>':'· au repos ('+(st.sh==='nuit'?'travaille la nuit':'travaille le jour')+')'}`},
       shiftCount=sh=>{normStaff();return S.staff.filter(st=>st.sh===sh).length},
       canHire=sh=>S.local&&shiftCount(sh)<SHIFT[sh].cap,
-      passive=()=>(distInc()+shopInc())*lynx()+rentInc(),
-      autoRate=()=>(passive()+empRate()*lynx())*gm(),
+      passive=()=>(distInc()+shopInc())*lynx()+rentInc()+towerInc(),
+      autoRate=()=>(passive()+empRate()*lynx())*gm()*towerM(),
       wageOf=i=>Math.round(12*(1+.25*S.emUp.form+.2*S.emUp.chariot)*(trOf(i)==='flemmard'?.5:1)*(1-.08*S.meta.perk.emp)*cm()),
       wages=()=>{let w=S.manager?C(40):0;for(let i=0;i<S.emp;i++)w+=wageOf(i);return w},
       strikeLim=()=>S.staff.some(s=>s.tr==='syndicaliste')?12:25;
@@ -1102,6 +1108,7 @@ const ACH=[
  ['parrain','Parrain','Avoir 5 bandits',()=>S.band>=5],
  ['requin','Requin','Racheter Déchets Corp',()=>S.rivalBought],
  ['proprio','Toute la rue','Posséder toutes les boutiques, les grands lieux et Déchets Corp',()=>SHOPS.every(x=>S.shops[x.k]>0)&&ESTATE.every(e=>S.owned[e.k])&&S.rivalBought],
+ ['manhattan','Roi de Manhattan','Terminer les 50 étages de la Pigeon Tower',()=>(S.meta.towerDone||0)>=1],
  ['trader','Loup de la rue','Gagner 1 000 € sur une seule vente en bourse',()=>S.meta.bestTrade>=1000],
  ['kebabier','Roi de la broche','Servir 30 kebabs parfaits',()=>S.meta.kebabs>=30],
  ['caissier','Calculatrice humaine','Rendre la monnaie juste 30 fois',()=>S.meta.changes>=30],
@@ -1115,7 +1122,7 @@ const ACH=[
 ];
 // ville à partir de laquelle un succès est faisable (bar, bandits et braquage arrivent à Londres) ;
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
-const ACH_CITY={trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
+const ACH_CITY={manhattan:2,trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
@@ -1846,6 +1853,7 @@ function spot(){
   feedTarget=null;
   for(const b of BUILD)if(dist(P.x,P.y,b.door,222)<62)return b.id;
   for(const s of SHOPS)if(dist(P.x,P.y,s.door,222)<55)return s.k;
+  if(CK()==='ny'&&Math.abs(P.x-584)<26&&P.y<300)return 'tower';
   if(dist(P.x,P.y,SNACK.x,SNACK.y+30)<50)return 'snack';
   if(CK()==='ny'&&dist(P.x,P.y,NYSE.door,222)<62)return 'nyse';
   for(const p of pigeons)if(p.fly<=0&&p.love<=0&&dist(P.x,P.y,p.x,p.y)<50){feedTarget=p;return 'feed'}
@@ -1865,6 +1873,7 @@ function updAct(){
   if(s==='local')lbl=S.local?'Entrer dans ton QG':'Visiter le local';
   else if(s==='rival')lbl=S.rivalBought?'Entrer dans ton 2e QG':'Entrer chez Déchets Corp';
   else if(s==='snack')lbl='Snack du distrib · '+fmt(foodP(3));
+  else if(s==='tower')lbl='Entrer dans la Pigeon Tower';
   else if(s==='nyse')lbl='Entrer au New York Stock Exchange';
   else if(s==='feed')lbl='Nourrir le pigeon · '+fmt(C(1));
   else if(SHOPDEF[s])lbl='Entrer : '+SHOPDEF[s].n;
@@ -1903,6 +1912,7 @@ function doAct(){
   const s=spot();if(!s)return;
   if(s==='bar'&&S.owned.bar)return enterBar();
   if(s==='nyse')return enterNyse();
+  if(s==='tower')return openPanel('tower');
   if(s==='snack'){const p=foodP(3);
     if(S.cash>=p){S.cash-=p;S.food=Math.min(100,S.food+18);S.stats.ate++;float(SNACK.x,SNACK.y-60,(SNACKS[CK()]||['Barre Choco-Douteuse !'])[0],'#ff9f1c');snd('eat')}
     else{float(SNACK.x,SNACK.y-60,'Pas assez de sous','#ef476f');snd('err')}
@@ -2308,6 +2318,14 @@ function renderPanel(){
         row('Musique',S.meta.mus?'oui':'non','Petit jazz de rue','opt:mus',0,S.meta.mus?'Couper':'Activer')+
         '<div class="sec">Zone dangereuse</div>'+
         `<button class="chunky alt" type="button" data-act="reset">Effacer toute la progression</button>`;}}
+  else if(pid==='tower'){t='Pigeon Tower';hd='#ffd23f';const f=S.tower||0,nx=f+1,sp=TW_SP[nx],c=twCost(f);
+    h=`<div style="display:flex;gap:12px;align-items:center"><canvas id="towpv" width="120" height="240" style="flex:0 0 auto;background:#cdeefd;border:3px solid var(--ink);border-radius:14px"></canvas><div><p class="lead" style="margin:0 0 6px">Ta tour à Manhattan : chaque étage rapporte un loyer chaque seconde, et elle grandit pour de vrai dans la rue.</p>`+
+      `<div class="row" style="display:block"><b>${f} / ${TW_MAX} étages</b><small style="display:block">Loyers de la tour : +${fmt2(towerInc()*gm())}/s${towerM()>1?' · bonus revenus auto x'+String(towerM().toFixed(2)).replace('.',','):''}</small></div></div></div>`;
+    if(!S.local)h+='<p class="lead" style="text-align:center">🔒 Il te faut d\'abord ton petit local (QG) à New York pour lancer le chantier.</p>';
+    else if(f<TW_MAX)h+=`<div class="row"><div class="info"><b>Étage ${nx}${sp?' · '+sp[0]:''}</b><small>+${fmt2((4+.6*nx)*gm())}/s de loyer${sp?' · étage spécial':''}</small></div><button class="buy" type="button" data-act="tower:1" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button></div>`;
+    else h+='<p class="lead" style="text-align:center">🏆 La Pigeon Tower est terminée : tu es le roi de Manhattan !</p>';
+    h+='<div class="sec">Paliers</div>'+TW_MS.map(([n,d])=>`<div class="obj${f>=n?' ok':''}"><div class="ck">${f>=n?'✓':''}</div><span><b>${n} étages</b> · ${d}</span></div>`).join('')+
+      '<div class="sec">Étages spéciaux</div><p class="foot">'+Object.entries(TW_SP).map(([n,v])=>`${f>=n?'✓':'·'} ${n} : ${v[0]}`).join(' &nbsp; ')+'</p>'}
   else if(pid==='daily'){t='Missions du jour';hd='#ff9f1c';h=dailyHTML()}
   else if(pid==='login'){t='Récompense de connexion';hd='#ffd23f';h=loginHTML()}
   else if(pid==='obj'){t='Objectifs';
@@ -2329,6 +2347,8 @@ function renderPanel(){
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='vest')drawLookPreview();
+  if(pid==='tower'){const c=$('towpv');if(c){const d=window.devicePixelRatio||1,g=c.getContext('2d'),keep=cx;c.width=120*d;c.height=240*d;c.style.width='120px';c.style.height='240px';const f=S.tower||0,hh=208+f*9+100,sc=Math.min(1.1,240/hh);
+    g.setTransform(d*sc,0,0,d*sc,0,0);g.translate(-440+(120/sc-180)/2,240/sc-208);cx=g;try{drawTower(440,180,f,0)}finally{cx=keep}}}
   if(document.querySelector('#pbody canvas[data-pv]'))drawPieceThumbs();
   if(pid==='trade'||pid==='anadesk'){const L=lockByKey('bourse');if(L)$('pbody').innerHTML=`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
@@ -2403,6 +2423,11 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='tower'){const f=S.tower||0;if(CK()!=='ny'||!S.local||f>=TW_MAX||!pay(twCost(f)))return;S.tower=f+1;const n=S.tower,sp=TW_SP[n];snd('buy');
+    const r0=b.getBoundingClientRect();burst(r0.left+r0.width/2,r0.top,14,['🏗️','✨','🧱'],140);
+    if(n===10||n===25)toast('Palier atteint : '+TW_MS.find(x=>x[0]===n)[1]+' !');
+    if(n===TW_MAX){S.meta.gold+=3;S.meta.towerDone=1;toast('La Pigeon Tower est terminée ! +3 Pigeons d\'Or, tu es le roi de Manhattan !');snd('legend');burst(innerWidth/2,innerHeight/3,40,['🎉','🏙️','✨','🐦'],260)}
+    else toast('Étage '+n+(sp?' · '+sp[0]:'')+' construit !');updHud();save();return renderPanel()}
   if(a==='dclaim'){const r0=b.getBoundingClientRect();dailyClaim(v);coinFx(r0);if(v==='chest')burst(r0.left+r0.width/2,r0.top,30,['🎁','✨','🪙','🎉'],200);return renderPanel()}
   if(a==='lclaim'){const r0=b.getBoundingClientRect();loginClaim();coinFx(r0);dailyShown=true;pid='daily';return renderPanel()}
   if(a==='look'){const L=myLook();if(['top','bot','hat','gl','sh'].includes(v)){if(w!=='none'&&w!=='auto'&&!myPieces().includes(w))return;L[v]=w;S.meta.outfit='classic'}else if(['skin','hair','hc'].includes(v))L[v]=w;snd('pick')}
@@ -2620,6 +2645,18 @@ function drawStreet(ck,x0,w0,dk){const G=GRND[ck]||GRND.paris,ct=CITY();
 function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);
   if(CK()==='london'){cx.save();rr(x,40,w,170,10);cx.clip();cx.strokeStyle='rgba(42,31,61,.16)';cx.lineWidth=1.5;cx.beginPath();// façades en briques
     for(let r=0,y=46;y<210;r++,y+=12){cx.moveTo(x,y);cx.lineTo(x+w,y);for(let bx=x+(r%2?15:0);bx<x+w;bx+=30){cx.moveTo(bx,y);cx.lineTo(bx,y+12)}}cx.stroke();cx.restore();rr(x,40,w,170,10);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke()}if(CK()==='ny'){nyFacade(x,w);if(w>=260&&typeof winCol!=='function')return nyBoard(x+66,48,w-90,48,x)}for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
+// la Pigeon Tower : hall vitré, étages empilés (fenêtres allumées la nuit, étages spéciaux en couleur), grue tant que ce n'est pas fini
+function drawTower(x,w,f,live){const dk=live?darkness():0,H0=150,FH=9;cx.save();cx.lineWidth=3;cx.lineJoin='round';cx.strokeStyle=INK;
+  if(!f){rr(x+10,120,w-20,88,4);fs('#c9b48f');for(let k=x+18;k<x+w-14;k+=16){cx.fillStyle='#ffd23f';cx.fillRect(k,190,8,18)}rr(x+30,130,w-60,42,4);fs('#fff6df');txt('FUTURE PIGEON TOWER',x+w/2,144,11,INK);txt('Chantier : E pour construire',x+w/2,160,9,'#6c757d');cx.lineWidth=4;cx.strokeStyle='#e9b800';cx.beginPath();cx.moveTo(x+w-30,208);cx.lineTo(x+w-30,60);cx.lineTo(x+20,60);cx.stroke();cx.restore();return}
+  else{const top=H0-f*FH;rr(x+14,top,w-28,f*FH+2,3);fs('#3a506b');
+    for(let i=0;i<f;i++){const y=H0-(i+1)*FH,sp=TW_SP[i+1];if(sp){cx.fillStyle=sp[1];cx.fillRect(x+16,y+1,w-32,FH-2)}else for(let wx=x+20;wx<x+w-24;wx+=12){const on=dk>.2&&hsh(wx,i)<.6;cx.fillStyle=on?'#ffd166':i%2?'#9bc1e0':'#b8d4ea';cx.fillRect(wx,y+2,8,FH-4)}}
+    cx.strokeStyle=INK;cx.lineWidth=3;rr(x+14,top,w-28,f*FH+2,3);cx.stroke();
+    if(f>=TW_MAX){cx.beginPath();cx.moveTo(x+w/2-20,top);cx.lineTo(x+w/2,top-40);cx.lineTo(x+w/2+20,top);cx.closePath();fs('#ffd23f');cx.beginPath();cx.moveTo(x+w/2,top-40);cx.lineTo(x+w/2,top-80);cx.stroke();circ(x+w/2,top-82,4);fs(Math.floor(T*2)%2?'#ef476f':'#fff')}
+    else{cx.strokeStyle='#e9b800';cx.lineWidth=4;cx.beginPath();cx.moveTo(x+w-30,top);cx.lineTo(x+w-30,top-60);cx.lineTo(x+20,top-60);cx.moveTo(x+w-30,top-60);cx.lineTo(x+w,top-60);cx.stroke();cx.lineWidth=1.5;cx.beginPath();for(let k=0;k<6;k++){cx.moveTo(x+w-30,top-k*10);cx.lineTo(x+w-30+(k%2?-6:6),top-k*10-10)}cx.stroke();
+      const hx=x+40+Math.sin(T*.6)*20;cx.strokeStyle=INK;cx.lineWidth=1.5;cx.beginPath();cx.moveTo(hx,top-60);cx.lineTo(hx,top-30);cx.stroke();rr(hx-8,top-30,16,8,2);cx.lineWidth=2;fs('#ef476f')}}
+  // hall
+  rr(x,H0,w,58,4);fs('#22223b');for(let k=0;k<5;k++){rr(x+8+k*34,H0+8,28,26,3);fs(dk>.2?'#ffd166':'#cdeefd')}rr(x+w-56,H0+14,40,44,4);fs('#5c4b73');
+  rr(x+10,H0-14,w-20,16,4);fs('#ffd23f');txt('PIGEON TOWER · '+f+' / '+TW_MAX,x+w/2,H0-6,10,INK);cx.restore()}
 // New York : écrans de pub façon Broadway (comédies musicales et marques parodiées)
 const NY_ADS=[['LE ROI PIGEON','La comédie musicale · Broadway','#ffd23f','#c1121f'],['CHATS','Le retour · 8e année','#ffd23f','#14141f'],['MAMMA MIA-OU','Ce soir 20 h','#fff','#f72585'],['PIGEON-MAN','Au cinéma','#ff4d6d','#1d3557'],
  ['LES MISÉRABLES','(c\'est nous)','#fff','#3a0ca3'],['BURGER ROI','2 pour 1 $','#ffd23f','#d62839'],['HAMILTON PIGEON','Complet jusqu\'en 2099','#ffd23f','#22223b'],['FANTÔME DE L\'OPÉRA','Le pigeon masqué','#fff','#14141f'],['TAXI ? HONK.','Yellow Cab Inc.','#14141f','#ffd23f'],['I ♥ NY','même les poubelles','#d62839','#fff']];
@@ -2648,7 +2685,7 @@ function plaque(x){cx.lineWidth=2.5;rr(x+12,172,46,20,4);fs('#ffd23f');txt('À T
 function drawBuildings(){
   cx.lineWidth=4;cx.lineJoin='round';
   rr(-60,60,140,148,6);fs('#c6b3d9');drawPlaque();
-  rr(440,90,200,118,6);fs('#a9c5b4');txt('ICI ÇA SENT BON',540,120,14,INK);
+  if(CK()==='ny')drawTower(440,180,S.tower||0,1);else{rr(440,90,200,118,6);fs('#a9c5b4');txt('ICI ÇA SENT BON',540,120,14,INK)}
   const ck=CK(),vista=ck==='paris'||ck==='london';
   if(vista){cx.save();cx.lineJoin='round';
     if(ck==='paris'){cx.fillStyle='#a47148';cx.strokeStyle='#6f4518';MON.eiffel(1570,206,'#a47148','#6f4518',.6);cx.fillStyle='#efe3cf';cx.strokeStyle='#b9a68e';MON.arc(4985,206,'#efe3cf','#b9a68e')}

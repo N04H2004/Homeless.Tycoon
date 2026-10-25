@@ -2060,7 +2060,7 @@ function lookHTML(){const L=myLook(),own=myPieces(),sw=(act,c,on)=>`<button type
   return h}
 // vignettes d'essayage : ton perso avec la pièce, cadré sur la bonne partie du corps
 const pvCanvas=(sl,k)=>`<canvas data-pv="${sl}:${k}" width="48" height="60" style="width:48px;height:60px;flex:0 0 auto;background:#f3ecfb;border:2px solid var(--ink);border-radius:10px"></canvas>`;
-function drawPieceThumbs(){const keep=cx,L0=myLook(),o0=S.meta.outfit,d=window.devicePixelRatio||1,F={hat:[-70,1.45],gl:[-58,1.9],top:[-28,1.55],bot:[-9,1.8],sh:[-4,2.1]};
+function drawPieceThumbs(){const keep=cx,L0=myLook(),o0=S.meta.outfit,d=window.devicePixelRatio||1,F={hat:[-70,1.05],gl:[-58,1.9],top:[-28,1.55],bot:[-9,1.8],sh:[-4,2.1]};
   try{for(const c of document.querySelectorAll('#pbody canvas[data-pv]')){const [sl,k]=c.dataset.pv.split(':'),[fy,sc]=F[sl]||[-40,.6];c.width=48*d;c.height=60*d;const g=c.getContext('2d');g.setTransform(d*sc,0,0,d*sc,0,0);
     S.meta.look=Object.assign({},L0,{[sl]:k});S.meta.outfit='classic';cx=g;const lk=Object.assign(playerLook(),{moving:false,ride:null,lift:0,bag:0,gun:null,face:1});drawGuy(24/sc,30/sc-fy,lk)}}
   finally{cx=keep;S.meta.look=L0;S.meta.outfit=o0}}
@@ -2860,7 +2860,7 @@ function drawGuy(x,y,o){
   cx.fillStyle=INK;circ(ex-4+f*1.5,-58,2.2);cx.fill();circ(ex+7+f*1.5,-58,2.2);cx.fill();
   if(o.glass&&o.glass!=='shades')drawGlasses(o.glass,ex);
   else if(o.shades||o.glass==='shades'){if(o.glass)drawGlasses('shades',ex);else{cx.fillStyle=INK;rr(ex-11,-62,24,8,3);cx.fill()}}
-  if(g&&g.oeil>0&&!o.noLynx){cx.strokeStyle=g.oeil>=6?'#ffd23f':INK;cx.lineWidth=2;circ(ex-5,-58,6.5);cx.stroke();circ(ex+6,-58,6.5);cx.stroke();cx.beginPath();cx.moveTo(ex-.5,-58);cx.lineTo(ex+.5,-58);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
+  if(g&&g.oeil>0&&!o.noLynx&&!o.glass){cx.strokeStyle=g.oeil>=6?'#ffd23f':INK;cx.lineWidth=2;circ(ex-5,-58,6.5);cx.stroke();circ(ex+6,-58,6.5);cx.stroke();cx.beginPath();cx.moveTo(ex-.5,-58);cx.lineTo(ex+.5,-58);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
   cx.beginPath();if(o.sad)cx.arc(ex,-45,4,Math.PI*1.15,Math.PI*1.85);else cx.arc(ex,-50,4,.15*Math.PI,.85*Math.PI);cx.lineWidth=2.5;cx.stroke();cx.lineWidth=3;
   if(o.nose){circ(ex+f*3,-52,5);fs('#ff8fa3');cx.beginPath();cx.moveTo(ex-9,-46);cx.quadraticCurveTo(ex,-50,ex+9,-46);cx.lineWidth=4;cx.stroke();cx.lineWidth=3}
   else if(o.mask){rr(ex-13,-53,26,10,4);fs('#d62839')}

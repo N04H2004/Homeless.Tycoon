@@ -2314,7 +2314,7 @@ $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')closePane
 // le côté obscur (bandits, déguisements, avocat) : dans Business et sur l'ordinateur du bar
 const darkRows=L=>
       '<div class="sec">Le côté obscur · '+(isNight()?'c\'est la nuit':'bandits au QG jusqu\'à la nuit')+' · chaleur '+Math.ceil(S.heat)+' / 100'+ib('bandits')+'</div>'+
-      row('Bandit',S.band+' / 5'+(bands.some(b=>b.jail>0)?' · '+bands.filter(b=>b.jail>0).length+' au trou':''),L?"Il faut d'abord le petit local":'Sort uniquement la nuit pour pickpocket les passants. Gros butin, mais fait monter la chaleur','biz:band',S.band>=5?0:bandCost(),S.band>=5?'MAX':null,L||S.band>=5)+
+      row('Bandit',S.band+' / 5'+(bands.some(b=>b.jail>0)?' · '+bands.filter(b=>b.jail>0).length+' au trou':''),L?"Il faut d'abord le petit local":!S.owned.bar?"Il faut d'abord racheter le bar Le Pigeon Borgne (Grands lieux) : c'est le QG des bandits":'Sort uniquement la nuit pour pickpocket les passants. Gros butin, mais fait monter la chaleur','biz:band',S.band>=5?0:bandCost(),S.band>=5?'MAX':!S.owned.bar?'🔒 Bar':null,L||S.band>=5||!S.owned.bar)+
       row('Faux nez et moustache','niv. '+S.bandUp.nez,'+6 % de vols réussis pour tes bandits','biz:nez',S.bandUp.nez>=5?0:nezCost(),S.bandUp.nez>=5?'MAX':null,S.band<1||S.bandUp.nez>=5)+
       row('Déguisement de pigeon','niv. '+S.bandUp.pigeon,'-15 % de chaleur par vol de bandit. Personne ne soupçonne un pigeon','biz:pigeon',S.bandUp.pigeon>=5?0:pigCost(),S.bandUp.pigeon>=5?'MAX':null,S.band<1||S.bandUp.pigeon>=5)+
       (S.band<1&&!av()?row('Avocat véreux','',"Il faut au moins 1 bandit"):av()>=5?row('Avocat véreux','niv. 5 · MAX','Maître Lafouine au sommet : chaleur -75 % plus vite, amendes et impôts -40 %'):row('Avocat véreux','niv. '+av(),'Chaque niveau : la chaleur retombe +15 % plus vite, amendes et impôts -8 %. Actuellement : chaleur +'+(15*av())+' %, amendes -'+(8*av())+' %','biz:avocat',avCost()));
@@ -2701,7 +2701,7 @@ $('pbody').addEventListener('click',e=>{
     if(v==='form'&&S.emp>0){if(S.emUp.form>=8||!pay(formCost()))return;S.emUp.form++;toast('Équipe formée, niveau '+S.emUp.form)}
     if(v==='chariot'&&S.emp>0){if(S.emUp.chariot>=5||!pay(charCost()))return;S.emUp.chariot++;toast('Chariots améliorés, niveau '+S.emUp.chariot)}
     if(v==='manager'&&S.emp>0&&!S.manager){if(!pay(C(2500)))return;S.manager=true;S.meta.her.manager=1;toast("Gérard le manager s'occupe des paies")}
-    if(v==='band'&&S.local&&CI()>=1){if(S.band>=5||!pay(bandCost()))return;S.band++;syncBands();toast('Un bandit rejoint la bande. Surveille la chaleur !')}
+    if(v==='band'&&S.local&&CI()>=1){if(!S.owned.bar){toast('Il faut d\'abord racheter le bar Le Pigeon Borgne : c\'est le QG des bandits');snd('err');return}if(S.band>=5||!pay(bandCost()))return;S.band++;syncBands();toast('Un bandit rejoint la bande. Surveille la chaleur !')}
     if(v==='nez'&&S.band>0){if(S.bandUp.nez>=5||!pay(nezCost()))return;S.bandUp.nez++;toast('Faux nez niveau '+S.bandUp.nez)}
     if(v==='pigeon'&&S.band>0){if(S.bandUp.pigeon>=5||!pay(pigCost()))return;S.bandUp.pigeon++;toast('Déguisement de pigeon niveau '+S.bandUp.pigeon)}
     if(v==='avocat'&&(S.band>0||av())&&av()<5){if(!pay(avCost()))return;S.avocat=av()+1;toast(S.avocat===1?'Maître Lafouine est à ton service':'Maître Lafouine passe niveau '+S.avocat)}

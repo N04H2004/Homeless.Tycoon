@@ -3816,10 +3816,14 @@ function vcGlow(col,w){if(!col)return;cx.save();cx.globalCompositeOperation='lig
 function vcHTML(){const own=VEH.filter(v=>S.veh[v.k]);if(!own.length)return '<p class="lead">Achète d\'abord un véhicule (Compétences ou Pigeon Motors) pour le customiser.</p>';
   return '<p class="lead">Modèle, peinture, jantes, stickers et néon : ça se voit dans la rue, dans toutes les villes, et c\'est gratuit.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
     const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
-    return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:120px;height:74px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
+    return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:150px;height:96px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
       sw('s',VC_STY[v.k],o.s,'Modèle')+sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Stickers')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
-function drawVcThumbs(){const keep=cx,d=window.devicePixelRatio||1;for(const c of document.querySelectorAll('#pbody canvas[data-vc]')){const g=c.getContext('2d');c.width=120*d;c.height=74*d;g.setTransform(d,0,0,d,0,0);
-  g.fillStyle='#e9e4f5';g.beginPath();g.roundRect(0,0,120,74,10);g.fill();cx=g;try{cx.save();cx.translate(56,58);cx.scale(1.7,1.7);drawRide(c.dataset.vc,0,0,1,false);drawRide(c.dataset.vc,0,0,1,true);cx.restore()}finally{cx=keep}}}
+// cadre de chaque modèle (x min, x max, y min) pour l'aperçu : le véhicule tient en entier
+const VC_BOX={skate:[-26,26,-16],long:[-32,32,-14],classic:[-24,31,-60],elec:[-24,31,-60],vespa:[-37,29,-70],chopper:[-41,48,-67],cross:[-41,37,-57],sport:[-39,35,-52]};
+function drawVcThumbs(){const keep=cx,d=window.devicePixelRatio||1,W=150,H=96;for(const c of document.querySelectorAll('#pbody canvas[data-vc]')){const g=c.getContext('2d');c.width=W*d;c.height=H*d;g.setTransform(d,0,0,d,0,0);
+  g.fillStyle='#e9e4f5';g.beginPath();g.roundRect(0,0,W,H,10);g.fill();g.fillStyle='#d6cfe6';g.fillRect(0,H-16,W,16);
+  const k=c.dataset.vc,[x0,x1,y0]=VC_BOX[vcOf(k).s]||[-30,30,-60],sc=Math.min((W-16)/(x1-x0),(H-18)/(6-y0),2.6);
+  cx=g;try{cx.save();cx.translate(W/2-(x0+x1)/2*sc,H-12);cx.scale(sc,sc);drawRide(k,0,0,1,false);drawRide(k,0,0,1,true);cx.restore()}finally{cx=keep}}}
 // modèles de véhicules (garage tuning de Tokyo) : purement esthétiques
 const VC_STY={trott:[['skate','Skate'],['long','Longboard']],scooter:[['classic','Classique'],['elec','Électrique']],voiture:[['vespa','Vespa'],['chopper','Chopper'],['cross','Motocross'],['sport','Sportive']]};
 const vcLift=k=>{if(!k)return 0;const s=vcOf(k).s;return k==='voiture'?({vespa:10,chopper:8,cross:15,sport:12}[s]||10):k==='scooter'?5:6};

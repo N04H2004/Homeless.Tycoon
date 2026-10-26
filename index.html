@@ -3145,7 +3145,7 @@ function tkNight(){const dk=darkness();if(dk<=0)return;cx.fillStyle=`rgba(24,14,
   drawJihanki(1);drawDaikoku(1);
   cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.5*dk;for(const lx of [1440,1700]){const g=cx.createRadialGradient(lx,151,0,lx,151,40);g.addColorStop(0,'rgba(255,209,102,.9)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fillRect(lx-40,111,80,80)}cx.restore()}
 // ===== Tokyo : courses clandestines à Daikoku PA (la quête finale, comme le casse à New York) =====
-const DAIKOKU={x:4680,w:430,door:4895};
+const DAIKOKU={x:4250,w:430,door:4465};
 const DR_PARTS=[['jantes','Jantes forgées','Plus légères : meilleure accélération',40000],['pneus','Pneus semi-slicks','Plus d\'adhérence : zone de drift plus large',60000],
   ['amort','Amortisseurs coilovers','Voiture plus stable : l\'aiguille de drift ralentit',60000],['moteur','Moteur gonflé','Vitesse de pointe plus haute',120000],
   ['turbo','Turbo + nitro','+1 nitro par course, à chaque niveau',90000],['frein','Frein à main hydraulique','Zone PARFAIT plus large',40000]];

@@ -390,6 +390,11 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #boot h2{font-family:var(--display);font-size:26px;margin:0;color:#fff6df}
 </style>
 
+<script>
+/* Langue : le dictionnaire anglais n'est chargé que si le joueur a choisi English (Menu › Options) */
+(()=>{let L='fr';try{L=localStorage.getItem('ht-lang')||'fr'}catch(e){}window.HT_LANG=L==='en'?'en':'fr';
+if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<script src="lang-en.js"><\/script>')}})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <div id="game">
   <div id="mdone"><b>Mission accomplie !</b><span></span></div>
@@ -457,6 +462,38 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   </div>
 </div>
 
+<script>
+/* Traduction à la volée : textes du HUD/panneaux (MutationObserver) et du canvas (fillText/strokeText) */
+(()=>{const D=window.HT_EN;window.tr=s=>s;if(window.HT_LANG!=='en'||!D)return;
+const OUT=new Set(Object.values(D)),C=new Map(),HAS=/[A-Za-zÀ-ÿ]/;
+const IL=c=>c!==undefined&&/\p{L}/u.test(c),M=new Map();
+for(const k of Object.keys(D).filter(k=>k.length>=4||k==='Dès').sort((a,b)=>b.length-a.length)){const p=k.slice(0,2);if(!M.has(p))M.set(p,[]);M.get(p).push(k)}
+const sub=s=>{let o='',i=0;const n=s.length;
+  while(i<n){const L=M.get(s.substr(i,2));let hit=null;
+    if(L&&!(IL(s[i])&&IL(s[i-1])))for(const k of L)if(s.startsWith(k,i)&&!(IL(k[k.length-1])&&IL(s[i+k.length]))){hit=k;break}
+    if(hit){o+=D[hit];i+=hit.length}else o+=s[i++]}
+  return o};
+const NUM=r=>/\d/.test(r)?r.replace(/(\d),(\d{1,2})(?!\d)/g,'$1.$2').replace(/(\d)[\u202f\u00a0](?=\d{3}(?!\d))/g,'$1,').replace(/(\d) Md/g,'$1 B').replace(/(\d) sur (\d)/g,'$1 of $2'):r;
+const tr=s=>{if(typeof s!=='string'||!(HAS.test(s)||/\d,\d|\d\u202f\d/.test(s)))return s;let r=C.get(s);if(r!==undefined)return r;
+  const t=s.trim();if(D[t]!==undefined)r=s.replace(t,D[t]);else if(OUT.has(t))r=s;else r=sub(s);r=NUM(r);
+  if(C.size>20000)C.clear();C.set(s,r);C.set(r,r);return r};
+window.tr=tr;
+const SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1},AT=['title','placeholder','aria-label'];
+const fix=n=>{const v=n.nodeValue,r=tr(v);if(r!==v)n.nodeValue=r};
+const fixA=(e,a)=>{const v=e.getAttribute(a);if(v){const r=tr(v);if(r!==v)e.setAttribute(a,r)}};
+const walk=n=>{if(n.nodeType===3){const p=n.parentNode;if(!p||!SKIP[p.nodeName])fix(n);return}if(n.nodeType!==1||SKIP[n.nodeName])return;
+  for(const a of AT)if(n.hasAttribute(a))fixA(n,a);
+  if(n.nodeName==='INPUT'&&(n.type==='button'||n.type==='submit'))n.value=tr(n.value);
+  for(let c=n.firstChild;c;c=c.nextSibling)walk(c)};
+walk(document.body);document.title=tr(document.title);
+new MutationObserver(ms=>{for(const m of ms){if(m.type==='childList')m.addedNodes.forEach(walk);
+  else if(m.type==='characterData'){const p=m.target.parentNode;if(!p||!SKIP[p.nodeName])fix(m.target)}
+  else fixA(m.target,m.attributeName)}}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:AT});
+const P=CanvasRenderingContext2D.prototype,fT=P.fillText,sT=P.strokeText;
+P.fillText=function(t,...a){return fT.call(this,tr(t),...a)};P.strokeText=function(t,...a){return sT.call(this,tr(t),...a)};
+for(const k of['alert','confirm']){const o=window[k].bind(window);window[k]=m=>o(tr(m))}
+})();
+</script>
 <script>
 (()=>{
 const W=5100,H=640,INK='#2a1f3d';
@@ -2327,6 +2364,7 @@ function renderPanel(){
     else if(ptab==='options'){
       h+=row('Effets sonores',S.meta.snd?'oui':'non','Pièces, klaxons, sirènes...','opt:snd',0,S.meta.snd?'Couper':'Activer')+
         row('Musique',S.meta.mus?'oui':'non','Petit jazz de rue','opt:mus',0,S.meta.mus?'Couper':'Activer')+
+        row('Langue · Language',window.HT_LANG==='en'?'English':'Français','Le jeu en français ou en anglais · Play in French or English','opt:lang',0,window.HT_LANG==='en'?'Français':'English')+
         '<div class="sec">Zone dangereuse</div>'+
         `<button class="chunky alt" type="button" data-act="reset">Effacer toute la progression</button>`;}}
   else if(pid==='tower'){t='Pigeon Tower';hd='#ffd23f';const f=S.tower||0,nx=f+1,sp=TW_SP[nx],c=twCost(f);
@@ -2447,6 +2485,7 @@ $('pbody').addEventListener('click',e=>{
     if(v==='cap'){const c=capCost();if(M.pgc<c){snd('err');return}M.pgc-=c;S.capBought++;const g=capAmt();S.cash+=g;snd('win');toast('+'+fmt(g)+' de capital de départ')}
     if(v==='mot'){const w=M.worlds[+b.dataset.act.split(':')[2]];if(!w||w.g>=.5-1e-9)return;const c=motCost(w);if(M.pgc<c){snd('err');return}M.pgc-=c;w.g=Math.round((w.g+.05)*100)/100;snd('buy');toast('Le gérant de '+CITIES[w.i].n+' passe à '+Math.round(w.g*100)+' %')}}
   if(a==='perk'){const p=PERKS.find(x=>x.k===v),l=S.meta.perk[v];if(l>=p.max||S.meta.gold<l+1){snd('err');return}S.meta.gold-=l+1;S.meta.perk[v]++;snd('buy');toast(p.n+' niveau '+S.meta.perk[v])}
+  if(a==='opt'&&v==='lang'){save();try{localStorage.setItem('ht-lang',window.HT_LANG==='en'?'fr':'en')}catch(er){}location.reload();return}
   if(a==='opt'){if(v==='snd'){S.meta.snd=!S.meta.snd;updSnd()}else S.meta.mus=!S.meta.mus;auInit()}
   if(a==='food'){const f=FOODS_NOW()[+v];if(!pay(foodP(f.p)))return;S.food=Math.min(100,S.food+f.f);S.hp=Math.min(100,S.hp+f.h);S.stats.ate++;snd('eat');toast('Miam : '+f.n)}
   if(a==='med'){const m=MEDS[+v];if(!pay(medP(m.p)))return;S.hp=Math.min(100,S.hp+m.h);if(m.f)S.food=100;toast('Soigné : '+m.n)}
@@ -3746,7 +3785,7 @@ function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==
   if(D.ms.every(m=>m.cl)&&!D.chest)ready++;const L=S.meta.login||{};if(L.last!==dayKey())ready++;
   {const el=$('dlist'),off=tutoOn()||D.chest;if(el.hidden!==off)el.hidden=off;
     if(!off){const sh=t=>t.length>26?t.slice(0,25)+'…':t,hm=`<b>Missions du jour</b>`+D.ms.map(m=>{const ok=m.p>=m.g;return `<div class="${m.cl?'ok':ok?'rd':''}">${m.cl||ok?'☑':'☐'} ${sh(dTxt(m))}${ok||m.cl?'':' · '+(m.k==='earn'?Math.floor(m.p/m.g*100)+' %':Math.min(m.p,m.g)+'/'+m.g)}${ok&&!m.cl?' · à récupérer':''}</div>`}).join('')+(D.ms.every(m=>m.cl)?'<div class="rd">🎁 Coffre à ouvrir !</div>':'');
-      if(el.innerHTML!==hm)el.innerHTML=hm}}
+      if(el._h!==hm){el._h=hm;el.innerHTML=hm}}}
   const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
   if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login');return}
   if(!hid&&!dailyShown&&!D.chest&&$('panel').hidden&&!JOB&&!INSIDE){dailyShown=true;openPanel('daily')}}
@@ -3760,7 +3799,7 @@ function coinFx(from){const c=$('cash').getBoundingClientRect(),tx=c.left+c.widt
   for(let i=0;i<14;i++){const e=document.createElement('span');e.className='cfx';e.textContent='🪙';e.style.left=fx+'px';e.style.top=fy+'px';e.style.setProperty('--dx',(tx-fx+(Math.random()*40-20))+'px');e.style.setProperty('--dy',(ty-fy+(Math.random()*30-15))+'px');e.style.setProperty('--r','0deg');e.style.animationDelay=(i*.04)+'s';e.style.animationDuration='.9s';
     document.body.appendChild(e);setTimeout(()=>e.remove(),1500)}
   setTimeout(()=>{const k=$('cash');k.classList.remove('cash-pop');void k.offsetWidth;k.classList.add('cash-pop')},800)}
-const dTxt=m=>DM[m.k][0].replace('{g}',m.k==='earn'?fmt(m.g):m.g);
+const dTxt=m=>window.tr(DM[m.k][0]).replace('{g}',m.k==='earn'?fmt(m.g):m.g);
 function dailyClaim(v){const D=S.meta.daily;if(!D)return;
   if(v==='chest'){if(D.chest||!D.ms.every(m=>m.cl))return;D.chest=true;D.streak=D.lastAll===dayKey(-1)?(D.streak||0)+1:1;D.lastAll=dayKey();const amt=Math.round(D.rw*2*(1+.1*Math.min(D.streak-1,10)));S.cash+=amt;S.total+=amt;S.meta.life+=amt;let msg='Coffre du jour : +'+fmt(amt);if(D.streak%7===0){S.meta.gold++;msg+=' et 1 Pigeon d\'Or !'}toast(msg+' · série de '+D.streak+' jour'+(D.streak>1?'s':''));snd('legend');updHud();save();return}
   const m=D.ms[+v];if(!m||m.cl||m.p<m.g)return;m.cl=true;S.cash+=D.rw;S.total+=D.rw;S.meta.life+=D.rw;toast('+'+fmt(D.rw)+' : '+dTxt(m));snd('coin');updHud();save()}
@@ -3945,10 +3984,12 @@ function lbMini(){const R=LB.rows||[],me=R.find(r=>r.is_me),top=R.slice(0,5);
   return h}
 $('boot').addEventListener('click',e=>{if(e.target.closest('[data-lbo]')){openPanel('lb');lbSend().finally(lbLoad)}
   if(e.target.closest('[data-fbo]'))openPanel('fb');
+  if(e.target.closest('[data-lang]')){save();try{localStorage.setItem('ht-lang',window.HT_LANG==='en'?'fr':'en')}catch(er){}location.reload();return}
   const a=e.target.closest('[data-au]');if(a){if(a.dataset.au==='snd'){S.meta.snd=!S.meta.snd;updSnd()}else S.meta.mus=!S.meta.mus;auInit();if(S.meta.snd)snd('tick');save();$('aus').innerHTML=ausHTML()}});
 function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" class="${m.snd?'':'off'}" aria-pressed="${!m.snd}" aria-label="${m.snd?'Couper le son':'Remettre le son'}" title="${m.snd?'Couper le son':'Remettre le son'}">🔊</button>`+
   `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`+
-  `<button type="button" data-fbo aria-label="Laisser une remarque" title="Laisser une remarque (bug, idée...)">💬</button>`}
+  `<button type="button" data-fbo aria-label="Laisser une remarque" title="Laisser une remarque (bug, idée...)">💬</button>`+
+  `<button type="button" data-lang style="font:700 15px var(--display,sans-serif)" aria-label="Langue · Language" title="${window.HT_LANG==='en'?'Français':'English'}">${window.HT_LANG==='en'?'FR':'EN'}</button>`}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.ready||(typeof AFK!=='undefined'&&AFK))return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}

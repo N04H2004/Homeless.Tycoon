@@ -2325,14 +2325,14 @@ function renderPanel(){
     if(!S.local)h+='<p class="lead" style="text-align:center">🔒 Il te faut d\'abord ton petit local (QG) à New York pour lancer le chantier.</p>';
     else if(f<TW_MAX)h+=`<div class="row"><div class="info"><b>Étage ${nx}${sp?' · '+sp[0]:''}</b><small>+${fmt2((4+.6*nx)*gm())}/s de loyer${sp?' · étage spécial':''}</small></div><button class="buy" type="button" data-act="tower:1" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button></div>`;
     else h+='<p class="lead" style="text-align:center">🏆 La Pigeon Tower est terminée : tu es le roi de Manhattan !</p>';
-    if(f>=5){const bl=liftLeft();h+=`<div class="row" style="background:#fff3b0"><div class="info"><b>🛗 Faire le liftier</b><small>45 s pour déposer un max de locataires au bon étage. Chacun ajoute <b>+5 %</b> à tes revenus auto pendant <b>1 h</b> (VIP du penthouse : +15 %, max x3). Une partie par jour.</small>`+
+    if(f>=5){const bl=liftLeft();h+=`<div class="row" style="background:#fff3b0"><div class="info"><b>🛗 Faire le liftier</b><small>45 s pour déposer un max de locataires au bon étage. Chacun ajoute <b>+5 %</b> à tes revenus auto de New York pendant <b>10 min</b> (VIP du penthouse : +15 %, max x3). Une partie par jour.</small>`+
       (bl>0?`<small style="display:block;color:#1f9d5c;font-weight:700">Bonus actif : x${liftM().toFixed(2).replace('.',',')} encore ${Math.ceil(bl/60000)} min</small>`:'')+`</div><button class="buy" type="button" data-act="lift:go" ${liftPlayed()?'disabled':''}>${liftPlayed()?'Demain':'Jouer'}</button></div>`}
     else h+='<p class="foot">🛗 À 5 étages, tu débloques le mini-jeu du liftier.</p>';
     h+='<div class="sec">Paliers</div>'+TW_MS.map(([n,d])=>`<div class="obj${f>=n?' ok':''}"><div class="ck">${f>=n?'✓':''}</div><span><b>${n} étages</b> · ${d}</span></div>`).join('')+
       '<div class="sec">Étages spéciaux</div><p class="foot">'+Object.entries(TW_SP).map(([n,v])=>`${f>=n?'✓':'·'} ${n} : ${v[0]}`).join(' &nbsp; ')+'</p>'}
   else if(pid==='lift'){t='Liftier de la Pigeon Tower';hd='#ffd23f';h=`<div style="display:flex;gap:10px;align-items:flex-start;justify-content:center"><canvas id="liftcv" style="width:320px;height:380px;border:3px solid var(--ink);border-radius:12px;max-width:100%"></canvas>`+
     `<div style="display:flex;flex-direction:column;gap:8px;width:110px"><button class="chunky" type="button" data-act="lift:up" style="font-size:22px">▲</button><button class="chunky" type="button" data-act="lift:open">Ouvrir</button><button class="chunky" type="button" data-act="lift:down" style="font-size:22px">▼</button>`+
-    `<small style="font-size:11px;line-height:1.3">Flèches ↑ ↓ et Espace. 4 personnes max. Le chiffre sur chaque locataire = son étage. <b style="color:#b8860b">Or</b> = VIP pour le penthouse (compte triple). Chaque locataire : +5 % de revenus auto pendant 1 h (max x3).</small></div></div><p class="jmsg" id="liftmsg" style="text-align:center"></p>`}
+    `<small style="font-size:11px;line-height:1.3">Flèches ↑ ↓ et Espace. 4 personnes max. Le chiffre sur chaque locataire = son étage. <b style="color:#b8860b">Or</b> = VIP pour le penthouse (compte triple). Chaque locataire : +5 % de revenus auto à New York pendant 10 min (max x3).</small></div></div><p class="jmsg" id="liftmsg" style="text-align:center"></p>`}
   else if(pid==='daily'){t='Missions du jour';hd='#ff9f1c';h=dailyHTML()}
   else if(pid==='login'){t='Récompense de connexion';hd='#ffd23f';h=loginHTML()}
   else if(pid==='obj'){t='Objectifs';
@@ -2655,8 +2655,8 @@ function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);
     for(let r=0,y=46;y<210;r++,y+=12){cx.moveTo(x,y);cx.lineTo(x+w,y);for(let bx=x+(r%2?15:0);bx<x+w;bx+=30){cx.moveTo(bx,y);cx.lineTo(bx,y+12)}}cx.stroke();cx.restore();rr(x,40,w,170,10);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke()}if(CK()==='ny'){nyFacade(x,w);if(w>=260&&typeof winCol!=='function')return nyBoard(x+66,48,w-90,48,x)}for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
 // ===== le liftier de la Pigeon Tower : conduis l'ascenseur, dépose les locataires au bon étage, pourboires selon la vitesse =====
 let LIFT=null;
-// récompense du liftier : un multiplicateur de revenus auto pendant 1 h (1 partie par vrai jour)
-const liftMul=n=>Math.min(3,1+.05*n),liftM=()=>{const B=S.meta.liftBoost;return B&&B.until>Date.now()?B.m:1},liftLeft=()=>{const B=S.meta.liftBoost;return B?Math.max(0,B.until-Date.now()):0},liftPlayed=()=>S.meta.liftDay===dayKey();
+// récompense du liftier : un multiplicateur des revenus auto de New York pendant 10 min (1 partie par vrai jour)
+const liftMul=n=>Math.min(3,1+.05*n),liftM=()=>{const B=S.meta.liftBoost;return B&&B.until>Date.now()&&CK()==='ny'&&!VISIT?B.m:1},liftLeft=()=>{const B=S.meta.liftBoost;return B?Math.max(0,B.until-Date.now()):0},liftPlayed=()=>S.meta.liftDay===dayKey();
 const liftN=()=>Math.min(8,Math.max(4,S.tower||0));
 function liftStart(){if((S.tower||0)<5||liftPlayed())return;S.meta.liftDay=dayKey();LIFT={t:45,f:0,y:0,open:false,car:[],wait:{},earn:0,served:0,angry:0,sp:1,msg:'Chaque locataire déposé augmente ton bonus de revenus (VIP = 3 locataires).',pts:0};pid='lift';renderPanel();liftLoop()}
 function liftSpawn(){const n=liftN();let fl=Math.floor(Math.random()*(n+1)),to;do to=Math.floor(Math.random()*(n+1));while(to===fl);const vip=Math.random()<.12;(LIFT.wait[fl]=LIFT.wait[fl]||[]).push({to:vip?n:to,pat:14,max:14,vip})}
@@ -2671,8 +2671,8 @@ function liftOpen(){const L=LIFT;if(!L||Math.abs(L.y-L.f)>.15)return;L.open=true
   L.car=L.car.filter(p=>{if(p.to!==L.f)return true;const v=p.vip?3:1;L.pts+=v;L.served++;got+=v;return false});
   const w=L.wait[L.f]||[];while(w.length&&L.car.length<4){const p=w.shift();p.pat=p.max;L.car.push(p)}
   if(got>0){L.msg=(got>1?'VIP déposé ! ':'Locataire déposé ! ')+'Bonus : x'+liftMul(L.pts).toFixed(2).replace('.',',')+(L.served%5===0?' · le hall applaudit !':'');snd('coin')}else if(w.length)L.msg='Ascenseur plein (4 personnes max) !';else snd('pick');updHud()}
-function liftEnd(early){const L=LIFT;if(!L)return;LIFT=null;const m=liftMul(L.pts);if(L.pts>0)S.meta.liftBoost={m,until:Date.now()+3600e3};
-  toast('Service terminé : '+L.served+' locataire'+(L.served>1?'s':'')+' déposé'+(L.served>1?'s':'')+(L.pts>0?' · revenus auto x'+m.toFixed(2).replace('.',',')+' pendant 1 h !':'')+(L.angry?' · '+L.angry+' parti'+(L.angry>1?'s':'')+' à pied':''));snd(L.served>=8?'win':'coin');save();if(!early){pid='tower';renderPanel()}}
+function liftEnd(early){const L=LIFT;if(!L)return;LIFT=null;const m=liftMul(L.pts);if(L.pts>0)S.meta.liftBoost={m,until:Date.now()+600e3};
+  toast('Service terminé : '+L.served+' locataire'+(L.served>1?'s':'')+' déposé'+(L.served>1?'s':'')+(L.pts>0?' · revenus auto de New York x'+m.toFixed(2).replace('.',',')+' pendant 10 min !':'')+(L.angry?' · '+L.angry+' parti'+(L.angry>1?'s':'')+' à pied':''));snd(L.served>=8?'win':'coin');save();if(!early){pid='tower';renderPanel()}}
 function liftGuy(g,p,x,base,fh,face){if(!p.look)p.look={shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),hairS:pick(['court','long','queue','meche'])};const keep=cx;cx=g;
   try{drawGuy(x,base,Object.assign({s:Math.min(.36,fh/100),t:T,face,moving:false,suit:p.vip,tophat:p.vip,sad:p.pat/p.max<.3},p.look,p.vip?{shirt:'#14141a'}:{}))}finally{cx=keep}}
 function drawLift(){const c=$('liftcv'),L=LIFT;if(!c||!L)return;const d=window.devicePixelRatio||1,W2=320,H2=380;if(c.width!==W2*d){c.width=W2*d;c.height=H2*d}const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);

@@ -1045,6 +1045,8 @@ resetWorld();
 
 function float(x,y,txt,col){floats.push({x,y,txt,col:col||'#1f9d5c',t:0})}
 function say(t){P.say=t;P.sayT=3}
+const autoSec=sec=>autoRate()*sec/Math.max(1e-9,gm());// travail à la main indexé sur la rue : n secondes de revenus auto
+const TRASH_SEC=1.5,CDD_SEC=6,CDD_BEST_SEC=20;
 function earn(n,x,y,col){const g=gain(n);if(x!=null)float(x,y,'+'+fmt(g),col);return g}
 const nearCop=(x,y,r)=>cops.some(c=>c.active&&dist(c.x,c.y,x,y)<r);
 const closestCop=(x,y)=>{let b=null,bd=1e9;for(const c of cops)if(c.active){const d=dist(c.x,c.y,x,y);if(d<bd){bd=d;b=c}}return b};
@@ -1314,7 +1316,7 @@ function update(dt){
   if(brokenTimer<=0){brokenTimer=rnd(18,28);if(broken.length<3){const k=Math.floor(Math.random()*BROKEN.length);broken.push({x:rnd(80,W-80),y:Math.random()<.5?rnd(240,285):rnd(470,615),b:BROKEN[k],prog:0,k})}}
   for(let i=trash.length-1;i>=0;i--){const t=trash[i];t.pop=Math.min(1,t.pop+dt*4);
     if(!VISIT&&!INSIDE&&S.bag<cap()&&dist(P.x,P.y-10,t.x,t.y)<pickR()){S.bag++;TUT.n++;S.bagVal+=trashV(t);if(t.by)t.by.tgt=null;trash.splice(i,1);sparks.push({x:t.x,y:t.y,t:0});snd('pick')}}
-  if(S.bag>0&&!VISIT&&!INSIDE)for(const [bx,by] of BINS){if(dist(P.x,P.y,bx,by+10)<58){const v=S.bagVal;S.stats.trash+=S.bag;S.bag=0;S.bagVal=0;earn(v,bx,by-50);snd('drop');break}}
+  if(S.bag>0&&!VISIT&&!INSIDE)for(const [bx,by] of BINS){if(dist(P.x,P.y,bx,by+10)<58){const v=S.bagVal+S.bag*autoSec(TRASH_SEC);S.stats.trash+=S.bag;S.bag=0;S.bagVal=0;earn(v,bx,by-50);snd('drop');break}}
   if(S.bag>=cap()&&P.sayT<=0&&Math.random()<dt*.5)say('Sac plein ! Une poubelle vite !');
   for(let i=broken.length-1;i>=0;i--){const b=broken[i];
     if(!VISIT&&!INSIDE&&dist(P.x,P.y,b.x,b.y)<50){b.prog+=dt/repT();if(Math.random()<dt*8)sparks.push({x:b.x+rnd(-14,14),y:b.y-20,t:0,star:1});
@@ -1758,7 +1760,7 @@ function newCust(){const J=JOB,name=pick(CNAMES),wt=J.served+J.fail>0?(J.k==='ba
     const pm=Math.max(14,28-J.served);
     J.cust={name,items:its.map(i=>({n:i[0],p:i[1],ok:false})),tot,paid,given:0,pat:pm,pm,line:pick(CA_LINES),wait:wt}}}
 function jobFail(m){JOB.fail++;JOB.msg=m;JOB.mc='ko';snd('err');newCust()}
-function jobWin(base,m,tm){const J=JOB,tip=Math.round(10*(tm??3)*J.cust.pat/J.cust.pm)/10,g=gain(base+tip);J.earn+=g;J.served++;J.msg=m+' · +'+fmt2(g).replace(',00','')+' encaissés';J.mc='ok';snd('coin');newCust();updHud()}
+function jobWin(base,m,tm){const J=JOB,tip=Math.round(10*(tm??3)*J.cust.pat/J.cust.pm)/10,g=gain(base+tip+autoSec(CDD_SEC)*(1+tip/6));J.earn+=g;J.served++;J.msg=m+' · +'+fmt2(g).replace(',00','')+' encaissés';J.mc='ok';snd('coin');newCust();updHud()}
 function jobLose(d){d=Math.min(d,S.cash);S.cash-=d;JOB.earn-=d}
 function kbAdd(ing){const c=JOB.cust;
   if(c.build.includes(ing)){c.build=c.build.filter(x=>x!==ing);return}
@@ -1782,7 +1784,7 @@ function caGive(){const c=JOB.cust,due=c.paid-c.tot;if(c.items.some(i=>!i.ok))re
   if(c.given<due)jobFail('« Il manque '+fc(diff)+' ! » Le client appelle le chef.');
   else{jobLose(diff/100);jobFail('Tu as rendu '+fc(diff)+' de trop, retenus sur ta paie.')}}
 function endJob(early){const J=JOB;if(!J)return;JOB=null;
-  const best=!early&&J.fail===0&&J.served>=5,bonus=best?gain(15):0,off=offerJob()===J.k?1.5:1,offB=off>1&&J.earn>0?gain(J.earn*.5/gm()):0,g=J.earn+bonus+offB;
+  const best=!early&&J.fail===0&&J.served>=5,bonus=best?gain(15+autoSec(CDD_BEST_SEC)):0,off=offerJob()===J.k?1.5:1,offB=off>1&&J.earn>0?gain(J.earn*.5/gm()):0,g=J.earn+bonus+offB;
   if(bonus+offB>0)float(P.x,P.y-100,'+'+fmt(bonus+offB),'#1f9d5c');
   if(J.k==='kebab'&&!early){S.food=Math.min(100,S.food+35)}
   if(J.k==='bar'&&!early){S.hp=Math.min(100,S.hp+20)}
@@ -2158,7 +2160,7 @@ function updHud(){
   {const hs=S.band>0||S.heat>0.5;for(const id of ['hl','hbar','htn'])if($(id).hidden===hs)$(id).hidden=!hs;
    {const ds=(S.dirty||0)>=1||S.band>0;for(const id of ['dl','dn'])if($(id).hidden===ds)$(id).hidden=!ds;const t=fmt(S.dirty||0)+(launderR()>0&&S.dirty>=1?' · lavage':'');if($('dn').textContent!==t)$('dn').textContent=t}
    $('htb').style.width=S.heat+'%';$('htb').classList.toggle('hot',S.heat>75);$('htn').textContent=Math.ceil(S.heat)}
-  $('bagn').textContent=S.bag+' / '+cap()+(S.bag?' · '+fmt(S.bagVal*gm()):'');
+  $('bagn').textContent=S.bag+' / '+cap()+(S.bag?' · '+fmt((S.bagVal+S.bag*autoSec(TRASH_SEC))*gm()):'');
   const parts=[];
   if(frenzy>0)parts.push('Frénésie dorée x3 · '+Math.ceil(frenzy)+' s');
   if(ev)parts.push(EVENTS[ev.k].n+' : '+EVENTS[ev.k].d+' · '+Math.ceil(ev.t)+' s');

@@ -780,7 +780,7 @@ let NOSAVE=false;
 function save(){if(NOSAVE)return;const R0=VISIT?VISIT.saved:S;if(R0.meta)R0.meta.ride=R0.ride;if(!VISIT)R0.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(R0))}catch(e){}}
 
 // ================= Économie =================
-let frenzy=0,ev=null;
+let frenzy=0,ev=null,RIDEFX=[];
 const CURI=()=>S.meta.cur??Math.min(S.meta.prestige,3),CK=()=>CITIES[VISIT?VISIT.i:CURI()].k,FOODS_NOW=()=>FOODS_C[CK()]||FOODS,
       CI=()=>VISIT?VISIT.i:CURI(),HOME=()=>CITIES[CURI()],CITY=()=>CITIES[CI()],CUR=()=>CITY().cur,cm=()=>CMS[CI()],C=n=>Math.round(n*cm());
 // ===== Pigeon Tower (New York) : 50 étages à construire, chacun rapporte, paliers bonus =====
@@ -1278,7 +1278,13 @@ function update(dt){
   if(INSIDE){roomMove(dx,dy,dt);dx=0;dy=0;P.tx=null}
   if(dx||dy){P.tx=null}
   else if(P.tx!=null){const d=dist(P.x,P.y,P.tx,P.ty);if(d<6)P.tx=null;else{dx=(P.tx-P.x)/d;dy=(P.ty-P.y)/d}}
-  const m=Math.hypot(dx,dy);P.moving=m>0;
+  const m=Math.hypot(dx,dy);
+  // démarrage à fond : la motocross et la sportive se cabrent, le chopper crache un nuage de fumée
+  {const st=S.ride==='voiture'?vcOf('voiture').s:'';if(m>0&&!P.moving&&(P.idle||0)>.25&&!INSIDE){if(st==='cross'||st==='sport')P.wheelie=1.3;if(st==='chopper')P.puff=.9}
+    P.idle=m>0?0:(P.idle||0)+dt;P.wheelie=Math.max(0,(P.wheelie||0)-dt);P.puff=Math.max(0,(P.puff||0)-dt);
+    if(st==='chopper'&&m>0&&(P.puff>0?Math.random()<.7:Math.random()<dt*2.5))RIDEFX.push({x:P.x-P.face*38,y:P.y-6,vx:-P.face*rnd(20,50),vy:-rnd(10,30),r:rnd(4,7),a:.75});
+    for(const q of RIDEFX){q.x+=q.vx*dt;q.y+=q.vy*dt;q.r+=14*dt;q.a-=dt*.9}RIDEFX=RIDEFX.filter(q=>q.a>0)}
+  P.moving=m>0;
   if(m){P.x+=dx/m*speed()*dt;P.y+=dy/m*speed()*dt;if(Math.abs(dx)>.1)P.face=dx>0?1:-1}
   P.x=clamp(P.x,20,W-20);P.y=clamp(P.y,215,630);
   const night=isNight(),rain=ev&&ev.k==='pluie';
@@ -4004,7 +4010,10 @@ function draw(){
   if(S.secu){const gx=BID.local.door+46;L.push([232,()=>drawGuy(gx,232,{s:1.05,t:T,face:-1,shirt:'#22223b',pants:'#22223b',skin:'#c68642',shades:1,suit:1})])}
   if(S.manager){const mx=BID.local.door-60;L.push([228,()=>drawGuy(mx,228,{s:.95,t:T,face:1,shirt:'#6d597a',pants:'#22223b',skin:'#ffdbac',hair:'#6c757d',suit:1,tie:'#118ab2'})])}
   if(FA)L.push([FA.y-1,drawFridge]);
-  L.push([P.y,()=>{drawRide(S.ride,P.x,P.y,P.face,false);drawGuy(P.x,P.y,playerLook());drawRide(S.ride,P.x,P.y,P.face,true);drawBarsUnder()}]);
+  L.push([P.y,()=>{for(const q of RIDEFX){cx.fillStyle=`rgba(200,200,210,${q.a})`;circ(q.x,q.y,q.r);cx.fill()}
+    const w=P.wheelie||0,ang=w>0?Math.sin(Math.min(1,(1.3-w)/.25)*Math.PI/2)*Math.min(1,w/.4)*.42:0;// monte vite, redescend en douceur
+    cx.save();if(ang){const px=P.x-P.face*22;cx.translate(px,P.y);cx.rotate(-P.face*ang);cx.translate(-px,-P.y)}
+    drawRide(S.ride,P.x,P.y,P.face,false);drawGuy(P.x,P.y,playerLook());drawRide(S.ride,P.x,P.y,P.face,true);cx.restore();drawBarsUnder()}]);
   L.sort((a,b)=>a[0]-b[0]);for(const [,f] of L)f();
   drawWeatherAndNight();
   cx.strokeStyle='rgba(255,255,255,.35)';cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.ellipse(P.x,P.y-4,pickR(),pickR()*.45,0,0,7);cx.stroke();cx.setLineDash([]);

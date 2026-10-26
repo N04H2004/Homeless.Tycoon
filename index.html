@@ -3105,7 +3105,7 @@ function drawShrine(){const dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='
     if(dk>.2){cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.4*dk;cx.fillStyle='#ffd166';circ(lx,151,20);cx.fill();cx.restore()}}
   cx.restore()}
 // Shibuya : tour cylindrique avec écran géant + le carrefour
-const TK_ADS=[['POUBELLE CORP','ゴミは宝','#ef476f','#ffd23f'],['RAMEN ICHIBAN','ズルズル！','#ffd23f','#d62839'],['PIGEON IDOL','鳩アイドル','#f72585','#fff'],['NIKKEI PIGEON','▲ 株','#7ee08a','#14141f'],['KAWAII ROBOTS','ロボット','#4cc9f0','#fff']];
+const TK_ADS=[['POUBELLE CORP','ゴミは宝','#ef476f','#ffd23f'],['RAMEN ICHIBAN','ズルズル！','#ffd23f','#d62839'],['PIGEON IDOL','鳩アイドル','#f72585','#fff'],['DAIKOKU PA','今夜レース！','#4cc9f0','#fff'],['DRIFT KING','最強は誰？','#ff4d6d','#14141f']];
 function drawShibuya(lit){const x=4240,w=420,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;
   if(!lit){rr(x,30,w,180,6);fs('#d9d4e8');cx.strokeStyle='rgba(42,31,61,.15)';cx.lineWidth=2;cx.beginPath();for(let y=46;y<210;y+=18){cx.moveTo(x+4,y);cx.lineTo(x+w-4,y)}cx.stroke();cx.lineWidth=4;cx.strokeStyle=INK;
   // tour ronde « 109 »
@@ -3118,7 +3118,7 @@ function drawShibuya(lit){const x=4240,w=420,dk=darkness();cx.save();cx.lineWidt
   const sl=ph<.12?(1-ph/.12)*262:0;txt(a1,x+149+sl,82,a1.length>12?22:28,c1,true);jtxt(a2,x+149+sl,118,22,'#fff',c1);cx.restore();
   // bandeau défilant
   rr(x+14,158,270,18,3);fs('#111');cx.save();rr(x+16,160,266,14,2);cx.clip();cx.font=`700 11px ${JPF}`;cx.textBaseline='middle';cx.textAlign='left';cx.fillStyle='#ffd23f';
-  const news='速報 : 鳩が渋谷を占拠  •  ラーメン価格が過去最高  •  PIGEON STOCKS ▲  •  ';const nw=cx.measureText(news).width;for(let px=x+16-((T*50)%nw);px<x+282;px+=nw)cx.fillText(news,px,167);cx.restore();cx.restore()}
+  const news='速報 : 鳩が渋谷を占拠  •  ラーメン価格が過去最高  •  今夜、大黒PAで伝説のレース  •  ';const nw=cx.measureText(news).width;for(let px=x+16-((T*50)%nw);px<x+282;px+=nw)cx.fillText(news,px,167);cx.restore();cx.restore()}
 // salle de pachinko : façade dorée, ampoules qui clignotent
 function drawPachinko(lit){const x=4680,w=430,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;
   if(!lit){rr(x,24,w,186,6);fs('#ffd23f');

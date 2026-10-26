@@ -2301,7 +2301,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
       (has?(on?'':`<button class="buy gold" type="button" data-act="look:${sl}:${p.k}">Porter</button>`):`<button class="buy" type="button" data-act="piece:${p.k}" data-cost="${p.p}" ${S.cash<p.p?'disabled':''}>${fmt(p.p)}</button>`)+'</div>'}).join('');
     h+='<div class="sec">Tenues complètes</div>'+OUTFITS.filter(o=>o.k!=='costume'&&o.k!=='peaky').map(outfitRow).join('')}
   if(x.svc==='bookie')h+=bkHTML();
-  if(x.svc==='garage')h+='<div class="sec">Customisation des véhicules</div>'+(S.meta.vcust?vcHTML():'<p class="lead">🔒 Rachète le garage pour débloquer la <b>customisation de tes véhicules</b> : peinture, jantes, déco et néon. Elle te suit ensuite à vie, dans toutes les villes.</p>');
+  if(x.svc==='garage')h+='<div class="sec">Customisation des véhicules</div>'+(S.meta.vcust?vcHTML():'<p class="lead">🔒 Rachète le garage pour débloquer la <b>customisation de tes véhicules</b> : modèle (Chopper, Motocross, Sportive…), peinture, jantes, stickers et néon. Elle te suit ensuite à vie, dans toutes les villes.</p>');
   if(!x.job&&!x.svc)h+=`<p class="lead">${x.d}. Le patron cherchera bientôt du monde pour un CDD ici.</p>`;
   h+='<div class="sec">La boutique'+ib('shops')+'</div>'+row(l?'Ta boutique':'Racheter '+x.n,l?'niv. '+l:'',(S.local?'':"Il faut d'abord le petit local · ")+`Loyer : +${String(x.inc).replace('.',',')} ${CUR()} de base par seconde et par niveau`+(l?` · actuellement +${fmt2(x.inc*l*gm())}/s`:''),'shop:'+k,mx?0:shopCost(x),mx?'MAX':(l?'Niveau '+(l+1)+' · '+fmt(shopCost(x)):'Racheter · '+fmt(shopCost(x))),!S.local||mx);
   return [x.n,x.col,h]}
@@ -3692,7 +3692,7 @@ function playerLook(){
   const n=S.done,tri=S.up.tri,out=S.meta.outfit;
   const tier=n>=9?2:n>=5?1:0;
   const L=myLook(),pt=k=>L[k]&&L[k]!=='auto'&&L[k]!=='none'?PC(L[k]):null,gl=pt('gl'),sh=pt('sh');
-  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:L.skin||'#f1c27d',hair:L.hair==='chauve'?null:(L.hc||'#2b2118'),hairS:L.hair||'court',glass:gl&&gl.t,noLynx:L.gl==='none',shoes:sh&&sh.c,shP:sh,ride:S.ride,lift:S.ride==='voiture'?10:S.ride==='scooter'?5:S.ride==='trott'?6:0,
+  const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:L.skin||'#f1c27d',hair:L.hair==='chauve'?null:(L.hc||'#2b2118'),hairS:L.hair||'court',glass:gl&&gl.t,noLynx:L.gl==='none',shoes:sh&&sh.c,shP:sh,ride:S.ride,lift:vcLift(S.ride),
     g:{pince:S.up.pince,sac:S.up.sac,basket:S.up.basket,cle:S.up.cle,oeil:S.up.oeil},gun:armed()?S.weapon:null};
   if(out==='costume')return Object.assign(base,{shirt:'#22223b',pants:'#22223b',suit:true,tie:'#d62839',hat:null});
   if(out==='peaky')return Object.assign(base,{shirt:'#6b5b45',pants:'#4a3f35',suit:true,tie:'#2a1f3d',hat:'#3b3127'});
@@ -3792,36 +3792,81 @@ function drawHatP(k,c,m,f,t){cx.lineWidth=3;cx.strokeStyle=INK;const dk=c?mix(c,
 const VC_BASE={trott:'#ff9f1c',scooter:'#06d6a0',voiture:'#ef476f'};
 const VC_COL=['#ef476f','#ff9f1c','#ffd23f','#06d6a0','#118ab2','#7b2cbf','#f72585','#22223b','#f8f9fa','#8d99ae'];
 const VC_OPT={
-  w:[['#333','Noires'],['#ced4da','Chromées'],['#ffd23f','Dorées'],['#ff70a6','Roses néon']],
-  d:[['','Aucune'],['flames','Flammes'],['stripes','Bandes de course'],['stars','Étoiles'],['sakura','Sakura']],
+  w:[['#adb5bd','Acier'],['#333','Noires'],['#ced4da','Chromées'],['#ffd23f','Dorées'],['#ff70a6','Roses néon']],
+  d:[['','Aucune'],['flames','Flammes'],['stripes','Bandes de course'],['stars','Étoiles'],['sakura','Sakura'],['checker','Damier'],['bolt','Éclair'],['dots','Pois'],['tribal','Tribal'],['pigeon','Pigeon'],['num','Numéro 86']],
   n:[['','Aucun'],['#f72585','Rose'],['#4cc9f0','Bleu'],['#38f07a','Vert'],['#c77dff','Violet']]};
-const vcOf=k=>{const c=(S.meta.vc||{})[k]||{};return {c:c.c||VC_BASE[k],w:c.w||'#333',d:c.d||'',n:c.n||''}};
+const vcOf=k=>{const c=(S.meta.vc||{})[k]||{};return {c:c.c||VC_BASE[k],w:c.w||'#adb5bd',d:c.d||'',n:c.n||'',s:c.s||VC_STY[k][0][0]}};
 function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]||(S.meta.vc[k]={});o[p]=v;snd('buy')}
 // déco dessinée sur une surface (x,y,w,h) du véhicule
 function vcDecal(d,x,y,w,h){if(!d)return;cx.save();cx.beginPath();cx.roundRect(x,y,w,h,Math.min(h/2,9));cx.clip();
   if(d==='flames'){cx.fillStyle='#ff6b35';cx.fillRect(x,y+h*.72,w*.5,h*.28);for(let i=0;i<3;i++){const fx=x+i*w*.16,L=w*(.42-i*.08);cx.fillStyle=i===1?'#ffd23f':'#ff6b35';cx.beginPath();cx.moveTo(fx,y+h);cx.quadraticCurveTo(fx+L*.5,y+h*(.45+i*.1),fx+L,y+h*(.3+i*.12));cx.quadraticCurveTo(fx+L*.55,y+h*.8,fx+L*.3,y+h);cx.closePath();cx.fill()}}
   if(d==='stripes'){cx.fillStyle='#fff';cx.fillRect(x,y+h*.38,w,h*.1);cx.fillRect(x,y+h*.56,w,h*.1)}
   if(d==='stars'){cx.fillStyle='#fff6df';for(let i=0;i<3;i++){const sx=x+w*(.2+.3*i),sy=y+h*(i%2?.35:.65),r=Math.min(4,h*.3);cx.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr2=k%2?r*.45:r;cx.lineTo(sx+Math.cos(a)*rr2,sy+Math.sin(a)*rr2)}cx.closePath();cx.fill()}}
+  if(d==='checker'){const q=Math.max(3,h/3);for(let i=0;i*q<w;i++)for(let j=0;j*q<h;j++)if((i+j)%2){cx.fillStyle='#14141f';cx.fillRect(x+i*q,y+j*q,q,q)}else{cx.fillStyle='#fff';cx.fillRect(x+i*q,y+j*q,q,q)}}
+  if(d==='bolt'){cx.fillStyle='#ffd23f';cx.beginPath();cx.moveTo(x+w*.15,y+h*.55);cx.lineTo(x+w*.5,y+h*.2);cx.lineTo(x+w*.48,y+h*.45);cx.lineTo(x+w*.85,y+h*.35);cx.lineTo(x+w*.5,y+h*.85);cx.lineTo(x+w*.52,y+h*.6);cx.closePath();cx.fill()}
+  if(d==='dots'){cx.fillStyle='#fff';const r=Math.max(1.2,Math.min(w,h)*.12);for(let i=0;i<5;i++)for(let j=0;j<3;j++){cx.beginPath();cx.arc(x+w*(.12+.19*i)+(j%2)*w*.09,y+h*(.2+.3*j),r,0,7);cx.fill()}}
+  if(d==='tribal'){cx.strokeStyle='#14141f';cx.lineWidth=Math.max(1.5,h*.14);cx.lineCap='round';cx.beginPath();cx.moveTo(x,y+h*.8);cx.quadraticCurveTo(x+w*.3,y+h*.1,x+w*.55,y+h*.5);cx.quadraticCurveTo(x+w*.75,y+h*.9,x+w,y+h*.2);cx.stroke();cx.beginPath();cx.moveTo(x+w*.3,y+h*.9);cx.quadraticCurveTo(x+w*.45,y+h*.55,x+w*.6,y+h*.95);cx.stroke()}
+  if(d==='pigeon'){const cxp=x+w/2,cyp=y+h/2,r=Math.min(w,h)*.42;cx.fillStyle='#fff';cx.beginPath();cx.arc(cxp,cyp,r,0,7);cx.fill();cx.fillStyle='#8d99ae';cx.beginPath();cx.ellipse(cxp-r*.1,cyp+r*.15,r*.5,r*.32,0,0,7);cx.fill();cx.beginPath();cx.arc(cxp+r*.35,cyp-r*.2,r*.25,0,7);cx.fill();cx.fillStyle='#f4a261';cx.beginPath();cx.moveTo(cxp+r*.58,cyp-r*.22);cx.lineTo(cxp+r*.8,cyp-r*.12);cx.lineTo(cxp+r*.58,cyp-r*.05);cx.fill()}
+  if(d==='num'){const r=Math.min(w,h)*.45;cx.fillStyle='#fff';cx.beginPath();cx.ellipse(x+w/2,y+h/2,r*1.3,r,0,0,7);cx.fill();cx.fillStyle='#14141f';cx.font=`bold ${Math.max(5,r*1.2)}px sans-serif`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText('86',x+w/2,y+h/2+.5)}
   if(d==='sakura'){for(let i=0;i<3;i++){const sx=x+w*(.2+.3*i),sy=y+h*(i%2?.35:.62),r=Math.min(3.4,h*.24);cx.fillStyle='#ffb7c5';for(let k=0;k<5;k++){const a=k*Math.PI*2/5;cx.beginPath();cx.arc(sx+Math.cos(a)*r,sy+Math.sin(a)*r,r*.7,0,7);cx.fill()}cx.fillStyle='#fff';cx.beginPath();cx.arc(sx,sy,r*.4,0,7);cx.fill()}}
   cx.restore()}
 function vcGlow(col,w){if(!col)return;cx.save();cx.globalCompositeOperation='lighter';const a=(.35+.25*Math.sin(T*4))*(.5+darkness()*.5);
   for(const [e,al] of [[1.6,.25],[1.15,.45]]){cx.globalAlpha=a*al;cx.fillStyle=col;cx.beginPath();cx.ellipse(0,3,w*e,7*e,0,0,7);cx.fill()}cx.restore()}
 // panneau de customisation (garage de Tokyo et Compétences)
 function vcHTML(){const own=VEH.filter(v=>S.veh[v.k]);if(!own.length)return '<p class="lead">Achète d\'abord un véhicule (Compétences ou Pigeon Motors) pour le customiser.</p>';
-  return '<p class="lead">Peinture, jantes, déco et néon : ça se voit dans la rue, dans toutes les villes, et c\'est gratuit.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
-    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='d'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
+  return '<p class="lead">Modèle, peinture, jantes, stickers et néon : ça se voit dans la rue, dans toutes les villes, et c\'est gratuit.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
+    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
     return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:120px;height:74px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
-      sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Déco')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
+      sw('s',VC_STY[v.k],o.s,'Modèle')+sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Stickers')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
 function drawVcThumbs(){const keep=cx,d=window.devicePixelRatio||1;for(const c of document.querySelectorAll('#pbody canvas[data-vc]')){const g=c.getContext('2d');c.width=120*d;c.height=74*d;g.setTransform(d,0,0,d,0,0);
   g.fillStyle='#e9e4f5';g.beginPath();g.roundRect(0,0,120,74,10);g.fill();cx=g;try{cx.save();cx.translate(56,58);cx.scale(1.7,1.7);drawRide(c.dataset.vc,0,0,1,false);drawRide(c.dataset.vc,0,0,1,true);cx.restore()}finally{cx=keep}}}
-function drawRide(k,x,y,f,front){if(!k)return;const o=vcOf(k);cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;
-  if(!front)vcGlow(o.n,k==='voiture'?30:24);
-  if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();circ(-14,-2,4);fs(o.w);circ(14,-2,4);fs(o.w)}
-    else{cx.beginPath();cx.moveTo(-24,-11);cx.quadraticCurveTo(-22,-6,-16,-6);cx.lineTo(16,-6);cx.quadraticCurveTo(22,-6,24,-11);cx.lineWidth=5;cx.strokeStyle='#333';cx.stroke();cx.lineWidth=3;cx.strokeStyle=o.c;cx.stroke();cx.strokeStyle='#000';vcDecal(o.d,-16,-9,32,5)}}
-  if(k==='scooter'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();rr(-20,-8,40,5,2);fs(o.c);vcDecal(o.d,-19,-8,38,5);circ(-16,-2,5);fs(o.w);circ(16,-2,5);fs(o.w)}
-    else{cx.beginPath();cx.moveTo(16,-6);cx.lineTo(12,-50);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=2;cx.strokeStyle=o.c;cx.stroke();cx.lineWidth=4;cx.strokeStyle=INK;cx.beginPath();cx.moveTo(5,-50);cx.lineTo(19,-50);cx.stroke()}}
-  if(k==='voiture'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,28,6,0,0,7);cx.fill();circ(-18,-4,9);fs('#333');circ(-18,-4,4);fs(o.w);circ(20,-4,9);fs('#333');circ(20,-4,4);fs(o.w);rr(-28,-26,48,18,9);fs(o.c);vcDecal(o.d,-27,-25,46,16);rr(-28,-26,48,18,9);cx.stroke()}
-    else{rr(14,-50,12,38,5);fs(o.c);vcDecal(o.d,15,-49,10,36);rr(14,-50,12,38,5);cx.stroke();rr(18,-58,10,9,3);fs('#cdeefd');circ(26,-34,3);fs('#fff3b0')}}
+// modèles de véhicules (garage tuning de Tokyo) : purement esthétiques
+const VC_STY={trott:[['skate','Skate'],['long','Longboard']],scooter:[['classic','Classique'],['elec','Électrique']],voiture:[['vespa','Vespa'],['chopper','Chopper'],['cross','Motocross'],['sport','Sportive']]};
+const vcLift=k=>{if(!k)return 0;const s=vcOf(k).s;return k==='voiture'?({vespa:10,chopper:8,cross:15,sport:12}[s]||10):k==='scooter'?5:6};
+const CHROME='#ced4da';
+function vcWheel(x,y,r,rim,knob){if(knob){cx.fillStyle='#222';for(let k=0;k<12;k++){const a=k*Math.PI/6+T*0;cx.save();cx.translate(x+Math.cos(a)*r,y+Math.sin(a)*r);cx.rotate(a);cx.fillRect(-2,-2.5,4,5);cx.restore()}}
+  circ(x,y,r);fs('#222');circ(x,y,r*.55);fs(rim);cx.fillStyle=INK;circ(x,y,r*.16);cx.fill();
+  cx.strokeStyle='rgba(255,255,255,.35)';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,r*.75,-2.4,-1.2);cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK}
+function vcLine(pts,w,col){cx.lineCap='round';cx.lineJoin='round';cx.beginPath();pts.forEach(([x,y],i)=>i?cx.lineTo(x,y):cx.moveTo(x,y));cx.lineWidth=w+3;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=w;cx.strokeStyle=col;cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK}
+function vcPath(pts,col){cx.beginPath();pts.forEach(([x,y],i)=>i?cx.lineTo(x,y):cx.moveTo(x,y));cx.closePath();fs(col)}
+function drawRide(k,x,y,f,front){if(!k)return;const o=vcOf(k),s=o.s,dk=mix(o.c,'#000000',.28),lt=mix(o.c,'#ffffff',.45);cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;cx.strokeStyle=INK;
+  const shadow=w=>{cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,w,5,0,0,7);cx.fill()};
+  if(!front)vcGlow(o.n,k==='voiture'?32:24);
+  if(k==='trott'){const L=s==='long'?30:22;
+    if(!front){shadow(L);for(const wx of [-L+8,L-8]){rr(wx-5,-6,10,4,1);fs('#495057');vcWheel(wx,-3,s==='long'?4.5:3.8,o.w)}}
+    else{cx.beginPath();if(s==='long'){cx.moveTo(-L,-13);cx.quadraticCurveTo(-L-1,-6,-L+5,-6);cx.lineTo(L-5,-6);cx.quadraticCurveTo(L+1,-6,L,-13);cx.quadraticCurveTo(0,-11,-L,-13)}
+      else{cx.moveTo(-L-2,-15);cx.quadraticCurveTo(-L+1,-6,-L+8,-6);cx.lineTo(L-8,-6);cx.quadraticCurveTo(L-1,-6,L+2,-15);cx.lineTo(L-5,-12);cx.lineTo(-L+5,-12);cx.closePath()}
+      fs(o.c);vcDecal(o.d,-L+6,-12,L*2-12,6);cx.fillStyle=INK;cx.fillRect(-L+7,-13,L*2-14,1.5)}}
+  if(k==='scooter'){const el=s==='elec';
+    if(!front){shadow(24);vcWheel(-17,-4,5,o.w);rr(-23,-12,10,3,1);fs(dk);rr(-20,-9,38,5,2);fs(o.c);vcDecal(o.d,-19,-9,36,5);if(el){rr(-8,-14,16,5,2);fs('#343a40');cx.fillStyle='#38f07a';cx.fillRect(-5,-13,6,3)}}
+    else{vcWheel(19,-4,5,o.w);vcLine([[18,-8],[20,-46]],4,el?'#343a40':o.c);vcLine([[13,-47],[27,-47]],3.5,'#495057');rr(10,-50,6,6,2);fs('#222');rr(24,-50,6,6,2);fs('#222');
+      if(el){circ(23,-34,3.4);fs('#fff3b0');rr(16,-43,8,5,1);fs('#4cc9f0')}else{rr(17,-42,6,4,1);fs(o.c)}}}
+  if(k==='voiture'){
+    if(s==='vespa'){
+      if(!front){shadow(30);vcWheel(-20,-6,8,o.w);vcPath([[-32,-10],[-34,-24],[-26,-34],[-8,-34],[-2,-22],[-2,-10]],o.c);vcDecal(o.d,-30,-30,26,16);vcPath([[-32,-10],[-34,-24],[-26,-34],[-8,-34],[-2,-22],[-2,-10]],'transparent');
+        rr(-30,-40,26,7,4);fs('#5c3b1e');rr(-36,-16,6,4,2);fs(CHROME);rr(-2,-12,18,4,2);fs(dk)}
+      else{vcWheel(22,-6,8,o.w);cx.beginPath();cx.arc(22,-12,10,Math.PI*1.05,Math.PI*1.95);fs(o.c);vcPath([[12,-10],[13,-44],[22,-50],[24,-12]],o.c);vcDecal(o.d,14,-42,8,28);
+        vcLine([[18,-50],[16,-58]],3,'#495057');vcLine([[9,-58],[25,-58]],3,'#495057');circ(24,-52,4);fs('#fff3b0');vcLine([[12,-58],[8,-66]],1.5,'#495057');circ(8,-67,2.5);fs(CHROME)}}
+    if(s==='chopper'){
+      if(!front){shadow(36);vcWheel(-26,-10,11,o.w);cx.beginPath();cx.arc(-26,-10,14,Math.PI*1.1,Math.PI*1.9);cx.lineWidth=4;cx.stroke();cx.lineWidth=3;
+        vcLine([[-26,-10],[-6,-14],[14,-30]],3,'#343a40');// cadre
+        vcLine([[-2,-8],[-36,-6]],4,CHROME);vcLine([[-2,-4],[-34,-2]],4,CHROME);// échappements
+        rr(-10,-26,8,14,2);fs(CHROME);rr(-1,-26,8,14,2);fs(CHROME);cx.strokeStyle='rgba(42,31,61,.35)';cx.lineWidth=1;cx.beginPath();for(let r=0;r<4;r++){cx.moveTo(-10,-23+r*3);cx.lineTo(7,-23+r*3)}cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK;
+        rr(-26,-26,18,6,3);fs('#5c3b1e');cx.beginPath();cx.ellipse(6,-30,13,6,-.1,0,7);fs(o.c);vcDecal(o.d,-6,-35,24,10);cx.beginPath();cx.ellipse(6,-30,13,6,-.1,0,7);cx.stroke()}
+      else{vcWheel(36,-8,9,o.w);vcLine([[16,-36],[36,-8]],3.5,CHROME);vcLine([[13,-38],[33,-10]],3.5,CHROME);circ(22,-38,4.5);fs('#fff3b0');
+        vcLine([[16,-38],[14,-64],[4,-64]],3,CHROME);rr(0,-66,6,5,2);fs('#222')}}
+    if(s==='cross'){
+      if(!front){shadow(32);vcWheel(-22,-10,10,o.w,1);vcLine([[-22,-10],[-2,-18]],3,CHROME);vcLine([[-6,-30],[-8,-14]],3,'#ffd23f');
+        vcPath([[-40,-36],[-16,-30],[-12,-24],[-30,-26]],o.c);rr(-24,-42,30,6,3);fs('#22223b');vcPath([[-6,-38],[12,-40],[14,-28],[-4,-26]],o.c);vcDecal(o.d,-5,-38,18,11);
+        rr(-14,-26,12,10,2);fs('#495057');vcLine([[-12,-18],[-30,-30]],3,CHROME)}
+      else{vcWheel(26,-10,10,o.w,1);vcLine([[16,-44],[26,-10]],4,'#ffd23f');vcPath([[14,-34],[34,-30],[28,-26],[14,-28]],o.c);
+        cx.beginPath();cx.ellipse(15,-46,6,7,0,0,7);fs('#fff');txt('86',15,-46,7,INK);vcLine([[6,-54],[24,-54]],3,'#495057');rr(2,-56,6,5,2);fs('#222')}}
+    if(s==='sport'){
+      if(!front){shadow(32);vcWheel(-22,-9,9,o.w);vcLine([[-22,-9],[-2,-14]],3,'#495057');vcPath([[-38,-34],[-16,-30],[-16,-24],[-30,-26]],o.c);rr(-20,-36,18,5,2);fs('#22223b');
+        vcPath([[-16,-28],[16,-40],[30,-30],[26,-14],[-6,-12],[-14,-18]],o.c);vcDecal(o.d,-12,-34,36,18);vcPath([[-16,-28],[16,-40],[30,-30],[26,-14],[-6,-12],[-14,-18]],'transparent');
+        rr(-10,-16,22,4,2);fs('#343a40');vcLine([[-6,-12],[-26,-18]],4,CHROME)}
+      else{vcWheel(24,-9,9,o.w);vcLine([[22,-30],[24,-9]],3.5,'#ffd23f');vcPath([[16,-40],[26,-50],[32,-36],[30,-30]],'rgba(130,190,230,.75)');vcPath([[24,-34],[34,-32],[32,-26],[24,-28]],o.c);
+        rr(28,-33,5,3,1);fs('#fff3b0');vcLine([[10,-44],[20,-42]],3,'#495057');rr(6,-46,6,5,2);fs('#222')}}}
   cx.restore()}
 function drawBarsUnder(){const w=54,x=P.x-w/2,y=P.y+10;cx.lineWidth=2;
   rr(x,y,w,7,3);fs('#fff');cx.fillStyle='#ef476f';rr(x+1,y+1,(w-2)*Math.max(0,S.hp)/100,5,2);cx.fill();

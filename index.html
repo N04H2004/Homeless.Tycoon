@@ -1206,13 +1206,13 @@ const STEPS=[
  {k:'shop',h:"Business › Commerces.",cost:()=>Math.min(...SHOPS.map(shopCost)),n:'Racheter une boutique de la rue',ok:()=>Object.values(S.shops).some(v=>v>0),tip:'shops',w:'Menu Business › Commerces : rachète une boutique, elle te verse un revenu.',acts:['shop:']},
  {k:'tower',only:2,h:"Pigeon Tower (E), à côté du supermarché.",cost:()=>twCost(S.tower||0),n:'Construire 5 étages de la Pigeon Tower',ok:()=>(S.tower||0)>=5,tip:'tower',
    w:'Va au chantier de la Pigeon Tower, entre le supermarché et Fripe & Chic, et appuie sur E. Chaque étage rapporte un loyer, et à 5 étages tu débloques le liftier.',acts:['tower:']},
- {k:'bar',h:"Business › Grands lieux.",c:1,cost:()=>estP(ESTDEF.bar),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
- {k:'band',h:"Business › Bandits.",c:1,cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
- {k:'arme',h:"Bar › ordinateur › marché noir.",c:1,cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
+ {k:'bar',h:"Business › Grands lieux.",c:1,skip:[3],cost:()=>estP(ESTDEF.bar),n:'Racheter le bar Le Pigeon Borgne',ok:()=>!!S.owned.bar,tip:'bar',w:'Menu Business › Grands lieux.',acts:['estate:bar']},
+ {k:'band',h:"Business › Bandits.",c:1,skip:[3],cost:()=>bandCost(),n:'Recruter un bandit',ok:()=>S.band>=1,tip:'bandits',w:'Menu Business › Bandits.',acts:['biz:band']},
+ {k:'arme',h:"Bar › ordinateur › marché noir.",c:1,skip:[3],cost:()=>Math.min(...ARMS.map(x=>C(x.p))),n:'Acheter une arme au marché noir',ok:()=>Object.values(S.arms||{}).some(v=>v),tip:'arms',
    w:'Entre au bar (E) et va à l\'ordinateur : le marché noir vend les armes. Équipe-la ensuite à l\'armurerie du bar.',acts:['arm:']},
- {k:'heist',h:"Bar › ordinateur › « Le casse ».",c:1,n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
+ {k:'heist',h:"Bar › ordinateur › « Le casse ».",c:1,skip:[3],n:'Braquer un joueur du classement',ok:()=>S.meta.heists>=1,tip:'bar',
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
- {k:'compta',h:"Bar › ordinateur › comptable.",c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
+ {k:'compta',h:"Bar › ordinateur › comptable.",c:1,skip:[3],cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
  {k:'bourse',h:"Entre au NYSE (E), ordinateur de trading.",only:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E) : les analystes au fond à droite, l\'ordinateur de trading au centre. Achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'ws',only:2,h:"Bar › ordinateur › Le casse de Wall Street.",n:'Réussir le casse de Wall Street',ok:()=>!!(S.ws&&S.ws.done),tip:'ws',
@@ -2450,7 +2450,8 @@ function renderPanel(){
     else{h=tabs(casTab,[['bj','Blackjack'],['rou','Roulette']],'tab');
       h+=`<p class="lead" style="margin:0">${ib(casTab==='bj'?'bj':'rou')} Comment jouer ${casTab==='bj'?'au blackjack':'à la roulette'}</p>`;h+=casTab==='bj'?bjRender():rouRender();}}
   else if(pid==='plus'){t='Menu';hd='#c77dff';
-    h=tabs(ptab,[['guide','Guide'],['holding','Holding'],['bourse','Bourse'],['succes','Succès'],['stats','Stats'],['prestige','Prestige'],['options','Options']],'ptab');
+    if(CK()==='tokyo'&&ptab==='bourse')ptab='guide';// pas de Bourse à Tokyo
+    h=tabs(ptab,[['guide','Guide'],['holding','Holding'],...(CK()==='tokyo'?[]:[['bourse','Bourse']]),['succes','Succès'],['stats','Stats'],['prestige','Prestige'],['options','Options']],'ptab');
     if(ptab==='holding'){const M=S.meta,pc=M.pc,h0=pc.h[0]||pc.p,ch=(pc.p/h0-1)*100,conv=M.treas*.95/pc.p;
       h+=`<button class="chunky" type="button" data-act="worldmap" style="width:100%">🌍 Carte des villes</button><div class="row" style="background:#d8f3dc"><div class="info"><b>Tu es à ${CITY().n} (${CUR()})</b><small>Ta rue actuelle rapporte environ ${fmt2(netRate())}/s. Elle passera en gérance si tu pars dans une autre ville.</small></div></div>`+'<p class="lead">Ta holding regroupe tes autres rues. Elles tournent en gérance et remplissent la trésorerie, que tu convertis en PigeonCoin pour accélérer tes nouvelles villes.</p>'+
         `<div class="stk"><div><b>Portefeuille PigeonCoin</b><small style="display:block;font-size:12px;opacity:.75">Cours en ${CUR()}, il bouge toutes les 2 secondes</small></div><div class="pr">${fpc(M.pgc)}<small style="display:block;font-size:12px" class="${ch>=0?'up':'dn'}">1 PGC = ${fmt2(pc.p*fx(CI()))} · ${ch>=0?'+':''}${ch.toFixed(1).replace('.',',')} %</small></div>${spark(pc.h,ch>=0?'#1f9d5c':'#d62839')}</div>`+

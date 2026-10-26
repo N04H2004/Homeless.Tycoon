@@ -371,6 +371,26 @@ revoke all on function public.heist_player(text, double precision) from public, 
 grant execute on function public.heist_player(text, double precision) to authenticated;
 
 -- la victime découvre ses braquages (une seule fois chacun)
+-- liste des cibles avec le butin maximum possible pour le joueur connecté (pour l'afficher dans le classement du braquage)
+drop function if exists public.heist_targets();
+create or replace function public.heist_targets()
+returns table(pseudo text, maxamt double precision, pctmax double precision, protected boolean) language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); mine double precision;
+begin
+  if uid is null then return; end if;
+  select greatest(coalesce((s.data ->> 'cash')::double precision, 0), 0) into mine from public.saves s where s.user_id = uid;
+  mine := coalesce(mine, 0);
+  return query
+    select p.pseudo,
+           least(floor(greatest(coalesce((sv.data ->> 'cash')::double precision, 0), 0) * public.heist_pctmax(coalesce((sv.data ->> 'cash')::double precision, 0), mine) / 100), floor(mine)),
+           round(public.heist_pctmax(coalesce((sv.data ->> 'cash')::double precision, 0), mine)::numeric, 1)::double precision,
+           exists (select 1 from public.heists h where h.to_id = p.id and h.amount > 0 and h.created_at > now() - interval '24 hours')
+    from public.profiles p left join public.saves sv on sv.user_id = p.id
+    where p.id <> uid and not coalesce(p.private, false);
+end $$;
+revoke all on function public.heist_targets() from public, anon;
+grant execute on function public.heist_targets() to authenticated;
+
 create or replace function public.claim_heists()
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare uid uuid := auth.uid(); r jsonb;

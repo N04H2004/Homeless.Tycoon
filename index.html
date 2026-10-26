@@ -3104,30 +3104,6 @@ function drawShrine(){const dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='
     rr(lx-9,144,18,14,2);fs(dk>.2?'#ffd166':'#e9ecef');cx.beginPath();cx.moveTo(lx-18,146);cx.lineTo(lx,130);cx.lineTo(lx+18,146);cx.closePath();fs('#adb5bd');
     if(dk>.2){cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.4*dk;cx.fillStyle='#ffd166';circ(lx,151,20);cx.fill();cx.restore()}}
   cx.restore()}
-// Shibuya : tour cylindrique avec écran géant + le carrefour
-const TK_ADS=[['POUBELLE CORP','ゴミは宝','#ef476f','#ffd23f'],['RAMEN ICHIBAN','ズルズル！','#ffd23f','#d62839'],['PIGEON IDOL','鳩アイドル','#f72585','#fff'],['DAIKOKU PA','今夜レース！','#4cc9f0','#fff'],['DRIFT KING','最強は誰？','#ff4d6d','#14141f']];
-function drawShibuya(lit){const x=4240,w=420,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;
-  if(!lit){rr(x,30,w,180,6);fs('#d9d4e8');cx.strokeStyle='rgba(42,31,61,.15)';cx.lineWidth=2;cx.beginPath();for(let y=46;y<210;y+=18){cx.moveTo(x+4,y);cx.lineTo(x+w-4,y)}cx.stroke();cx.lineWidth=4;cx.strokeStyle=INK;
-  // tour ronde « 109 »
-  rr(x+w-120,0,110,210,40);fs('#e9ecef');for(let k=0;k<5;k++){cx.fillStyle=k%2?'#adb5bd':'#cdeefd';cx.fillRect(x+w-112,108+k*18,94,10)}
-  rr(x+110,178,70,32,4);fs('#5c4b73')}
-  glowBox(x+w-108,58,86,40,'#f72585');rr(x+w-108,58,86,40,8);fs('#14141f');txt('109',x+w-65,79,28,dk>.2?'#ff70a6':'#f72585',true);
-  // écran géant qui change de pub
-  const i=Math.floor(T/4)%TK_ADS.length,[a1,a2,c1,c2]=TK_ADS[i],ph=(T%4)/4;glowBox(x+14,44,270,108,c1);rr(x+14,44,270,108,6);fs('#14141f');
-  cx.save();rr(x+18,48,262,100,4);cx.clip();const g=cx.createLinearGradient(x+18,0,x+280,0);g.addColorStop(0,mix(c1,'#14141f',.5));g.addColorStop(1,mix(c2,'#14141f',.7));cx.fillStyle=g;cx.fillRect(x+18,48,262,100);
-  const sl=ph<.12?(1-ph/.12)*262:0;txt(a1,x+149+sl,82,a1.length>12?22:28,c1,true);jtxt(a2,x+149+sl,118,22,'#fff',c1);cx.restore();
-  // bandeau défilant
-  rr(x+14,158,270,18,3);fs('#111');cx.save();rr(x+16,160,266,14,2);cx.clip();cx.font=`700 11px ${JPF}`;cx.textBaseline='middle';cx.textAlign='left';cx.fillStyle='#ffd23f';
-  const news='速報 : 鳩が渋谷を占拠  •  ラーメン価格が過去最高  •  今夜、大黒PAで伝説のレース  •  ';const nw=cx.measureText(news).width;for(let px=x+16-((T*50)%nw);px<x+282;px+=nw)cx.fillText(news,px,167);cx.restore();cx.restore()}
-// salle de pachinko : façade dorée, ampoules qui clignotent
-function drawPachinko(lit){const x=4680,w=430,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;
-  if(!lit){rr(x,24,w,186,6);fs('#ffd23f');
-    cx.save();rr(x,24,w,186,6);cx.clip();for(let k=-10;k<30;k++){cx.fillStyle=k%2?'rgba(255,255,255,.25)':'rgba(255,159,28,.25)';cx.beginPath();cx.moveTo(x+k*30,24);cx.lineTo(x+k*30+30,24);cx.lineTo(x+k*30-60,210);cx.lineTo(x+k*30-90,210);cx.closePath();cx.fill()}cx.restore();
-    for(const [bx,by] of [[x+38,139],[x+w-38,139]]){circ(bx,by,18);fs('#dee2e6');cx.fillStyle='#fff';circ(bx-6,by-6,5);cx.fill()}
-    rr(x+w/2-50,168,100,42,4);fs('#5c4b73');cx.fillStyle='rgba(255,255,255,.3)';cx.fillRect(x+w/2-2,170,4,40)}
-  glowBox(x+20,48,w-40,54,'#f72585');rr(x+20,48,w-40,54,8);fs('#c1121f');txt('PACHINKO',x+w/2,66,24,'#fff6df',true);jtxt('パチンコ 鳩',x+w/2,89,14,'#ffd23f','#ffd23f');
-  for(let k=0;k<22;k++){const bx=x+16+k*19;circ(bx,110,4.5);cx.fillStyle=(Math.floor(T*5)+k)%3===0?'#fff':dk>.2?'#ff4d6d':'#f77f00';cx.fill();cx.stroke()}
-  rr(x+72,120,w-144,38,6);fs('#14141f');jtxt('大当たり！ JACKPOT',x+w/2,139,15,Math.floor(T*3)%2?'#ffd23f':'#ff70a6','#ffd23f');cx.restore()}
 // lampadaires de shōtengai : deux globes et une bannière rose
 function drawTkLamp(lx){const dk=darkness();cx.lineWidth=5;cx.strokeStyle=INK;cx.beginPath();cx.moveTo(lx,298);cx.lineTo(lx,196);cx.stroke();cx.lineWidth=3;cx.strokeStyle='#adb5bd';cx.stroke();
   cx.lineWidth=2.5;cx.strokeStyle=INK;cx.beginPath();cx.moveTo(lx-16,198);cx.lineTo(lx+16,198);cx.stroke();
@@ -3166,7 +3142,7 @@ function tkEave(x,w,cols){const y=96;cx.save();cx.lineWidth=3;cx.strokeStyle=INK
   cx.lineWidth=2;cx.strokeStyle=INK;for(let k=x+10;k<x+w-4;k+=12){circ(k,y+24,3.2);fs('#5c6185')}cx.restore()}
 // la nuit : la rue s'assombrit pour que les néons ressortent
 function tkNight(){const dk=darkness();if(dk<=0)return;cx.fillStyle=`rgba(24,14,60,${.42*dk})`;cx.fillRect(camX-10,0,viewW+20,214);
-  drawJihanki(1);drawShibuya(1);drawDaikoku(1);
+  drawJihanki(1);drawDaikoku(1);
   cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.5*dk;for(const lx of [1440,1700]){const g=cx.createRadialGradient(lx,151,0,lx,151,40);g.addColorStop(0,'rgba(255,209,102,.9)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fillRect(lx-40,111,80,80)}cx.restore()}
 // ===== Tokyo : courses clandestines à Daikoku PA (la quête finale, comme le casse à New York) =====
 const DAIKOKU={x:4680,w:430,door:4895};
@@ -3251,7 +3227,7 @@ function drDraw(){const c=$('drcv'),G=DRG;if(!c||!G)return;const d=window.device
   if(G.ft>0&&G.flash){g.globalAlpha=Math.min(1,G.ft*2);g.fillStyle=G.flash.startsWith('PARFAIT')||G.flash.startsWith('NITRO')?'#ffd23f':G.flash.startsWith('Joli')?'#38f07a':'#ef476f';g.font='bold 28px sans-serif';g.textAlign='center';g.fillText(G.flash,W/2,150);g.globalAlpha=1}
   if(G.fin){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,H);g.fillStyle=G.fin.win?'#ffd23f':'#ef476f';g.font='bold 40px sans-serif';g.textAlign='center';g.fillText(G.fin.win?'VICTOIRE !':'PERDU',W/2,H/2)}}
 function drEnd(win,why){const G=DRG;if(!G)return;DRG=null;const r=G.r,D=drS();let prize=0,first=false;
-  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.3);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
+  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.5);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
   pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
 // la voiture de drift, de profil (aperçu au garage et voitures garées à Daikoku)
 function drawDriftCar(x,y,s,lv){lv=lv||{};cx.save();cx.translate(x,y);cx.scale(s,s);cx.lineWidth=3;cx.strokeStyle=INK;const low=lv.amort?4:0;
@@ -3282,7 +3258,7 @@ function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-
   h+=`<div class="row" style="align-items:center"><canvas id="drcar" style="width:150px;height:70px;flex:0 0 auto"></canvas><div class="info"><b>Pigeon 86 « Tofu »</b>`+bar('Vitesse',st.vmax-80,59)+bar('Accélération',st.acc-10,43)+bar('Adhérence',st.zw-10,24)+bar('Stabilité',1.4-st.nspd,.7)+'</div></div>';
   h+='<div class="sec">Préparation</div>'+DR_PARTS.map(p=>{const l=drLv(p[0]),mx=l>=DR_LV,c=mx?0:drPartCost(p,l);return `<div class="row"><div class="info"><b>${p[1]}</b><span class="lvl">${'●'.repeat(l)}${'○'.repeat(DR_LV-l)}</span><small>${p[2]}</small></div>`+
     (mx?'<button class="buy gold" type="button" disabled>MAX</button>':`<button class="buy" type="button" data-act="dr:up:${p[0]}" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button>`)+'</div>'}).join('');
-  const raceRow=r=>{const won=D.wins[r.k],op=drOpen(r),fee=C(r.fee),pr=drPrize(r)*(won?.3:1);const prev=DR_RACES[DR_RACES.indexOf(r)-1];
+  const raceRow=r=>{const won=D.wins[r.k],op=drOpen(r),fee=C(r.fee),pr=drPrize(r)*(won?.5:1);const prev=DR_RACES[DR_RACES.indexOf(r)-1];
     return `<div class="row"${won?' style="background:#d8f3dc"':''}><div class="info"><b>${won?'✓ ':''}${r.n}</b><small>Rival : ${r.rv} · ${r.corners} virages · gain ${fmt(pr)}${won?' (revanche)':''}</small></div>`+
       (op?`<button class="buy" type="button" data-act="dr:race:${r.k}" data-cost="${fee}" ${S.cash<fee?'disabled':''}>Courir · ${fmt(fee)}</button>`:`<button class="buy" type="button" disabled>🔒 ${r.k==='legend'?'3 victoires':'Gagne '+prev.n.split(' ')[0]}</button>`)+'</div>'};
   h+='<div class="sec">Courses d\'entraînement</div>'+DR_RACES.slice(0,3).map(raceRow).join('');
@@ -3323,7 +3299,7 @@ function drawBuildings(){
   rr(4880,70,240,138,6);fs('#c6b3d9');}
   {const x0=2372,x1=4880,tk=ck==='tokyo',dkn=darkness();rr(x0,92,x1-x0,116,6);fs(tk?'#5a5480':'#cbbde0');for(let wx=x0+30;wx<x1-30;wx+=70){rr(wx,110,30,24,4);fs(tk?(dkn>.2&&hsh(wx,3)<.6?TK_COLS[Math.floor(hsh(wx,7)*6)]:'#8e88b0'):'#e7dcf3')}}
   if(ck==='ny'){drawNYSE();drawTimesSq()}
-  if(ck==='tokyo'){drawShibuya();drawDaikoku()}
+  if(ck==='tokyo')drawDaikoku();
   if(CI()<1){rr(3900,70,320,138,6);fs('#b9a8cf');txt(CK()==='london'?'TO LET':'À LOUER',4060,110,16,'#fff6df',true);txt('bientôt un bar ?',4060,138,12,INK)}
   for(const b of BUILD){if(b.x+b.w<camX-50||b.x>camX+viewW+50)continue;
     if(b.id==='local'&&S.local){drawStore(b.x,b.w,'#2a9d5c','POUBELLE CORP',qgTier(),EMB.qg,20);

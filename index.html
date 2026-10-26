@@ -122,6 +122,9 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .pc{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .pc span{font-size:11px;font-weight:700;border:1.5px solid var(--ink);border-radius:6px;padding:1px 6px;background:#d8f3dc}
 .pc span.m{background:#ffccd5}
+.vcrow{align-items:flex-start;gap:10px}.vcl{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}.vcl>span{font-size:11px;font-weight:700;width:58px}
+.vcs{display:flex;flex-wrap:wrap;gap:4px}.vcb{border:2px solid var(--ink);border-radius:8px;background:#fff;padding:2px 6px;font:600 11px var(--body,sans-serif);cursor:pointer;color:var(--ink)}
+.vcb i{display:block;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink)}.vcb.on{background:#ffd23f;box-shadow:0 0 0 2px var(--ink)}
 .godds{width:100%;max-width:340px;margin:6px auto 0;border-collapse:separate;border-spacing:0;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;font-size:13px}
 .godds th{background:#ffd23f;font-family:var(--display);font-weight:400;padding:4px 6px;text-align:left}
 .godds td{padding:3px 6px;border-top:1.5px solid #e6dcc6}.godds td:first-child{font-size:16px;white-space:nowrap}.godds small{opacity:.65}
@@ -536,7 +539,7 @@ const FOODS_C={
  london:[{n:'Beans on toast',d:'Des haricots sur une tartine. Si si.',p:2,f:12,h:0},{n:'Fish & chips',d:'Dans du papier journal, avec du vinaigre',p:6,f:35,h:0},{n:'Sunday roast',d:'Rosbif, pudding et sauce gravy',p:15,f:70,h:20},{n:'Afternoon tea royal',d:'Scones, crème et petit doigt levé',p:45,f:100,h:60}],
 };
 const SNACKS={paris:['Pain au chocolat (ou chocolatine ?)','VIENNOIS'],london:['Chips au vinaigre !','CRISPS'],ny:['Bretzel géant !','PRETZEL'],tokyo:['Onigiri du konbini !','ONIGIRI']};
-const LABELS={ny:{super:'SUPERMARKET',casino:'GOLDEN PIGEON CASINO',bar:'THE ONE-EYED PIGEON',vest:'COAT CHECK',police:'NYPD PRECINCT',rival:'TRASH CORP',local:'FOR RENT'},tokyo:{super:'KONBINI',police:'KOBAN'},london:{vest:'CLOAKROOM',police:'POLICE STATION',super:'SUPERMARKET',brico:"DÉDÉ'S DIY",pharma:'PHARMACY',casino:'GOLDEN PIGEON CASINO',bar:'THE ONE-EYED PIGEON',fripe:'POSH & VINTAGE',rival:'RUBBISH CORP',local:'TO LET'},
+const LABELS={ny:{super:'SUPERMARKET',casino:'GOLDEN PIGEON CASINO',bar:'THE ONE-EYED PIGEON',vest:'COAT CHECK',police:'NYPD PRECINCT',rival:'TRASH CORP',local:'FOR RENT'},tokyo:{super:'KONBINI',police:'KOBAN',garage:'GARAGE TUNING'},london:{vest:'CLOAKROOM',police:'POLICE STATION',super:'SUPERMARKET',brico:"DÉDÉ'S DIY",pharma:'PHARMACY',casino:'GOLDEN PIGEON CASINO',bar:'THE ONE-EYED PIGEON',fripe:'POSH & VINTAGE',rival:'RUBBISH CORP',local:'TO LET'},
   paris:{super:'SUPERMARCHÉ',bar:'CAFÉ DU PIGEON BORGNE'}};
 const PROPS={
  paris:[['morris',860,505],['metro',1110,508],['wallace',1450,600],['terrasse',2620,592],['morris',3520,505],['wallace',3960,600],['terrasse',4330,592]],
@@ -561,11 +564,11 @@ const SHOPDEF={
  bookie:{n:'Bookmaker Lucky Pigeon',s:'BOOKMAKER',d:'Courses de chevaux et cotes douteuses',base:9000,inc:12,col:'#2d6a4f',svc:'bookie'},
  fripe:{n:'Fripe & Chic',s:'FRIPE & CHIC',d:'Tenues fun, à vie',base:12000,inc:16,col:'#ff8fab',awn:['#ff8fab','#fff'],svc:'fripe',job:'style'},
  peluche:{n:"Teddy's Toys",s:"TEDDY'S TOYS",d:'Des peluches jusqu\'au plafond',base:20000,inc:26,col:'#c77dff',awn:['#c77dff','#fff'],job:'peluche'},
- garage:{n:'Garage Pneu-Pneu',s:'GARAGE',d:'Vidange et blagues de mécano',base:12000,inc:16,col:'#8d99ae',job:'meca'},
+ garage:{n:'Garage Tuning Pneu-Pneu',s:'GARAGE TUNING',d:'Proprio : customisation de tes véhicules, à vie',base:35000,inc:40,col:'#3a86ff',awn:['#3a86ff','#ffd23f'],svc:'garage',job:'meca'},
  coiffeur:{n:"Salon Tif'Tycoon",s:'COIFFEUR',d:'Coupe dégradée, prix pas dégradé',base:35000,inc:40,col:'#f72585',job:'coupe'},
  karaoke:{n:'Karaoké Pigeon Star',s:'KARAOKÉ',d:'Micro, néons et fausses notes',base:25000,inc:30,col:'#7209b7',job:'karaoke'},
 };
-const CITY_SHOPS={paris:['super','kebab','brico','motors'],london:['super','fish','laverie','bookie'],ny:['super','hotdog','fripe','peluche'],tokyo:['super','ramen','coiffeur','karaoke']};
+const CITY_SHOPS={paris:['super','kebab','brico','motors'],london:['super','fish','laverie','bookie'],ny:['super','hotdog','fripe','peluche'],tokyo:['super','ramen','garage','karaoke']};
 const SHOPS=[],BUILD=[],BID={},ESTATE=[];
 const foodK=()=>(CITY_SHOPS[CK()]||CITY_SHOPS.paris)[1];
 const TR={canette:{v:1,c:'#e63946'},bouteille:{v:1,c:'#8ecae6'},carton:{v:2,c:'#c8975a'},sac:{v:3,c:'#33313b'}};
@@ -703,7 +706,7 @@ const INFO={
  distrib:['Distributeurs de boissons',"Ton premier revenu automatique : chaque distributeur rapporte de l'argent chaque seconde, même quand tu ne fais rien.",["Achète un distributeur : il s'installe dans la rue et rapporte tout de suite.","Monte la gamme (BIO puis LUXE) : +30 % par niveau sur tous tes distributeurs.","Jusqu'à 8 distributeurs, gamme jusqu'au niveau 10."],"C'est le meilleur premier achat : rentabilisé vite, et ça tourne même la nuit."],
  local:['Ton entreprise',"Le petit local est ton QG : il débloque presque tout le reste du Business.",["Achète le petit local : employés, commerces, bandits et frigo deviennent disponibles.","Le frigo connecté te nourrit tout seul quand ta faim passe sous 35.","Le frigo fait partie de l'Héritage : il te suit dans les villes suivantes."],"Vise le local dès que tu as les sous : c'est lui qui lance l'automatisation."],
  staff:['Employés',"Tes employés ramassent les déchets à ta place et rapportent de l'argent en continu.",["Recrute en équipe de jour ou de nuit : chacune ne travaille que pendant son créneau.","Chaque recrue est tirée au sort : 54 % commune, 39 % rare, 7 % légendaire. La rareté et le trait (rapide, chanceux…) changent son efficacité.","Les salaires tombent toutes les 60 s. Si tu ne paies pas, ils font grève.","Le manager paie les salaires à ta place. Formation et chariot rendent toute l'équipe plus efficace."],"Pas content d'un tirage ? Licencie (3 jours de salaire) et retente ta chance."],
- shops:['Tes boutiques',"Chaque ville a 4 boutiques. Tu peux y faire un CDD, puis les racheter pour toucher un loyer.",["Paris : supermarché, kebab, Brico Dédé, Pigeon Motors. Londres : supermarché, fish & chips, laverie, bookmaker. New York : supermarché, hot-dog, Fripe & Chic, magasin de peluches. Tokyo : konbini, ramen, coiffeur, karaoké.","Racheter une boutique te verse un loyer chaque seconde. Chaque niveau (jusqu'à 10) l'augmente.","La vitrine évolue avec le niveau. Une boutique rachetée n'a plus de CDD : tu es le patron."],"Commence par la boutique la moins chère : le loyer tombe même quand tu ne joues pas."],
+ shops:['Tes boutiques',"Chaque ville a 4 boutiques. Tu peux y faire un CDD, puis les racheter pour toucher un loyer.",["Paris : supermarché, kebab, Brico Dédé, Pigeon Motors. Londres : supermarché, fish & chips, laverie, bookmaker. New York : supermarché, hot-dog, Fripe & Chic, magasin de peluches. Tokyo : konbini, ramen, garage tuning, karaoké.","Racheter une boutique te verse un loyer chaque seconde. Chaque niveau (jusqu'à 10) l'augmente.","La vitrine évolue avec le niveau. Une boutique rachetée n'a plus de CDD : tu es le patron."],"Commence par la boutique la moins chère : le loyer tombe même quand tu ne joues pas."],
  estate:['Les grands lieux',"Le casino et le bar se rachètent aussi, pour un gros loyer.",["Le casino est dans toutes les villes : le racheter te verse un énorme loyer.","Le bar (à partir de Londres) devient le QG de tes bandits : armurerie, marché noir, coffre et comptable.","Racheter Déchets Corp met fin à la concurrence et en fait ton 2e QG."],"Gros prix mais revenu sûr : idéal quand tu as du cash qui dort."],
  bandits:['Le côté obscur',"Des bandits qui sortent la nuit pour faire les poches des passants. Gros butin, mais la police surveille.",["Les bandits se débloquent à Londres. Recrute-les : ils sortent à la tombée de la nuit et volent les passants. Leur butin est de l'argent sale, stocké au coffre du QG.","Chaque vol fait monter la chaleur. Elle redescend lentement toute seule.","Chaleur 50 : un policier de plus. 75 : deux fois plus de flics en civil. 100 : la brigade débarque au bar, amende, tout le coffre saisi (l'agent de sécurité en protège 5 %, l'avocat 5 % de plus) et bandits au trou.","Blanchis l'argent sale avec le comptable ou l'ordinateur du bar. L'avocat (5 niveaux) fait retomber la chaleur plus vite et réduit les amendes."],"Surveille la jauge Chaleur en haut à gauche, et passe au commissariat te rendre si elle devient trop haute."],
  tools:['Les outils de Brico Dédé',"Des outils qui te rendent plus efficace dans la rue. Achetés une fois, ils te suivent à vie dans toutes les villes.",["Brico Dédé se trouve à Paris. À partir de Londres, améliore tes outils dans le bouton Compétences.","Pince : tu attrapes de plus loin. Sac XXL : tu portes plus de déchets.","Baskets : tu cours plus vite (effet réduit de moitié sur un véhicule). Clé à molette : tu répares plus vite.","Œil de lynx : tous tes revenus automatiques augmentent. Tri sélectif : chaque déchet vaut plus."],"Au début : Sac XXL puis Pince. Rachète la boutique Brico Dédé pour avoir tes outils à -20 %."],
@@ -844,6 +847,7 @@ function normalizeS(){const m=S.meta,ci=CI();if(VISIT)return;
   const vs=[S.veh||{},...(m.worlds||[]).map(w=>w.snap&&w.snap.veh||{})];for(const v of vs)for(const k in v)if(v[k])m.veh[k]=1;
   if(m.ride===undefined)m.ride=S.ride||'';S.up=m.up;S.veh=m.veh;S.ride=m.ride;
   if(S.shops&&S.shops.garage&&CK()==='ny'){S.shops.peluche=Math.max(S.shops.peluche||0,S.shops.garage);delete S.shops.garage}
+  if(S.shops&&S.shops.coiffeur&&CK()==='tokyo'){S.shops.garage=Math.max(S.shops.garage||0,S.shops.coiffeur);delete S.shops.coiffeur;m.vcust=1}// Tokyo : le salon de coiffure est devenu le garage
   if(!S.v2){S.v2=1;let ref=0;const keep=CITY_SHOPS[CK()]||CITY_SHOPS.paris,old=S.shops||{},nw={};S.owned=S.owned||{};
     const sumLv=(base,l)=>{let t=0;for(let i=0;i<l;i++)t+=C(base*Math.pow(1.5,i));return t};
     const OLDB={laverie:1500,kebab:4000,garage:12000,coiffeur:35000};
@@ -2283,6 +2287,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
       (has?(on?'':`<button class="buy gold" type="button" data-act="look:${sl}:${p.k}">Porter</button>`):`<button class="buy" type="button" data-act="piece:${p.k}" data-cost="${p.p}" ${S.cash<p.p?'disabled':''}>${fmt(p.p)}</button>`)+'</div>'}).join('');
     h+='<div class="sec">Tenues complètes</div>'+OUTFITS.filter(o=>o.k!=='costume'&&o.k!=='peaky').map(outfitRow).join('')}
   if(x.svc==='bookie')h+=bkHTML();
+  if(x.svc==='garage')h+='<div class="sec">Customisation des véhicules</div>'+(S.meta.vcust?vcHTML():'<p class="lead">🔒 Rachète le garage pour débloquer la <b>customisation de tes véhicules</b> : peinture, jantes, déco et néon. Elle te suit ensuite à vie, dans toutes les villes.</p>');
   if(!x.job&&!x.svc)h+=`<p class="lead">${x.d}. Le patron cherchera bientôt du monde pour un CDD ici.</p>`;
   h+='<div class="sec">La boutique'+ib('shops')+'</div>'+row(l?'Ta boutique':'Racheter '+x.n,l?'niv. '+l:'',(S.local?'':"Il faut d'abord le petit local · ")+`Loyer : +${String(x.inc).replace('.',',')} ${CUR()} de base par seconde et par niveau`+(l?` · actuellement +${fmt2(x.inc*l*gm())}/s`:''),'shop:'+k,mx?0:shopCost(x),mx?'MAX':(l?'Niveau '+(l+1)+' · '+fmt(shopCost(x)):'Racheter · '+fmt(shopCost(x))),!S.local||mx);
   return [x.n,x.col,h]}
@@ -2387,7 +2392,8 @@ function renderPanel(){
       UP.map(u=>{const l=S.up[u.k],mx=l>=u.max;return row(u.n,'niv. '+l,u.d,'up:'+u.k,mx?0:upCost(u),mx?'MAX':null,mx)}).join('')+
       '<div class="sec">Véhicules'+ib('motors')+'</div>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
         return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
-          (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('');}
+          (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('')+
+      '<div class="sec">Customisation des véhicules</div>'+(S.meta.vcust?vcHTML():'<p class="foot">🔒 Se débloque en rachetant le garage de Tokyo.</p>');}
   else if(pid==='biz'){t=S.local?'Poubelle Corp · QG':'Business';hd='#7ee08a';const L=!S.local;
     h='<div class="sec">Revenus automatiques'+ib('distrib')+'</div>'+
       row('Distributeur de boissons',S.distrib+' / 8',`Rapporte ${(.8*(1+.3*S.distUp)).toFixed(2).replace('.',',')} ${CUR()} de base par seconde chacun`,'biz:distrib',S.distrib>=8?0:distCost(),S.distrib>=8?'MAX':null,S.distrib>=8)+
@@ -2534,6 +2540,7 @@ function renderPanel(){
     g.setTransform(d*sc,0,0,d*sc,0,0);g.translate(-440+(120/sc-180)/2,240/sc-208);cx=g;try{drawTower(440,180,f,0)}finally{cx=keep}}}
   if(document.querySelector('#pbody canvas[data-pv]'))drawPieceThumbs();
   if(pid==='job')drawFoodJob();
+  if(document.querySelector('#pbody canvas[data-vc]'))drawVcThumbs();
   if(pid==='trade'||pid==='anadesk'){const L=lockByKey('bourse');if(L)$('pbody').innerHTML=`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
   for(const b of $('pbody').querySelectorAll('[data-act]')){const L=lockOf(b.dataset.act);if(L){b.disabled=true;b.textContent='🔒';b.title=lockText(L)}}
@@ -2603,7 +2610,9 @@ $('pbody').addEventListener('click',e=>{
   if(a==='food'){const f=FOODS_NOW()[+v];if(!pay(foodP(f.p)))return;S.food=Math.min(100,S.food+f.f);S.hp=Math.min(100,S.hp+f.h);S.stats.ate++;snd('eat');toast('Miam : '+f.n)}
   if(a==='med'){const m=MEDS[+v];if(!pay(medP(m.p)))return;S.hp=Math.min(100,S.hp+m.h);if(m.f)S.food=100;toast('Soigné : '+m.n)}
   if(a==='up'){const u=UP.find(x=>x.k===v);if(S.up[v]>=u.max||!pay(upCost(u)))return;S.up[v]++;toast(u.n+' niveau '+S.up[v]+' · regarde ton perso !')}
-  if(a==='shop'){const s=SHOPS.find(x=>x.k===v);const l=S.shops[v]||0;if(!S.local||l>=10||!pay(shopCost(s)))return;S.shops[v]=l+1;toast(l?s.n+' passe niveau '+(l+1):s.n+' est à toi ! Le loyer tombe chaque seconde')}
+  if(a==='shop'){const s=SHOPS.find(x=>x.k===v);const l=S.shops[v]||0;if(!S.local||l>=10||!pay(shopCost(s)))return;S.shops[v]=l+1;
+    if(v==='garage'&&!S.meta.vcust){S.meta.vcust=1;toast('🔧 Customisation des véhicules débloquée ! Peins tes véhicules ici ou dans Compétences.')}else toast(l?s.n+' passe niveau '+(l+1):s.n+' est à toi ! Le loyer tombe chaque seconde')}
+  if(a==='vc'){vcSet(v,w,b.dataset.act.split(':')[3]==='-'?'':b.dataset.act.split(':')[3]);return renderPanel()}
   if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(estP(es)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
@@ -3637,13 +3646,40 @@ function drawHatP(k,c,m,f,t){cx.lineWidth=3;cx.strokeStyle=INK;const dk=c?mix(c,
     rr(-16,-72,32,7,2);fs('#e0a800');for(const [x,col] of [[-9,'#ef476f'],[0,'#4cc9f0'],[9,'#06d6a0']]){circ(x,-68.5,2.3);fs(col)}for(const [x,y] of [[-16,-89],[0,-94],[16,-89]]){circ(x,y,2.4);fs('#fff')}
     if(Math.floor(t*2)%4===0)txt('✦',10,-84,9,'#fff',true)}
   cx.lineWidth=3;cx.strokeStyle=INK}
-function drawRide(k,x,y,f,front){if(!k)return;cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;
-  if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();circ(-14,-2,4);fs('#333');circ(14,-2,4);fs('#333')}
-    else{cx.beginPath();cx.moveTo(-24,-11);cx.quadraticCurveTo(-22,-6,-16,-6);cx.lineTo(16,-6);cx.quadraticCurveTo(22,-6,24,-11);cx.lineWidth=5;cx.strokeStyle='#333';cx.stroke();cx.lineWidth=3;cx.strokeStyle='#ff9f1c';cx.stroke();cx.strokeStyle='#000'}}
-  if(k==='scooter'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();rr(-20,-8,40,5,2);fs('#06d6a0');circ(-16,-2,5);fs('#333');circ(16,-2,5);fs('#333')}
-    else{cx.beginPath();cx.moveTo(16,-6);cx.lineTo(12,-50);cx.lineWidth=4;cx.stroke();cx.beginPath();cx.moveTo(5,-50);cx.lineTo(19,-50);cx.stroke()}}
-  if(k==='voiture'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,28,6,0,0,7);cx.fill();circ(-18,-4,9);fs('#333');circ(20,-4,9);fs('#333');rr(-28,-26,48,18,9);fs('#ef476f')}
-    else{rr(14,-50,12,38,5);fs('#ef476f');rr(18,-58,10,9,3);fs('#cdeefd');circ(26,-34,3);fs('#fff3b0')}}
+// ===== customisation des véhicules : débloquée en rachetant le garage de Tokyo, valable à vie dans toutes les villes =====
+const VC_BASE={trott:'#ff9f1c',scooter:'#06d6a0',voiture:'#ef476f'};
+const VC_COL=['#ef476f','#ff9f1c','#ffd23f','#06d6a0','#118ab2','#7b2cbf','#f72585','#22223b','#f8f9fa','#8d99ae'];
+const VC_OPT={
+  w:[['#333','Noires'],['#ced4da','Chromées'],['#ffd23f','Dorées'],['#ff70a6','Roses néon']],
+  d:[['','Aucune'],['flames','Flammes'],['stripes','Bandes de course'],['stars','Étoiles'],['sakura','Sakura']],
+  n:[['','Aucun'],['#f72585','Rose'],['#4cc9f0','Bleu'],['#38f07a','Vert'],['#c77dff','Violet']]};
+const vcOf=k=>{const c=(S.meta.vc||{})[k]||{};return {c:c.c||VC_BASE[k],w:c.w||'#333',d:c.d||'',n:c.n||''}};
+function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]||(S.meta.vc[k]={});o[p]=v;snd('buy')}
+// déco dessinée sur une surface (x,y,w,h) du véhicule
+function vcDecal(d,x,y,w,h){if(!d)return;cx.save();cx.beginPath();cx.roundRect(x,y,w,h,Math.min(h/2,9));cx.clip();
+  if(d==='flames'){cx.fillStyle='#ff6b35';cx.fillRect(x,y+h*.72,w*.5,h*.28);for(let i=0;i<3;i++){const fx=x+i*w*.16,L=w*(.42-i*.08);cx.fillStyle=i===1?'#ffd23f':'#ff6b35';cx.beginPath();cx.moveTo(fx,y+h);cx.quadraticCurveTo(fx+L*.5,y+h*(.45+i*.1),fx+L,y+h*(.3+i*.12));cx.quadraticCurveTo(fx+L*.55,y+h*.8,fx+L*.3,y+h);cx.closePath();cx.fill()}}
+  if(d==='stripes'){cx.fillStyle='#fff';cx.fillRect(x,y+h*.38,w,h*.1);cx.fillRect(x,y+h*.56,w,h*.1)}
+  if(d==='stars'){cx.fillStyle='#fff6df';for(let i=0;i<3;i++){const sx=x+w*(.2+.3*i),sy=y+h*(i%2?.35:.65),r=Math.min(4,h*.3);cx.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,rr2=k%2?r*.45:r;cx.lineTo(sx+Math.cos(a)*rr2,sy+Math.sin(a)*rr2)}cx.closePath();cx.fill()}}
+  if(d==='sakura'){for(let i=0;i<3;i++){const sx=x+w*(.2+.3*i),sy=y+h*(i%2?.35:.62),r=Math.min(3.4,h*.24);cx.fillStyle='#ffb7c5';for(let k=0;k<5;k++){const a=k*Math.PI*2/5;cx.beginPath();cx.arc(sx+Math.cos(a)*r,sy+Math.sin(a)*r,r*.7,0,7);cx.fill()}cx.fillStyle='#fff';cx.beginPath();cx.arc(sx,sy,r*.4,0,7);cx.fill()}}
+  cx.restore()}
+function vcGlow(col,w){if(!col)return;cx.save();cx.globalCompositeOperation='lighter';const a=(.35+.25*Math.sin(T*4))*(.5+darkness()*.5);
+  for(const [e,al] of [[1.6,.25],[1.15,.45]]){cx.globalAlpha=a*al;cx.fillStyle=col;cx.beginPath();cx.ellipse(0,3,w*e,7*e,0,0,7);cx.fill()}cx.restore()}
+// panneau de customisation (garage de Tokyo et Compétences)
+function vcHTML(){const own=VEH.filter(v=>S.veh[v.k]);if(!own.length)return '<p class="lead">Achète d\'abord un véhicule (Compétences ou Pigeon Motors) pour le customiser.</p>';
+  return '<p class="lead">Peinture, jantes, déco et néon : ça se voit dans la rue, dans toutes les villes, et c\'est gratuit.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
+    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='d'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
+    return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:120px;height:74px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
+      sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Déco')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
+function drawVcThumbs(){const keep=cx,d=window.devicePixelRatio||1;for(const c of document.querySelectorAll('#pbody canvas[data-vc]')){const g=c.getContext('2d');c.width=120*d;c.height=74*d;g.setTransform(d,0,0,d,0,0);
+  g.fillStyle='#e9e4f5';g.beginPath();g.roundRect(0,0,120,74,10);g.fill();cx=g;try{cx.save();cx.translate(56,58);cx.scale(1.7,1.7);drawRide(c.dataset.vc,0,0,1,false);drawRide(c.dataset.vc,0,0,1,true);cx.restore()}finally{cx=keep}}}
+function drawRide(k,x,y,f,front){if(!k)return;const o=vcOf(k);cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=3;
+  if(!front)vcGlow(o.n,k==='voiture'?30:24);
+  if(k==='trott'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();circ(-14,-2,4);fs(o.w);circ(14,-2,4);fs(o.w)}
+    else{cx.beginPath();cx.moveTo(-24,-11);cx.quadraticCurveTo(-22,-6,-16,-6);cx.lineTo(16,-6);cx.quadraticCurveTo(22,-6,24,-11);cx.lineWidth=5;cx.strokeStyle='#333';cx.stroke();cx.lineWidth=3;cx.strokeStyle=o.c;cx.stroke();cx.strokeStyle='#000';vcDecal(o.d,-16,-9,32,5)}}
+  if(k==='scooter'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,22,5,0,0,7);cx.fill();rr(-20,-8,40,5,2);fs(o.c);vcDecal(o.d,-19,-8,38,5);circ(-16,-2,5);fs(o.w);circ(16,-2,5);fs(o.w)}
+    else{cx.beginPath();cx.moveTo(16,-6);cx.lineTo(12,-50);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=2;cx.strokeStyle=o.c;cx.stroke();cx.lineWidth=4;cx.strokeStyle=INK;cx.beginPath();cx.moveTo(5,-50);cx.lineTo(19,-50);cx.stroke()}}
+  if(k==='voiture'){if(!front){cx.fillStyle='rgba(0,0,0,.18)';cx.beginPath();cx.ellipse(0,2,28,6,0,0,7);cx.fill();circ(-18,-4,9);fs('#333');circ(-18,-4,4);fs(o.w);circ(20,-4,9);fs('#333');circ(20,-4,4);fs(o.w);rr(-28,-26,48,18,9);fs(o.c);vcDecal(o.d,-27,-25,46,16);rr(-28,-26,48,18,9);cx.stroke()}
+    else{rr(14,-50,12,38,5);fs(o.c);vcDecal(o.d,15,-49,10,36);rr(14,-50,12,38,5);cx.stroke();rr(18,-58,10,9,3);fs('#cdeefd');circ(26,-34,3);fs('#fff3b0')}}
   cx.restore()}
 function drawBarsUnder(){const w=54,x=P.x-w/2,y=P.y+10;cx.lineWidth=2;
   rr(x,y,w,7,3);fs('#fff');cx.fillStyle='#ef476f';rr(x+1,y+1,(w-2)*Math.max(0,S.hp)/100,5,2);cx.fill();

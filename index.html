@@ -740,7 +740,7 @@ function infoHTML(k){const [n,what,steps,tip]=INFO[k];
   return `<p class="lead">${what}</p>`+steps.map((x,i)=>`<div class="row" style="display:flex;justify-content:flex-start;align-items:center;gap:10px"><b style="flex:none;width:26px;height:26px;border-radius:50%;background:#4cc9f0;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center">${i+1}</b><small style="font-size:13px;margin:0">${x}</small></div>`).join('')+
     `<div class="row" style="display:block;background:#fff3b0"><b>Conseil</b><small style="display:block">${tip}</small></div><button class="chunky" type="button" data-act="infoback">Compris !</button>`}
 const PERKS=[
- {k:'cash',n:'Magot du pigeon',d:'+10 % sur tous tes gains',max:20},
+ {k:'cash',n:'Magot du pigeon',d:'+10 % sur tous tes gains',max:10},
  {k:'dodo',n:'Sommeil rentable',d:'+10 min de gains comptés pendant ton absence',max:10},
  {k:'lucky',n:'Pigeon porte-bonheur',d:'Le Pigeon Légendaire (gains x3) dure 30 s de plus',max:5},
  {k:'emp',n:'Réseau de pistons',d:'Employés 8 % moins chers à embaucher et à payer',max:5},
@@ -767,7 +767,8 @@ function fresh0(m){m=m||freshMeta();const ci=m.cur??Math.min(m.prestige,3);
   pay:{timer:60,due:0,late:0,strike:false},stats:{trash:0,repairs:0,ate:0,casino:0,pick:0,fines:0,bpick:0,raids:0,cdd:0},cdd:{},arms:{},heistDay:-1,heist:null,capBought:0,done:0,last:Date.now(),meta:m}}
 let S=fresh();
 try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw),om=o.meta||{};
-  const m=Object.assign(freshMeta(),om);m.perk=Object.assign(freshMeta().perk,om.perk||{});for(const k of ['start','sac']){const l=m.perk[k]||0;if(l){m.gold+=l*(l+1)/2;m.refund=(m.refund||0)+l*(l+1)/2}delete m.perk[k]}// anciens bonus remplacés : Pigeons d'Or rendusm.ach=Object.assign({},om.ach||{});if(!Array.isArray(m.wardrobe))m.wardrobe=['classic'];
+  const m=Object.assign(freshMeta(),om);m.perk=Object.assign(freshMeta().perk,om.perk||{});for(const k of ['start','sac']){const l=m.perk[k]||0;if(l){m.gold+=l*(l+1)/2;m.refund=(m.refund||0)+l*(l+1)/2}delete m.perk[k]}// anciens bonus remplacés : Pigeons d'Or rendus
+  if(m.perk.cash>10){const r=(m.perk.cash*(m.perk.cash+1)-110)/2;m.gold+=r;m.refund=(m.refund||0)+r;m.perk.cash=10}// Magot du pigeon plafonné à 10 niveaux : le surplus est rendum.ach=Object.assign({},om.ach||{});if(!Array.isArray(m.wardrobe))m.wardrobe=['classic'];
   m.her=Object.assign({},om.her||{});m.tips=Object.assign({},om.tips||{});if(!Array.isArray(m.worlds))m.worlds=[];if(!m.pc||!m.pc.p)m.pc={p:50,h:[]};
   for(let i=m.worlds.length;i<Math.min(m.prestige,3);i++)m.worlds.push({i,rate:5*(i+1),g:.2});
   const f=fresh(m);S=Object.assign(f,o);S.meta=m;

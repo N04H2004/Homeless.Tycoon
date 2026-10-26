@@ -3584,11 +3584,11 @@ const GUIDES={
   {t:()=>'Choisis combien de bandits partent (chacun en plus pardonne 0,5 raté), puis <b>Lance le casse</b>.',ui:()=>$('pbody').querySelector('[data-act="braq:start"]'),done:()=>BQ.st==='play'||BQ.st==='send'||BQ.st==='done'},
   {t:()=>'Clique sur chaque <b>🎯</b> avant qu\'elle disparaisse. Sous 50 % de précision, tu repars bredouille !',done:()=>BQ.st==='done'}]},
  ws:{n:'Le casse de Wall Street',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='ws',steps:[
-  {t:()=>'Dernière étape avant Tokyo : <b>le casse de Wall Street</b> ! Va au <b>bar</b> (la flèche), puis à l\'<b>ordinateur du fond</b>.',tg:()=>barDoor(),rx:950,done:()=>inPanel('pc')},
+  {t:()=>'Dernière étape avant Tokyo : <b>le casse de Wall Street</b> ! Va au <b>bar</b> (la flèche), puis à l\'<b>ordinateur du fond</b>.',tg:()=>barDoor(),rx:950,room:'bar',done:()=>inPanel('pc')},
   {t:()=>'Recrute ton <b>équipe</b> : hacker, perceur et chauffeur (il te faut au moins <b>3 bandits</b>). Ça coûte cher : Business rapporte tout seul en attendant.',ui:q('#pbody [data-act^="ws:crew:"]:not([disabled])'),done:()=>WS_CREW.every(c=>wsS().crew[c[0]])},
   {t:()=>'Achète le <b>matériel</b> : clé USB pirate, perceuse thermique, van banalisé. Attention : il est <b>perdu</b> si le casse rate.',ui:q('#pbody [data-act^="ws:gear:"]:not([disabled])'),done:()=>WS_GEAR.every(g=>wsS().gear[g[0]])},
-  {t:()=>'<b>Repérage</b> : va au <b>NYSE</b> et parle au <b>vigile</b> (près de l\'écran des cours) pour obtenir le plan de la chambre forte.',tg:()=>[NYSE.door,150],rx:680,ui:()=>inPanel('pc')?$('pclose'):q('#pbody [data-act="ws:scout"]')(),done:()=>!!wsS().scout},
-  {t:()=>'Tout est prêt. Retourne à l\'<b>ordinateur du bar</b> et clique <b>Lancer le casse</b>. Une seule tentative par jour !',tg:()=>barDoor(),rx:950,ui:q('#pbody [data-act="ws:go"]:not([disabled])'),done:()=>!!WSG||wsToday()},
+  {t:()=>'<b>Repérage</b> : va au <b>NYSE</b> et parle au <b>vigile</b> (près de l\'écran des cours) pour obtenir le plan de la chambre forte.',tg:()=>[NYSE.door,150],rx:680,room:'nyse',ui:()=>inPanel('pc')?$('pclose'):q('#pbody [data-act="ws:scout"]')(),done:()=>!!wsS().scout},
+  {t:()=>'Tout est prêt. Retourne à l\'<b>ordinateur du bar</b> et clique <b>Lancer le casse</b>. Une seule tentative par jour !',tg:()=>barDoor(),rx:950,room:'bar',ui:q('#pbody [data-act="ws:go"]:not([disabled])'),done:()=>!!WSG||wsToday()},
   {t:()=>'<b>1.</b> Retiens le code et tape-le (3 caméras). <b>2.</b> Stoppe la molette dans le vert (4 crans). <b>3.</b> Fuis avec ← →, esquive taxis et police, ramasse les 💰.',done:()=>!WSG},
   {t:()=>wsS().done?'<b>Légendaire !</b> Blanchis ton butin avec le comptable, termine ta to-do et ouvre <b>Tokyo</b> (Menu › Prestige).':'Raté cette fois... Rachète le matériel et <b>retente demain</b> : l\'équipe et le repérage restent prêts.',...nxt()}]},
  tower:{n:'La Pigeon Tower',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='tower',steps:[
@@ -3601,9 +3601,9 @@ const GUIDES={
   {t:()=>'Bravo ! Ton bonus s\'affiche sous ton argent (🛗). Reviens demain pour une nouvelle partie, et continue la tour jusqu\'au penthouse.',...nxt()}]},
  bourse:{n:'La Bourse',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='bourse',steps:[
   {t:()=>'La <b>Bourse</b> ouvre enfin ! Va au <b>New York Stock Exchange</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[NYSE.door,150],done:()=>!!INSIDE&&INSIDE.k==='nyse'},
-  {t:()=>'Bienvenue sur le parquet ! Avant d\'acheter, renseigne-toi : va au <b>bureau des analystes</b> (au fond à droite) et appuie sur <b>E</b>.',rx:880,done:()=>inPanel('anadesk')},
+  {t:()=>'Bienvenue sur le parquet ! Avant d\'acheter, renseigne-toi : va au <b>bureau des analystes</b> (au fond à droite) et appuie sur <b>E</b>.',rx:880,room:'nyse',done:()=>inPanel('anadesk')},
   {t:()=>'Paie l\'<b>analyse rapide</b> : elle te dit quelles actions vont monter.',ui:q('#pbody [data-act="ana:1"]'),done:()=>!!S.ana},
-  {t:()=>'Retiens les actions marquées <b style="color:#1f9d5c">▲ Hausse</b>. Ferme (<b>X</b>) et va à l\'<b>ordinateur de trading</b>, au centre.',rx:470,ui:()=>inPanel('anadesk')?$('pclose'):null,done:()=>inPanel('trade')},
+  {t:()=>'Retiens les actions marquées <b style="color:#1f9d5c">▲ Hausse</b>. Ferme (<b>X</b>) et va à l\'<b>ordinateur de trading</b>, au centre.',rx:470,room:'nyse',ui:()=>inPanel('anadesk')?$('pclose'):null,done:()=>inPanel('trade')},
   {t:()=>'Chaque ligne est une <b>action</b> : son cours bouge toutes les 2 s. Achète une action en hausse avec <b>+10</b> (ou <b>Max</b>).',ui:q('#pbody [data-act$=":10"]'),done:()=>Object.values(S.stk).some(x=>x&&x.q>0)},
   {t:()=>'Attends qu\'elle monte (le bénéfice s\'affiche en vert sous son nom), puis clique <b>Tout vendre</b>.',ui:q('#pbody [data-act^="sell:"]:not([disabled])'),done:()=>(S.meta.sells||0)>=1},
   {t:()=>'Bravo, premier trade ! Les <b>actions restent dans la ville</b> où tu les achètes. Le <b>délit d\'initié</b> (ton cousin, au bureau des analystes) rapporte gros, mais le gendarme de la Bourse veille.',...nxt()}]},
@@ -3630,7 +3630,7 @@ function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if
   if(GD.k==='pmu'&&GD.i>=2&&GD.i<6&&!inPanel('bookie')&&!BK.run)GD.i=1;
   if(GD.i>=G.steps.length){gd[GD.k]=1;toast('Guide terminé : '+G.n+' !');snd('ach');GD.k=null;$('tuto').hidden=true;return}
   guideCard()}
-function guideCard(){const el=$('tuto'),G=GUIDES[GD.k],st=G.steps[GD.i],t=st.t(),key=GD.k+GD.i+t;el.hidden=false;el.classList.toggle('top',!$('panel').hidden);
+function guideCard(){const el=$('tuto'),G=GUIDES[GD.k],st=G.steps[GD.i],t=(wrongRoom(st)?'<b>Sors d\'abord</b> par la porte à gauche (flèche), puis : ':'')+st.t(),key=GD.k+GD.i+t;el.hidden=false;el.classList.toggle('top',!$('panel').hidden);
   {const u=st.ui&&st.ui(),r=u&&u.getBoundingClientRect();el.classList.toggle('hi',!!(r&&r.width&&r.bottom>innerHeight-230))}// la carte passe en haut si elle cacherait sa cible
   if(GD.tx===key)return;GD.tx=key;
   el.innerHTML=`<div class="tt"><span>Guide · ${G.n} · ${GD.i+1} / ${G.steps.length}</span><button type="button" id="gskip">Passer</button></div><div class="tx">${t}</div>`+(st.next?'<button type="button" id="gnext" class="chunky" style="align-self:flex-end;font-size:15px;padding:5px 14px">Suivant ›</button>':'');
@@ -3638,7 +3638,9 @@ function guideCard(){const el=$('tuto'),G=GUIDES[GD.k],st=G.steps[GD.i],t=st.t()
   $('gskip').onclick=()=>{(S.meta.gd||(S.meta.gd={}))[GD.k]=1;GD.k=null;el.hidden=true;refocus()}}
 setInterval(guideUpdate,250);
 // flèche dans la salle du bar
-function drawGuideRoom(){tutoUI();const st=!tutoOn()&&gStep();if(!st||st.rx==null)return;const b=Math.sin(T*6)*6,x=st.rx,y=250;
+// étape qui se joue dans une autre salle : on montre d'abord la sortie
+const wrongRoom=st=>!!(st&&st.room&&INSIDE&&INSIDE.k!==st.room);
+function drawGuideRoom(){tutoUI();const st=!tutoOn()&&gStep();if(!st||(st.rx==null&&!wrongRoom(st)))return;const b=Math.sin(T*6)*6,x=wrongRoom(st)?95:st.rx,y=250;
   if(x<roomCam+30||x>roomCam+viewW-30){const left=x<roomCam+30,ax=left?roomCam+40:roomCam+viewW-40;cx.save();cx.translate(ax,470);if(left)cx.scale(-1,1);cx.lineWidth=4;cx.beginPath();cx.moveTo(-26+b,-16);cx.lineTo(4+b,-16);cx.lineTo(4+b,-30);cx.lineTo(30+b,0);cx.lineTo(4+b,30);cx.lineTo(4+b,16);cx.lineTo(-26+b,16);cx.closePath();fs('#ffd23f');cx.restore();return}
   cx.save();cx.translate(x,y+b);cx.lineWidth=4;cx.beginPath();cx.moveTo(-12,-34);cx.lineTo(12,-34);cx.lineTo(12,-14);cx.lineTo(24,-14);cx.lineTo(0,10);cx.lineTo(-24,-14);cx.lineTo(-12,-14);cx.closePath();fs('#ffd23f');cx.restore()}
 // fiches : s'ouvrent une seule fois, à la première rencontre

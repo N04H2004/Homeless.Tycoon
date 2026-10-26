@@ -759,7 +759,7 @@ const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac+2*S.meta.perk.sac, speed=
       shiftCount=sh=>{normStaff();return S.staff.filter(st=>st.sh===sh).length},
       canHire=sh=>S.local&&shiftCount(sh)<SHIFT[sh].cap,
       passive=()=>(distInc()+shopInc())*lynx()+rentInc()+towerInc(),
-      autoRate=()=>(passive()+empRate()*lynx())*gm()*towerM(),
+      autoRate=()=>(passive()+empRate()*lynx())*gm()*towerM()*liftM(),
       wageOf=i=>Math.round(12*(1+.25*S.emUp.form+.2*S.emUp.chariot)*(trOf(i)==='flemmard'?.5:1)*(1-.08*S.meta.perk.emp)*cm()),
       wages=()=>{let w=S.manager?C(40):0;for(let i=0;i<S.emp;i++)w+=wageOf(i);return w},
       strikeLim=()=>S.staff.some(s=>s.tr==='syndicaliste')?12:25;
@@ -1970,7 +1970,7 @@ function updHud(){
     else{$('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.'}
     $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';critHud();$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
   $('cash').textContent=fmt(S.cash);
-  const r=autoRate();$('rate').textContent=r>0?'+'+(r<100?r.toFixed(1).replace('.',',')+' '+CUR():fmt(r))+'/s en automatique':'aucun revenu auto';
+  const r=autoRate(),lb=liftM()>1?' · 🛗 x'+liftM().toFixed(2).replace('.',',')+' ('+Math.ceil(liftLeft()/60000)+' min)':'';$('rate').textContent=(r>0?'+'+(r<100?r.toFixed(1).replace('.',',')+' '+CUR():fmt(r))+'/s en automatique':'aucun revenu auto')+lb;
   const pl=$('payline');
   if(S.emp>0){
     if(S.pay.strike){pl.textContent='GRÈVE : paie due '+fmt(S.pay.due);pl.className='bad'}
@@ -2325,13 +2325,14 @@ function renderPanel(){
     if(!S.local)h+='<p class="lead" style="text-align:center">🔒 Il te faut d\'abord ton petit local (QG) à New York pour lancer le chantier.</p>';
     else if(f<TW_MAX)h+=`<div class="row"><div class="info"><b>Étage ${nx}${sp?' · '+sp[0]:''}</b><small>+${fmt2((4+.6*nx)*gm())}/s de loyer${sp?' · étage spécial':''}</small></div><button class="buy" type="button" data-act="tower:1" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button></div>`;
     else h+='<p class="lead" style="text-align:center">🏆 La Pigeon Tower est terminée : tu es le roi de Manhattan !</p>';
-    if(f>=5)h+=`<div class="row" style="background:#fff3b0"><div class="info"><b>🛗 Faire le liftier</b><small>Conduis l'ascenseur et dépose les locataires au bon étage : pourboires selon ta vitesse, VIP du penthouse x5. Plus ta tour est haute, plus ça paie. Une fois par jour du jeu.</small></div><button class="buy" type="button" data-act="lift:go" ${S.liftDay===dayN()?'disabled':''}>${S.liftDay===dayN()?'Demain':'Jouer'}</button></div>`;
+    if(f>=5){const bl=liftLeft();h+=`<div class="row" style="background:#fff3b0"><div class="info"><b>🛗 Faire le liftier</b><small>45 s pour déposer un max de locataires au bon étage. Chacun ajoute <b>+5 %</b> à tes revenus auto pendant <b>1 h</b> (VIP du penthouse : +15 %, max x3). Une partie par jour.</small>`+
+      (bl>0?`<small style="display:block;color:#1f9d5c;font-weight:700">Bonus actif : x${liftM().toFixed(2).replace('.',',')} encore ${Math.ceil(bl/60000)} min</small>`:'')+`</div><button class="buy" type="button" data-act="lift:go" ${liftPlayed()?'disabled':''}>${liftPlayed()?'Demain':'Jouer'}</button></div>`}
     else h+='<p class="foot">🛗 À 5 étages, tu débloques le mini-jeu du liftier.</p>';
     h+='<div class="sec">Paliers</div>'+TW_MS.map(([n,d])=>`<div class="obj${f>=n?' ok':''}"><div class="ck">${f>=n?'✓':''}</div><span><b>${n} étages</b> · ${d}</span></div>`).join('')+
       '<div class="sec">Étages spéciaux</div><p class="foot">'+Object.entries(TW_SP).map(([n,v])=>`${f>=n?'✓':'·'} ${n} : ${v[0]}`).join(' &nbsp; ')+'</p>'}
   else if(pid==='lift'){t='Liftier de la Pigeon Tower';hd='#ffd23f';h=`<div style="display:flex;gap:10px;align-items:flex-start;justify-content:center"><canvas id="liftcv" style="width:320px;height:380px;border:3px solid var(--ink);border-radius:12px;max-width:100%"></canvas>`+
     `<div style="display:flex;flex-direction:column;gap:8px;width:110px"><button class="chunky" type="button" data-act="lift:up" style="font-size:22px">▲</button><button class="chunky" type="button" data-act="lift:open">Ouvrir</button><button class="chunky" type="button" data-act="lift:down" style="font-size:22px">▼</button>`+
-    `<small style="font-size:11px;line-height:1.3">Flèches ↑ ↓ et Espace. 4 personnes max. Le chiffre sur chaque locataire = son étage. <b style="color:#b8860b">Or</b> = VIP pour le penthouse (pourboire x5).</small></div></div><p class="jmsg" id="liftmsg" style="text-align:center"></p>`}
+    `<small style="font-size:11px;line-height:1.3">Flèches ↑ ↓ et Espace. 4 personnes max. Le chiffre sur chaque locataire = son étage. <b style="color:#b8860b">Or</b> = VIP pour le penthouse (compte triple). Chaque locataire : +5 % de revenus auto pendant 1 h (max x3).</small></div></div><p class="jmsg" id="liftmsg" style="text-align:center"></p>`}
   else if(pid==='daily'){t='Missions du jour';hd='#ff9f1c';h=dailyHTML()}
   else if(pid==='login'){t='Récompense de connexion';hd='#ffd23f';h=loginHTML()}
   else if(pid==='obj'){t='Objectifs';
@@ -2654,8 +2655,10 @@ function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);
     for(let r=0,y=46;y<210;r++,y+=12){cx.moveTo(x,y);cx.lineTo(x+w,y);for(let bx=x+(r%2?15:0);bx<x+w;bx+=30){cx.moveTo(bx,y);cx.lineTo(bx,y+12)}}cx.stroke();cx.restore();rr(x,40,w,170,10);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke()}if(CK()==='ny'){nyFacade(x,w);if(w>=260&&typeof winCol!=='function')return nyBoard(x+66,48,w-90,48,x)}for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
 // ===== le liftier de la Pigeon Tower : conduis l'ascenseur, dépose les locataires au bon étage, pourboires selon la vitesse =====
 let LIFT=null;
-const liftN=()=>Math.min(8,Math.max(4,S.tower||0)),liftTip=()=>Math.max(C(40),towerInc()*gm()*3);
-function liftStart(){if((S.tower||0)<5||S.liftDay===dayN())return;S.liftDay=dayN();LIFT={t:45,f:0,y:0,open:false,car:[],wait:{},earn:0,served:0,angry:0,sp:1,msg:'Monte, descends, ouvre les portes : chaque locataire veut aller à un étage précis.'};pid='lift';renderPanel();liftLoop()}
+// récompense du liftier : un multiplicateur de revenus auto pendant 1 h (1 partie par vrai jour)
+const liftMul=n=>Math.min(3,1+.05*n),liftM=()=>{const B=S.meta.liftBoost;return B&&B.until>Date.now()?B.m:1},liftLeft=()=>{const B=S.meta.liftBoost;return B?Math.max(0,B.until-Date.now()):0},liftPlayed=()=>S.meta.liftDay===dayKey();
+const liftN=()=>Math.min(8,Math.max(4,S.tower||0));
+function liftStart(){if((S.tower||0)<5||liftPlayed())return;S.meta.liftDay=dayKey();LIFT={t:45,f:0,y:0,open:false,car:[],wait:{},earn:0,served:0,angry:0,sp:1,msg:'Chaque locataire déposé augmente ton bonus de revenus (VIP = 3 locataires).',pts:0};pid='lift';renderPanel();liftLoop()}
 function liftSpawn(){const n=liftN();let fl=Math.floor(Math.random()*(n+1)),to;do to=Math.floor(Math.random()*(n+1));while(to===fl);const vip=Math.random()<.12;(LIFT.wait[fl]=LIFT.wait[fl]||[]).push({to:vip?n:to,pat:14,max:14,vip})}
 function liftLoop(){let last=performance.now();const tick=()=>{if(!LIFT||pid!=='lift'){if(LIFT&&pid!=='lift')liftEnd(true);return}const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;const L=LIFT;
   L.t-=dt;L.sp-=dt;if(L.sp<=0){L.sp=Math.max(1,2.2-L.served*.05);liftSpawn()}
@@ -2665,10 +2668,11 @@ function liftLoop(){let last=performance.now();const tick=()=>{if(!LIFT||pid!=='
   drawLift();if(L.t<=0)return liftEnd(false);requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 function liftMove(d){const L=LIFT;if(!L)return;const n=liftN();if(L.open)L.open=false;L.f=clamp(L.f+d,0,n);snd('tick')}
 function liftOpen(){const L=LIFT;if(!L||Math.abs(L.y-L.f)>.15)return;L.open=true;let got=0;
-  L.car=L.car.filter(p=>{if(p.to!==L.f)return true;const g=liftTip()*(p.vip?5:1)*(.5+p.pat/p.max);L.earn+=gain(g);L.served++;got+=g;return false});
+  L.car=L.car.filter(p=>{if(p.to!==L.f)return true;const v=p.vip?3:1;L.pts+=v;L.served++;got+=v;return false});
   const w=L.wait[L.f]||[];while(w.length&&L.car.length<4){const p=w.shift();p.pat=p.max;L.car.push(p)}
-  if(got>0){L.msg='Pourboire : +'+fmt(got)+(L.served%5===0?' · le hall applaudit !':'');snd('coin')}else if(w.length)L.msg='Ascenseur plein (4 personnes max) !';else snd('pick');updHud()}
-function liftEnd(early){const L=LIFT;if(!L)return;LIFT=null;toast('Service de liftier terminé : '+L.served+' locataire'+(L.served>1?'s':'')+' déposé'+(L.served>1?'s':'')+', +'+fmt(L.earn)+(L.angry?' · '+L.angry+' parti'+(L.angry>1?'s':'')+' à pied':''));snd(L.served>=8?'win':'coin');save();if(!early){pid='tower';renderPanel()}}
+  if(got>0){L.msg=(got>1?'VIP déposé ! ':'Locataire déposé ! ')+'Bonus : x'+liftMul(L.pts).toFixed(2).replace('.',',')+(L.served%5===0?' · le hall applaudit !':'');snd('coin')}else if(w.length)L.msg='Ascenseur plein (4 personnes max) !';else snd('pick');updHud()}
+function liftEnd(early){const L=LIFT;if(!L)return;LIFT=null;const m=liftMul(L.pts);if(L.pts>0)S.meta.liftBoost={m,until:Date.now()+3600e3};
+  toast('Service terminé : '+L.served+' locataire'+(L.served>1?'s':'')+' déposé'+(L.served>1?'s':'')+(L.pts>0?' · revenus auto x'+m.toFixed(2).replace('.',',')+' pendant 1 h !':'')+(L.angry?' · '+L.angry+' parti'+(L.angry>1?'s':'')+' à pied':''));snd(L.served>=8?'win':'coin');save();if(!early){pid='tower';renderPanel()}}
 function liftGuy(g,p,x,base,fh,face){if(!p.look)p.look={shirt:pick(SHIRTS),pants:pick(PANTS),skin:pick(SKINS),hair:pick(HAIRS),hairS:pick(['court','long','queue','meche'])};const keep=cx;cx=g;
   try{drawGuy(x,base,Object.assign({s:Math.min(.36,fh/100),t:T,face,moving:false,suit:p.vip,tophat:p.vip,sad:p.pat/p.max<.3},p.look,p.vip?{shirt:'#14141a'}:{}))}finally{cx=keep}}
 function drawLift(){const c=$('liftcv'),L=LIFT;if(!c||!L)return;const d=window.devicePixelRatio||1,W2=320,H2=380;if(c.width!==W2*d){c.width=W2*d;c.height=H2*d}const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
@@ -2682,7 +2686,7 @@ function drawLift(){const c=$('liftcv'),L=LIFT;if(!c||!L)return;const d=window.d
   g.fillStyle='#ffd23f';g.strokeStyle='#2a1f3d';g.lineWidth=3;g.fillRect(204,cy+2,62,fh-4);g.strokeRect(204,cy+2,62,fh-4);
   if(L.open){g.fillStyle='rgba(255,255,255,.6)';g.fillRect(208,cy+5,54,fh-10)}else{g.strokeStyle='#2a1f3d';g.lineWidth=1.5;g.beginPath();g.moveTo(235,cy+4);g.lineTo(235,cy+fh-4);g.stroke()}
   L.car.forEach((p,i)=>{const x=214+i*13;liftGuy(g,p,x,cy+fh-4,fh,1);g.fillStyle=p.vip?'#ffd23f':'#fff';g.font='bold 9px sans-serif';g.textAlign='center';g.fillText(p.to?(p.to===n?'P':p.to):'R',x,cy+8)});
-  g.fillStyle='#2a1f3d';g.fillRect(0,H2-20,W2,20);g.fillStyle='#ffd23f';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText('⏱ '+Math.ceil(L.t)+' s',8,H2-10);g.textAlign='right';g.fillText('+'+fmt(L.earn)+' · '+L.served+' déposés',W2-8,H2-10);
+  g.fillStyle='#2a1f3d';g.fillRect(0,H2-20,W2,20);g.fillStyle='#ffd23f';g.font='bold 12px sans-serif';g.textAlign='left';g.fillText('⏱ '+Math.ceil(L.t)+' s',8,H2-10);g.textAlign='right';g.fillText('Bonus x'+liftMul(L.pts).toFixed(2).replace('.',',')+' · '+L.served+' déposés',W2-8,H2-10);
   const m=$('liftmsg');if(m&&m.textContent!==L.msg)m.textContent=L.msg}
 // la Pigeon Tower : hall vitré, étages empilés (fenêtres allumées la nuit, étages spéciaux en couleur), grue tant que ce n'est pas fini
 function drawTower(x,w,f,live){const dk=live?darkness():0,H0=150,FH=9;cx.save();cx.lineWidth=3;cx.lineJoin='round';cx.strokeStyle=INK;

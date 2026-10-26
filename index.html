@@ -2340,7 +2340,8 @@ function renderPanel(){
       '<button class="chunky" type="button" data-act="close">Retour dans la rue</button>'}
   else if(pid==='reveal'){const R0=REV,st=R0.st,tt=TRAITS[st.tr],rr=RAR[tt.r];t='Recrutement · '+SHIFT[st.sh].n.toLowerCase();hd='#ffd23f';
     h=R0.done?`<div class="rv"><div id="rvx"></div><div class="rvc pop${tt.r?' r'+tt.r:''}" id="rvc" style="background:${rr[1]}"><div class="rvr" id="rvr">${rr[0]}</div><div class="rvn" id="rvn">${st.n}</div><div class="rvt" id="rvt"><b>${tt.n}</b></div>${pcHTML(tt)}<div class="rvt">${SHIFT[st.sh].n} · salaire ${fmt(wageOf(S.staff.indexOf(st)))} / jour</div></div>`+
-      `<div class="bets" style="width:100%"><button class="chunky alt" type="button" data-act="tobiz">Retour au business</button>${hireBtn(st.sh,true)}</div></div>`
+      `<div class="bets" style="width:100%"><button class="chunky alt" type="button" data-act="tobiz">Retour au business</button>${hireBtn(st.sh,true)}`+
+      (()=>{const i=S.staff.indexOf(st);if(i<0||i>=S.emp)return '';const c=replCost(i);return `<button class="chunky" type="button" data-act="repl2:${i}" style="grid-column:1/-1" ${S.cash<c?'disabled':''}>🔁 Pas convaincu ? Remplacer ${st.n} · ${fmt(c)}</button>`})()+'</div></div>'
       :`<div class="rv"><div id="rvx"></div><div class="rvc spin" id="rvc"><div class="rvr" id="rvr">Tirage...</div><div class="rvn" id="rvn">?</div><div class="rvt" id="rvt"></div></div></div>`}
   else if(pid==='replconf'){const i=parg,st=S.staff[i];if(!st){pid='biz';return renderPanel()}const tt=TRAITS[st.tr],a1=sev(i),a2=empCost(S.emp-1),c=a1+a2;t='Remplacer '+st.n+' ?';hd='#ffd23f';
     h=`<p class="lead">${st.n} (${tt.n.toLowerCase()}) part avec son indemnité, et une nouvelle recrue tirée au sort prend sa place dans l'${SHIFT[st.sh].n.toLowerCase()}.</p>`+

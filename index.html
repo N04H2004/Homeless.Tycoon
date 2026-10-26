@@ -4267,8 +4267,10 @@ const dReward=()=>nice(Math.max(C(300),autoRate()*180));
 function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat','fed'];if(casinoOk())pool.push('casino');if(bourseOpen())pool.push('sells','sells');if(S.band>0)pool.push('bpick');
   let h=0;for(const ch of day)h=(h*31+ch.charCodeAt(0))>>>0;const pk=[];while(pk.length<2){h=(h*1103515245+12345)>>>0;const k=pool[h%pool.length];if(!pk.includes(k))pk.push(k)}
   const D=S.meta.daily||{},ms=['earn',...pk].map(k=>({k,g:k==='earn'?nice(Math.max(C(1000),autoRate()*600)):DM[k][2],p:0,b:DM[k][1](),c:CURI(),cl:false}));
-  S.meta.daily={day,ms,rw:dReward(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
+  S.meta.daily={day,ms,rw:dReward(),ci:CURI(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
 function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
+  // changement de ville : récompenses et objectif « Gagner » recalculés selon les revenus de la nouvelle ville
+  if(D.ci!==CURI()){D.ci=CURI();D.rw=dReward();for(const m of D.ms)if(m.k==='earn'&&!m.cl&&m.p<m.g){m.g=nice(Math.max(C(1000),autoRate()*600));m.p=0}}
   for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){missionFx(m)}}if(m.p>=m.g&&!m.cl)ready++}
   if(D.ms.every(m=>m.cl)&&!D.chest)ready++;const L=S.meta.login||{};if(L.last!==dayKey())ready++;
   {const el=$('dlist'),off=tutoOn()||D.chest;if(el.hidden!==off)el.hidden=off;

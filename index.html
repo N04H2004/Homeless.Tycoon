@@ -107,6 +107,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .ings{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .ing{font-family:var(--display);font-size:14px;padding:9px 4px;border:3px solid var(--ink);border-radius:10px;box-shadow:0 3px 0 var(--ink);cursor:pointer;color:var(--ink)}
 .ing.dk{color:#fff}.ing.on{outline:3px dashed var(--ink);outline-offset:2px}
+.ing.fd{font-size:13px;line-height:1.1;padding:4px 3px 6px;border-radius:12px;background:#fff6df;display:flex;flex-direction:column;align-items:center;gap:2px}
+.ing.fd canvas,.ing.fd span{display:block;pointer-events:none}.ing.fd.on{background:#b9f5c4;transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .ing:active{transform:translateY(3px);box-shadow:none}
 .items{display:flex;flex-wrap:wrap;gap:6px}
 .item{font-family:var(--body);font-weight:700;font-size:13px;padding:7px 10px;border:2px solid var(--ink);border-radius:10px;background:#fff;cursor:pointer;color:var(--ink)}
@@ -1754,6 +1756,99 @@ function endJob(early){const J=JOB;if(!J)return;JOB=null;
   if(J.k==='kebab'&&!early){S.food=Math.min(100,S.food+35)}
   if(J.k==='bar'&&!early){S.hp=Math.min(100,S.hp+20)}
   parg={k:J.k,early,served:J.served,fail:J.fail,earn:J.earn,bonus,off,offB,g};pid='jobend';snd(best?'win':'coin');renderPanel();updHud();save()}
+// CDD cuisine : chaque ingrédient a son dessin cartoon, différent selon la ville (kebab, fish & chips, hot-dog, ramen)
+const FD=(()=>{
+  const sh=(g,f,lw=2.5)=>{g.fillStyle=f;g.fill();g.lineWidth=lw;g.strokeStyle=INK;g.stroke()};
+  const el=(g,x,y,rx,ry,f,rot=0,lw)=>{g.beginPath();g.ellipse(x,y,rx,ry,rot,0,Math.PI*2);sh(g,f,lw)};
+  const rr=(g,x,y,w,h,r,f,lw)=>{g.beginPath();g.roundRect(x,y,w,h,r);sh(g,f,lw)};
+  const drizzle=(g,pts,col)=>{g.lineCap='round';g.lineJoin='round';g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+    g.lineWidth=8;g.strokeStyle=INK;g.stroke();g.lineWidth=4.5;g.strokeStyle=col;g.stroke()};
+  const zig=(x0,x1,y,a,n)=>Array.from({length:n+1},(_,i)=>[x0+(x1-x0)*i/n,y+(i%2?a:-a)]);
+  const dollop=(g,x,y,r,col,dk)=>{g.beginPath();g.moveTo(x-r,y+r*.45);g.quadraticCurveTo(x-r*1.1,y-r*.2,x-r*.4,y-r*.35);g.quadraticCurveTo(x-r*.2,y-r*1.2,x+r*.15,y-r*.55);
+    g.quadraticCurveTo(x+r*1.1,y-r*.6,x+r,y+r*.45);g.closePath();sh(g,col);if(dk){g.fillStyle=dk;for(const [a,b] of [[-.4,0],[.2,-.2],[.5,.2],[-.1,.25]]){g.beginPath();g.arc(x+a*r,y+b*r,1.6,0,7);g.fill()}}
+    g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(x-r*.25,y-r*.25,r*.22,r*.12,-.5,0,7);g.fill()};
+  const leaf=(g,x,y,r,rot,col)=>{g.save();g.translate(x,y);g.rotate(rot);g.beginPath();for(let i=0;i<=10;i++){const a=Math.PI*i/10,rr=r*(i%2?.82:1);g.lineTo(-Math.cos(a)*r*1.3,-Math.sin(a)*rr)}g.closePath();sh(g,col,2);
+    g.strokeStyle='#d8f3a0';g.lineWidth=1.5;g.beginPath();g.moveTo(-r,-1);g.lineTo(r,-r*.4);g.stroke();g.restore()};
+  const pickle=(g,x,y,r)=>{el(g,x,y,r,r*.8,'#6a994e',0,2);el(g,x,y,r*.62,r*.48,'#a7c957',0,0);g.fillStyle='#f1f7d0';for(const [a,b] of [[-.3,-.1],[.25,-.15],[0,.25]]){g.beginPath();g.arc(x+a*r,y+b*r,1.3,0,7);g.fill()}};
+  // ---------- Paris · kebab dans un pain pita ----------
+  const paris={
+    pain:[g=>{el(g,130,58,74,22,'#f3d58c')},g=>{g.beginPath();g.moveTo(54,58);g.quadraticCurveTo(130,178,206,58);g.quadraticCurveTo(130,96,54,58);sh(g,'#e9c46a');g.save();g.clip();
+      g.strokeStyle='#b5832a';g.lineWidth=3;g.lineCap='round';for(const [a,b] of [[96,98],[124,108],[152,100],[110,124],[140,128]]){g.beginPath();g.moveTo(a-7,b-3);g.lineTo(a+7,b+3);g.stroke()}g.restore()}],
+    viande:[g=>{const P=[[78,52,-.5],[96,44,.3],[114,50,-.2],[134,42,.4],[152,50,-.3],[170,44,.2],[186,54,-.4],[104,60,.1],[144,60,-.1],[166,62,.3]];
+      for(const [x,y,r] of P){g.save();g.translate(x,y);g.rotate(r);g.beginPath();g.moveTo(-14,0);g.quadraticCurveTo(-6,-10,4,-7);g.quadraticCurveTo(14,-4,14,3);g.quadraticCurveTo(2,9,-14,0);sh(g,r>0?'#8d4a24':'#a0592c',2);
+        g.strokeStyle='#5e2f12';g.lineWidth=1.3;g.beginPath();g.moveTo(-8,0);g.quadraticCurveTo(0,-4,8,-1);g.stroke();g.restore()}}],
+    salade:[g=>{for(const [x,y,r] of [[74,46,-.5],[102,38,.2],[132,34,-.1],[162,38,.3],[190,46,.6]])leaf(g,x,y,12,r,'#80b918')}],
+    tomate:[g=>{for(const [x,y] of [[92,42],[126,36],[160,40],[182,50]]){g.beginPath();g.arc(x,y,11,Math.PI,0);g.closePath();sh(g,'#e63946',2);
+      g.fillStyle='#ff8a8a';g.beginPath();g.arc(x,y-1,7,Math.PI,0);g.fill();g.fillStyle='#ffd166';for(const d of [-4,0,4]){g.beginPath();g.ellipse(x+d,y-4,1.3,2,0,0,7);g.fill()}}}],
+    oignon:[g=>{for(const [x,y] of [[84,38],[112,32],[146,30],[176,36]]){el(g,x,y,10,6,'#f6e8f8',0,2);el(g,x,y,5,3,'#e0b8e8',0,1.5);g.strokeStyle='#b07cc6';g.lineWidth=1.5;g.beginPath();g.ellipse(x,y,7.5,4.5,0,0,7);g.stroke()}}],
+    blanche:[g=>drizzle(g,zig(70,192,30,7,9),'#ffffff')],
+    samourai:[g=>drizzle(g,zig(74,188,40,6,8),'#f77f00')],
+    harissa:[g=>drizzle(g,zig(78,184,48,5,8),'#9d0208')],
+    order:['viande','salade','tomate','oignon','blanche','samourai','harissa'],
+    icon:{pain:[50,22,160,110],viande:[84,32,64,36],salade:[86,20,62,40],tomate:[108,22,40,28],oignon:[98,22,40,26],blanche:[84,18,48,26],samourai:[84,30,48,22],harissa:[88,38,48,22]}};
+  // ---------- Londres · fish & chips dans un cornet de journal ----------
+  const london={
+    pain:[g=>{el(g,130,56,64,14,'#c9b99a')},g=>{g.beginPath();g.moveTo(64,56);g.lineTo(196,56);g.lineTo(156,144);g.lineTo(104,144);g.closePath();sh(g,'#f4ecd8');
+      g.save();g.clip();g.fillStyle='#9a8f7a';for(let r=0;r<6;r++)for(let c=0;c<4;c++)g.fillRect(84+c*24,70+r*12,18-(r+c)%3*4,3);g.fillStyle='#2a1f3d';g.font='bold 9px sans-serif';g.textAlign='center';g.fillText('THE TIMES',130,66);g.restore();
+      g.beginPath();g.moveTo(64,56);g.lineTo(196,56);g.lineWidth=3;g.strokeStyle=INK;g.stroke()}],
+    salade:[g=>{const P=[[86,-.35],[98,-.15],[110,-.25],[122,.05],[134,-.1],[146,.2],[158,.1],[170,.3],[180,.15],[104,.12],[140,-.3],[162,-.05]];
+      P.forEach(([x,r],i)=>{g.save();g.translate(x,58);g.rotate(r);rr(g,-4.5,-38+(i%3)*5,9,40,3,i%2?'#ffd166':'#f9c74f',2);g.fillStyle='#e9a23b';g.fillRect(-2.5,-34+(i%3)*5,2,6);g.restore()})}],
+    viande:[g=>{g.save();g.translate(128,40);g.rotate(-.18);g.beginPath();for(let i=0;i<=28;i++){const a=Math.PI*2*i/28,w=i%2?1:1.07;g.lineTo(Math.cos(a)*50*w,Math.sin(a)*15*w)}g.closePath();sh(g,'#d4a373');
+      g.fillStyle='#e9c46a';g.beginPath();g.ellipse(-8,-4,32,7,0,0,7);g.fill();g.fillStyle='#b5762f';for(const [a,b] of [[-30,3],[-12,6],[10,-2],[26,5],[38,-3],[-36,-4]]){g.beginPath();g.arc(a,b,1.8,0,7);g.fill()}g.restore()}],
+    tomate:[g=>{for(const [x,y] of [[176,52],[168,44],[184,44],[176,38],[164,52],[188,52],[172,32],[182,34]])el(g,x,y,5,5,'#55a630',0,1.6);g.fillStyle='rgba(255,255,255,.6)';g.beginPath();g.arc(174,36,1.5,0,7);g.fill()}],
+    oignon:[g=>{pickle(g,84,48,9);pickle(g,96,40,9);pickle(g,82,34,8)}],
+    blanche:[g=>dollop(g,108,30,11,'#fefae0','#80b918')],
+    samourai:[g=>{for(const [x,y] of [[118,22],[138,18],[150,28],[100,26]]){g.beginPath();g.moveTo(x,y-7);g.quadraticCurveTo(x+5,y,x,y+4);g.quadraticCurveTo(x-5,y,x,y-7);sh(g,'#bc6c25',1.6)}}],
+    harissa:[g=>dollop(g,156,24,10,'#c1121f')],
+    order:['salade','viande','tomate','oignon','blanche','samourai','harissa'],
+    icon:{pain:[60,40,140,108],salade:[72,10,124,56],viande:[74,18,112,46],tomate:[156,24,40,36],oignon:[70,22,40,36],blanche:[92,14,34,28],samourai:[90,8,68,30],harissa:[142,10,30,26]}};
+  // ---------- New York · hot-dog ----------
+  const ny={
+    pain:[g=>{rr(g,40,52,180,40,20,'#d9a441')},g=>{g.beginPath();g.moveTo(36,84);g.quadraticCurveTo(36,118,74,118);g.lineTo(186,118);g.quadraticCurveTo(224,118,224,84);g.quadraticCurveTo(130,100,36,84);sh(g,'#e9c46a');
+      g.fillStyle='rgba(255,255,255,.35)';g.beginPath();g.ellipse(96,108,30,4,0,0,7);g.fill()}],
+    viande:[g=>{rr(g,26,66,208,26,13,'#9c2f1f');g.strokeStyle='#d35d4a';g.lineWidth=3;g.lineCap='round';g.beginPath();g.moveTo(48,72);g.lineTo(206,72);g.stroke();
+      g.strokeStyle='#5e1a10';g.lineWidth=1.6;for(const x of [70,110,150,190]){g.beginPath();g.moveTo(x,70);g.lineTo(x+8,88);g.stroke()}}],
+    oignon:[g=>{g.strokeStyle='#e9d8a6';g.lineWidth=2;for(let i=0;i<9;i++){const x=58+i*17;g.beginPath();g.moveTo(x,64);g.bezierCurveTo(x+4,56,x+10,70,x+15,60);g.lineWidth=4;g.strokeStyle=INK;g.stroke();g.lineWidth=2.4;g.strokeStyle='#f1e3c8';g.stroke()}}],
+    salade:[g=>{for(let i=0;i<11;i++){const x=54+i*15,y=60+(i%2)*4;g.beginPath();g.ellipse(x,y,6,3.5,.5*(i%3-1),0,7);sh(g,i%2?'#bc6c25':'#d4a373',1.6)}}],
+    tomate:[g=>{for(const x of [72,108,144,180])pickle(g,x,60,7)}],
+    blanche:[g=>drizzle(g,zig(46,214,62,5,14),'#ffd60a')],
+    samourai:[g=>drizzle(g,zig(52,208,68,4,12),'#c1121f')],
+    harissa:[g=>{for(let i=0;i<14;i++){const x=56+i*11.5,y=56+(i%3)*3;rr(g,x-3,y-3,6,6,2,i%2?'#55a630':'#80b918',1.4)}}],
+    order:['viande','oignon','salade','tomate','harissa','samourai','blanche'],
+    icon:{pain:[30,48,200,74],viande:[22,58,110,40],oignon:[54,50,44,20],salade:[46,52,42,18],tomate:[62,51,22,18],blanche:[46,54,40,18],samourai:[52,60,40,16],harissa:[50,48,40,20]}};
+  // ---------- Tokyo · bol de ramen ----------
+  const brothCol=b=>b.includes('blanche')&&b.includes('samourai')?'#b8875a':b.includes('blanche')?'#9c5a2c':b.includes('samourai')?'#d4a373':b.includes('harissa')?'#d8572a':'#f6edd9';
+  const tokyo={
+    pain:[g=>{g.beginPath();g.moveTo(32,62);g.quadraticCurveTo(36,138,130,140);g.quadraticCurveTo(224,138,228,62);g.closePath();sh(g,'#c1121f');
+      g.strokeStyle='#fff6df';g.lineWidth=2.5;for(let i=0;i<7;i++){const x=58+i*24;g.beginPath();g.arc(x,104,6,Math.PI,0);g.stroke()}
+      rr(g,98,136,64,10,4,'#9d0208',2)}],
+    inside:b=>g=>{el(g,130,62,98,26,b.includes('pain')?brothCol(b):'#f6edd9')},
+    viande:[g=>{g.strokeStyle='#fff3c4';g.lineCap='round';for(let r=0;r<4;r++){g.beginPath();for(let x=60;x<=200;x+=4)g.lineTo(x,56+r*6+Math.sin(x/5+r)*3);g.lineWidth=5;g.strokeStyle='#d6b46a';g.stroke();g.lineWidth=3;g.strokeStyle='#fff3c4';g.stroke()}}],
+    salade:[g=>{for(const [x,y] of [[78,58],[98,52]]){el(g,x,y,16,10,'#e8a87c',-.2);el(g,x,y,10,6,'#f6d3b3',-.2,0);g.strokeStyle='#bc6c25';g.lineWidth=1.5;g.beginPath();g.ellipse(x,y,5,3,-.2,0,5.5);g.stroke()}}],
+    tomate:[g=>{for(const x of [160,182]){el(g,x,56,12,9,'#ffffff');el(g,x,57,6,5,'#ffb703',0,1.5);g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.arc(x-2,55,1.6,0,7);g.fill()}}],
+    oignon:[g=>{for(const [x,y] of [[120,48],[132,54],[142,46],[126,62],[146,60],[114,56],[136,40]]){g.beginPath();g.arc(x,y,3.6,0,7);g.lineWidth=3.6;g.strokeStyle=INK;g.stroke();g.lineWidth=2;g.strokeStyle='#80b918';g.stroke()}}],
+    blanche:[g=>{}],samourai:[g=>{}],
+    harissa:[g=>{for(const [x,y,r] of [[90,70,4],[150,74,3],[176,68,3.5],[110,72,2.5],[200,62,2.5]]){g.fillStyle='rgba(214,40,40,.75)';g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+      g.fillStyle='#c1121f';for(const [x,y] of [[100,46],[120,70],[166,44],[190,58],[140,66]]){g.fillRect(x,y,3,2)}}],
+    order:['viande','salade','tomate','oignon','harissa'],
+    icon:{pain:[28,34,204,114],viande:[60,46,64,30],salade:[58,40,62,30],tomate:[144,44,54,26],oignon:[106,34,46,34],harissa:[84,40,124,40]}};
+  const SK={paris,london,ny,tokyo};
+  const sk=()=>SK[CK()]||paris;
+  // icône de bouillon (Tokyo) : un petit bol rempli de la bonne couleur
+  const brothIcon=(g,k)=>{tokyo.pain[0](g);el(g,130,62,98,26,brothCol([k,'pain']))};
+  function dish(g,b){const s=sk(),has=k=>b.includes(k);
+    g.fillStyle='#c98f4f';g.beginPath();g.roundRect(6,118,248,30,10);g.fill();g.fillStyle='#ad7437';for(let x=22;x<220;x+=36)g.fillRect(x,124,22,2);
+    if(!has('pain')){g.fillStyle=INK;g.globalAlpha=.55;g.font='bold 14px "Lilita One",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('Plan de travail vide',130,70);g.globalAlpha=1;return}
+    if(s===tokyo){tokyo.pain[0](g);tokyo.inside(b)(g);g.save();g.beginPath();g.ellipse(130,62,96,24,0,0,7);g.clip();for(const k of tokyo.order)if(has(k))tokyo[k][0](g);g.restore();
+      g.beginPath();g.ellipse(130,62,98,26,0,0,7);g.lineWidth=3;g.strokeStyle=INK;g.stroke();return}
+    s.pain[0](g);for(const k of s.order)if(has(k))s[k][0](g);s.pain[1](g)}
+  const fit=(g,[x,y,w,h])=>{const sc=Math.min(56/w,40/h),d=g.__d;g.setTransform(d*sc,0,0,d*sc,d*(28-(x+w/2)*sc),d*(20-(y+h/2)*sc))};
+  function icon(g,k){const s=sk();
+    if(s===tokyo&&['blanche','samourai','harissa'].includes(k)){fit(g,[28,34,204,114]);brothIcon(g,k);return}
+    fit(g,s.icon[k]);if(k==='pain'){s.pain[0](g);if(s===tokyo)tokyo.inside([])(g);else s.pain[1](g)}else s[k][0](g)}
+  return {dish,icon}})();
+function drawFoodJob(){const c=$('kbcv');if(!c||!JOB||JOB.k!=='kebab')return;const d=window.devicePixelRatio||1,g=c.getContext('2d');c.width=260*d;c.height=150*d;g.setTransform(d,0,0,d,0,0);FD.dish(g,JOB.cust.build);
+  for(const e of document.querySelectorAll('#pbody canvas[data-ing]')){const q=e.getContext('2d');e.width=56*d;e.height=40*d;q.__d=d;FD.icon(q,e.dataset.ing)}}
 function renderJob(){const J=JOB,c=J.cust;let h=`<div class="jbar"><span>Service</span><div class="bar"><i id="jt" style="width:${J.t/J.dur*100}%;background:#118ab2"></i></div><b id="je">${fmt2(J.earn)}</b></div>`+
   `<div class="cust"><div class="who"><span>${c.name}</span><div class="bar"><i id="jp" style="width:${c.pat/c.pm*100}%;background:#7ee08a"></i></div></div><div class="say">${J.k==='kebab'?c.line:'« '+c.line+' »'}</div></div>`+
   `<div class="jmsg ${J.mc}">${J.msg||'&nbsp;'}</div>`;
@@ -1763,8 +1858,8 @@ function renderJob(){const J=JOB,c=J.cust;let h=`<div class="jbar"><span>Service
       `<div class="bets"><button class="chunky" type="button" data-act="tap" style="grid-column:1/-1;font-size:20px;padding:12px" ${c.wait>0?'disabled':''}>${c.wait>0?'Client suivant...':c.pouring?'STOP !':'Tirer la bière'}</button></div>`}
   else if(MG[J.k])h+=mgRender(J,c);
   else if(J.k==='kebab'){const hasP=c.build.includes('pain');
-    h+=`<div class="kbz"><div class="kb${hasP?'':' empty'}" style="${hasP?'background:'+ING.pain[1]:''}">${hasP?c.build.filter(x=>x!=='pain').map(x=>`<i style="background:${ING[x][1]}"></i>`).join(''):'Plan de travail vide'}</div></div>`+
-      '<div class="ings">'+Object.entries(ING).map(([k,v])=>`<button class="ing${v[2]?' dk':''}${c.build.includes(k)?' on':''}" type="button" style="background:${v[1]}" data-act="kb:${k}">${v[0]}</button>`).join('')+'</div>'+
+    h+=`<div class="kbz"><canvas id="kbcv" style="width:260px;height:150px"></canvas></div>`+
+      '<div class="ings">'+Object.entries(ING).map(([k,v])=>`<button class="ing fd${c.build.includes(k)?' on':''}" type="button" data-act="kb:${k}"><canvas data-ing="${k}" style="width:56px;height:40px"></canvas><span>${v[0]}</span></button>`).join('')+'</div>'+
       '<div class="bets"><button class="chunky alt" type="button" data-act="kbtrash">Jeter</button><button class="chunky" type="button" data-act="kbserve">Servir</button></div>';}
   else{const all=c.items.every(i=>i.ok);
     h+='<div class="items">'+c.items.map((it,i)=>`<button class="item${it.ok?' ok':''}" type="button" data-act="scan:${i}">${it.n}<small>${it.ok?fc(it.p):'Clique pour scanner'}</small></button>`).join('')+'</div>';
@@ -2421,6 +2516,7 @@ function renderPanel(){
   if(pid==='tower'){const c=$('towpv');if(c){const d=window.devicePixelRatio||1,g=c.getContext('2d'),keep=cx;c.width=120*d;c.height=240*d;c.style.width='120px';c.style.height='240px';const f=S.tower||0,hh=208+f*9+100,sc=Math.min(1.1,240/hh);
     g.setTransform(d*sc,0,0,d*sc,0,0);g.translate(-440+(120/sc-180)/2,240/sc-208);cx=g;try{drawTower(440,180,f,0)}finally{cx=keep}}}
   if(document.querySelector('#pbody canvas[data-pv]'))drawPieceThumbs();
+  if(pid==='job')drawFoodJob();
   if(pid==='trade'||pid==='anadesk'){const L=lockByKey('bourse');if(L)$('pbody').innerHTML=`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
   for(const b of $('pbody').querySelectorAll('[data-act]')){const L=lockOf(b.dataset.act);if(L){b.disabled=true;b.textContent='🔒';b.title=lockText(L)}}

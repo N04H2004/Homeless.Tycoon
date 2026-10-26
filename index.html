@@ -122,6 +122,10 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .pc{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .pc span{font-size:11px;font-weight:700;border:1.5px solid var(--ink);border-radius:6px;padding:1px 6px;background:#d8f3dc}
 .pc span.m{background:#ffccd5}
+.godds{width:100%;max-width:340px;margin:6px auto 0;border-collapse:separate;border-spacing:0;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;font-size:13px}
+.godds th{background:#ffd23f;font-family:var(--display);font-weight:400;padding:4px 6px;text-align:left}
+.godds td{padding:3px 6px;border-top:1.5px solid #e6dcc6}.godds td:first-child{font-size:16px;white-space:nowrap}.godds small{opacity:.65}
+.godds tr.lose td{background:#ffe3e8;font-size:13px}
 .rvc .pc{justify-content:center}
 .buy.hire{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px}
 .buy.hire small{font-family:var(--body);font-weight:600;font-size:12px}
@@ -1693,8 +1697,13 @@ function gratBuy(k){const pr=k==='perso'?Math.floor(+GR.custom||0):gratPrices()[
   cells.sort(()=>Math.random()-.5);GR.grid=cells;GR.shown=cells.map(()=>false);GR.price=pr;GR.sym=ws;GR.win=ws>=0?pr*GRAT_SYM[ws][1]:0;GR.done=false;snd('buy');updHud()}
 function gratReveal(i){if(!GR.grid||GR.done)return;if(i==null)GR.shown=GR.shown.map(()=>true);else if(!GR.shown[i]){GR.shown[i]=true;snd('tick')}
   if(GR.shown.every(Boolean)){GR.done=true;if(GR.win>0){S.cash+=GR.win;S.meta.casinoWon=(S.meta.casinoWon||0)+GR.win-GR.price;snd(GR.win>=GR.price*10?'legend':'win')}else{S.meta.casinoLost+=GR.price;snd('fail')}updHud()}}
+// tableau des chances de gain, calculé depuis GRAT_P (toujours à jour si on change les probas)
+function gratOddsHTML(){const pc=p=>String(+(p*100).toFixed(1)).replace('.',',')+' %',one=p=>'1 sur '+Math.round(1/p),win=GRAT_P.reduce((a,b)=>a+b,0),ret=GRAT_P.reduce((a,p,i)=>a+p*GRAT_SYM[i][1],0);
+  return '<table class="godds"><tr><th>Ticket</th><th>Gain</th><th>Chance</th></tr>'+GRAT_SYM.map(([e,m],i)=>`<tr><td>${e}${e}${e}</td><td>mise x${m}${m===1?' (remboursé)':''}</td><td><b>${pc(GRAT_P[i])}</b> <small>(${one(GRAT_P[i])})</small></td></tr>`).join('')+
+    `<tr class="lose"><td>Rien</td><td>perdu</td><td><b>${pc(1-win)}</b></td></tr></table>`+
+    `<p class="foot" style="text-align:center;margin-top:4px">Ticket gagnant : <b>${pc(win)}</b> · en moyenne, un ticket rend <b>${pc(ret)}</b> de sa mise</p>`}
 function gratHTML(){const P=gratPrices();let h='<p class="lead">Gratte les 9 cases : <b>3 symboles identiques</b> et tu gagnes ! Environ 4 tickets sur 10 rapportent quelque chose.</p>'+
-  '<div class="pc" style="justify-content:center">'+GRAT_SYM.map(([e,m])=>`<span>${e}${e}${e} = mise x${m}</span>`).join('')+'</div>';
+  gratOddsHTML();
   if(GR.grid){h+='<div class="grat">'+GR.grid.map((c,i)=>`<button type="button" class="gc${GR.shown[i]?' on':''}${GR.done&&c===GR.sym?' win':''}" data-gi="${i}" aria-label="Case ${i+1}">${GR.shown[i]?GRAT_SYM[c][0]:''}</button>`).join('')+'</div>';
     h+=GR.done?`<div class="msg ${GR.win>0?'ok':'ko'} anim">${GR.win>0?'Gagné ! +'+fmt(GR.win):'Perdu… pas de chance cette fois'}</div>`:'<div class="bets"><button class="chunky alt" type="button" data-act="grat:all" style="grid-column:1/-1">Tout gratter</button></div>'}
   if(!GR.grid||GR.done){h+='<div class="bets" style="grid-template-columns:repeat(3,1fr)">'+['Petit','Moyen','Gros'].map((n,k)=>`<button class="buy" type="button" data-act="grat:buy:${k}" ${S.cash<P[k]?'disabled':''}>${n} ticket<br>${fmt(P[k])}</button>`).join('')+'</div>';

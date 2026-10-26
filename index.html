@@ -2280,7 +2280,13 @@ function lookHTML(){const L=myLook(),own=myPieces(),sw=(act,c,on)=>`<button type
       mine.map(x=>`<button class="ing${cur===x.k?' on':''}" type="button" style="background:${cur===x.k?'#ffd23f':'#fff'};display:flex;flex-direction:column;align-items:center;gap:3px" data-act="look:${sl}:${x.k}">${pvCanvas(sl,x.k)}<span>${x.n}</span></button>`).join('')+'</div>'+(mine.length?'':'<p class="foot" style="margin:2px 0 0">Aucune pièce : direction Fripe & Chic, à New York.</p>')}
   const fl=S.meta.wardrobe.filter(k=>k!=='classic'),on=S.meta.outfit;
   h+='<div class="sec">Tenue complète (remplace les pièces)</div><div class="ings" style="grid-template-columns:repeat(2,1fr)">'+chip('wear:classic','Mon look perso',on==='classic')+fl.map(k=>{const o=OUTFITS.find(x=>x.k===k);return o?chip('wear:'+k,o.n,on===k):''}).join('')+'</div>';
+  h+=upVisHTML();
   return h}
+// afficher ou cacher les outils de Brico Dédé sur le perso (le bonus reste actif)
+const UP_VIS=[['pince','Pince télescopique','dans ta main'],['sac','Sac XXL','couleur du sac'],['basket','Baskets à ressorts','ressorts et baskets'],['cle','Clé à molette dorée','à la ceinture'],['oeil','Œil de lynx','monture dorée']];
+function upVisHTML(){const L=UP_VIS.filter(([k])=>S.up[k]>0);if(!L.length)return '';const H=S.meta.hideUp||{};
+  return '<div class="sec">Outils visibles sur ton perso</div><p class="foot" style="margin:0 0 6px">Cacher un outil ne retire pas son bonus.</p><div class="ings" style="grid-template-columns:repeat(2,1fr)">'+
+    L.map(([k,n,d])=>`<button class="ing${H[k]?'':' on'}" type="button" style="background:${H[k]?'#fff':'#ffd23f'};font-size:13px" data-act="upvis:${k}">${H[k]?'🙈':'👁'} ${n}<small style="display:block;font-size:10px;opacity:.7">${H[k]?'caché':'visible'} · ${d}</small></button>`).join('')+'</div>'}
 // vignettes d'essayage : ton perso avec la pièce, cadré sur la bonne partie du corps
 const pvCanvas=(sl,k)=>`<canvas data-pv="${sl}:${k}" width="48" height="60" style="width:48px;height:60px;flex:0 0 auto;background:#f3ecfb;border:2px solid var(--ink);border-radius:10px"></canvas>`;
 function drawPieceThumbs(){const keep=cx,L0=myLook(),o0=S.meta.outfit,d=window.devicePixelRatio||1,F={hat:[-70,1.05],gl:[-58,1.9],top:[-28,1.55],bot:[-9,1.8],sh:[-4,2.1]};
@@ -2298,7 +2304,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
   if(x.job==='kebab')h+=`<p class="lead">${F.boss} essuie son comptoir. « Tu cherches du boulot ? J'ai besoin d'un commis pour la journée. »</p>`+cddRow('kebab');
   if(x.svc==='super'){h+='<p class="lead">'+ib('food')+' Rayon "ça cale".'+(l?' Tu es le proprio : -50 %.':'')+(ev&&ev.k==='marche'?' Marché du dimanche : -50 % !':'')+'</p>'+FOODS_NOW().map((f,i)=>row(f.n,'',`${f.d} · +${f.f} faim${f.h?' · +'+f.h+' vie':''}`,'food:'+i,foodP(f.p))).join('')+
     '<div class="sec">Rayon santé'+ib('health')+'</div>'+MEDS.map((m,i)=>row(m.n,'',`${m.d} · +${m.h} vie`,'med:'+i,medP(m.p))).join('')}
-  if(x.svc==='brico')h+='<p class="lead">'+ib('tools')+' Chaque outil se voit sur ton perso, et il te suit <b>à vie</b> dans toutes les villes.'+(l?' Remise du proprio : -20 %.':'')+'</p>'+UP.map(u=>{const lv=S.up[u.k];const m2=lv>=u.max;return row(u.n,'niv. '+lv,u.d,'up:'+u.k,m2?0:upCost(u),m2?'MAX':null,m2)}).join('');
+  if(x.svc==='brico')h+='<p class="lead">'+ib('tools')+' Chaque outil se voit sur ton perso, et il te suit <b>à vie</b> dans toutes les villes.'+(l?' Remise du proprio : -20 %.':'')+'</p>'+UP.map(u=>{const lv=S.up[u.k];const m2=lv>=u.max;return row(u.n,'niv. '+lv,u.d,'up:'+u.k,m2?0:upCost(u),m2?'MAX':null,m2)}).join('')+upVisHTML();
   if(x.svc==='motors')h+='<p class="lead">'+ib('motors')+' Plus de vitesse, moins de sueur. Tes véhicules te suivent <b>à vie</b>.'+(l?' Remise du proprio : -20 %.':'')+'</p>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
       return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
         (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('');
@@ -2415,7 +2421,7 @@ function renderPanel(){
       row('Racheter Déchets Corp','',"Fin de la concurrence. Leur siège devient ton 2e QG : +20 "+CUR()+"/s",'rival:buy',rivalCost());}
   else if(pid==='skills'){t='Compétences';hd='#ffd23f';
     h='<p class="lead">Tes outils et tes véhicules te suivent à vie, dans toutes les villes.</p><div class="sec">Outils de Brico Dédé'+ib('tools')+'</div>'+
-      UP.map(u=>{const l=S.up[u.k],mx=l>=u.max;return row(u.n,'niv. '+l,u.d,'up:'+u.k,mx?0:upCost(u),mx?'MAX':null,mx)}).join('')+
+      UP.map(u=>{const l=S.up[u.k],mx=l>=u.max;return row(u.n,'niv. '+l,u.d,'up:'+u.k,mx?0:upCost(u),mx?'MAX':null,mx)}).join('')+upVisHTML()+
       '<div class="sec">Véhicules'+ib('motors')+'</div>'+VEH.map(v=>{const own=S.veh[v.k],on=S.ride===v.k;
         return `<div class="row"><div class="info"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}<small>${v.d}</small></div>`+
           (own?`<button class="buy ${on?'red':'gold'}" type="button" data-act="ride:${on?'':v.k}">${on?'Descendre':'Monter'}</button>`:`<button class="buy" type="button" data-act="veh:${v.k}" data-cost="${vehP(v)}" ${S.cash<vehP(v)?'disabled':''}>${fmt(vehP(v))}</button>`)+'</div>'}).join('')+
@@ -2649,6 +2655,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='upvis'){S.meta.hideUp=S.meta.hideUp||{};S.meta.hideUp[v]=!S.meta.hideUp[v];snd('tick');save();return renderPanel()}
   if(a==='dr'){if(v==='drift')return drDrift();if(v==='nitro')return drNitro();if(v==='back')return openPanel('drift');if(v==='finale')return openPanel('finale');drAct(v,w);return renderPanel()}
   if(a==='ws'){if(v==='go')return wsStart();wsBuy(v,w);if(v==='scout')return renderPanel()}
   if(a==='wsk'){wsKey(v);return}
@@ -3699,7 +3706,7 @@ function playerLook(){
   const tier=n>=9?2:n>=5?1:0;
   const L=myLook(),pt=k=>L[k]&&L[k]!=='auto'&&L[k]!=='none'?PC(L[k]):null,gl=pt('gl'),sh=pt('sh');
   const base={t:T,moving:P.moving,face:P.face,bag:S.bag,sad:S.food<20,skin:L.skin||'#f1c27d',hair:L.hair==='chauve'?null:(L.hc||'#2b2118'),hairS:L.hair||'court',glass:gl&&gl.t,noLynx:L.gl==='none',shoes:sh&&sh.c,shP:sh,ride:S.ride,lift:vcLift(S.ride),
-    g:{pince:S.up.pince,sac:S.up.sac,basket:S.up.basket,cle:S.up.cle,oeil:S.up.oeil},gun:armed()?S.weapon:null};
+    g:(()=>{const H=S.meta.hideUp||{},v=k=>H[k]?0:S.up[k];return {pince:v('pince'),sac:v('sac'),basket:v('basket'),cle:v('cle'),oeil:v('oeil')}})(),gun:armed()?S.weapon:null};
   if(out==='costume')return Object.assign(base,{shirt:'#22223b',pants:'#22223b',suit:true,tie:'#d62839',hat:null});
   if(out==='peaky')return Object.assign(base,{shirt:'#6b5b45',pants:'#4a3f35',suit:true,tie:'#2a1f3d',hat:'#3b3127'});
   if(out!=='classic'&&OUTLOOK[out])return Object.assign(base,{outfit:out,shirt:OUTLOOK[out][0],pants:OUTLOOK[out][1]});

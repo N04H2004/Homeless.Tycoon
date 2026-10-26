@@ -125,6 +125,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .vcrow{align-items:flex-start;gap:10px}.vcl{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}.vcl>span{font-size:11px;font-weight:700;width:58px}
 .vcs{display:flex;flex-wrap:wrap;gap:4px}.vcb{border:2px solid var(--ink);border-radius:8px;background:#fff;padding:2px 6px;font:600 11px var(--body,sans-serif);cursor:pointer;color:var(--ink)}
 .vcb i{display:block;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink)}.vcb.on{background:#ffd23f;box-shadow:0 0 0 2px var(--ink)}
+.drst{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:2px}.drst span{width:84px}.drst i{flex:1;height:8px;background:#e6dcc6;border-radius:4px;overflow:hidden;border:1.5px solid var(--ink)}.drst b{display:block;height:100%;background:#f72585}
 .godds{width:100%;max-width:340px;margin:6px auto 0;border-collapse:separate;border-spacing:0;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;font-size:13px}
 .godds th{background:#ffd23f;font-family:var(--display);font-weight:400;padding:4px 6px;text-align:left}
 .godds td{padding:3px 6px;border-top:1.5px solid #e6dcc6}.godds td:first-child{font-size:16px;white-space:nowrap}.godds small{opacity:.65}
@@ -722,6 +723,7 @@ const INFO={
  crypto:['PigeonCoin',"La monnaie de ta holding : elle relie toutes tes villes.",["Convertis ta trésorerie en PigeonCoin quand le cours est bas : tu en reçois plus.","Dépense-les pour des Pigeons d'Or, du capital de départ ou des gérants.","Les prix montent à chaque achat."],"Regarde la petite courbe : convertis dans un creux, pas dans un pic."],
  heritage:['Héritage',"Certains achats te suivent dans toutes les nouvelles villes.",["Le frigo connecté et le manager : achète-les une fois, ils seront là dans chaque ville.","Les outils, véhicules et tenues sont déjà à vie, partout."],"Achète frigo et manager avant d'ouvrir une nouvelle ville : tu démarreras plus vite."],
  prestige:['Prestige et villes',"Ouvre une filiale dans une nouvelle ville : tout y rapporte plus, mais tu repars de zéro pour l'argent.",["Fais grimper le total gagné dans ta ville pour gagner des Pigeons d'Or.","Ouvre la ville suivante : ta rue actuelle passe en gérance et continue de rapporter.","Tu gardes Pigeons d'Or, bonus, PigeonCoin, tenues, Héritage et succès."],"Dépense tes Pigeons d'Or dans les bonus permanents : ils s'appliquent dans toutes les villes."],
+ drift:['Les courses clandestines',"À Tokyo, pas de bourse : l'argent se gagne sur le bitume, à Daikoku PA. C'est la quête finale du jeu.",["Achète la Pigeon 86, puis prépare-la : jantes (accélération), pneus (zone de drift plus large), amortisseurs (aiguille plus lente), moteur (vitesse), turbo (nitro), frein à main (zone PARFAIT plus large).","À chaque virage, une jauge apparaît : appuie sur Espace (ou DRIFT) quand l'aiguille est dans le vert. Dans le jaune : PARFAIT, tu accélères. À côté : sortie de route. Rien : tête-à-queue.","N (ou NITRO) en ligne droite : un gros coup d'accélérateur, une fois par niveau de turbo.","Gagne les 3 courses d'entraînement, puis la course légendaire du Mont Fuji contre le Roi du Drift : le pactole et la fin du jeu."],"Chaque course coûte un droit d'entrée. Si tu perds, améliore la voiture et retente ta chance."],
  ws:['Le casse de Wall Street',"Le coup du siècle : la chambre forte du New York Stock Exchange. Il faut le réussir pour ouvrir Tokyo.",["Préparation (ordinateur du bar) : recrute un hacker, un perceur et un chauffeur (3 bandits minimum), achète la clé USB pirate, la perceuse thermique et le van banalisé.","Repérage : au NYSE, paie le vigile pour obtenir le plan de la chambre forte.","Le casse : 1. pirater les caméras (retenir des codes), 2. percer le coffre (stopper la molette dans le vert), 3. fuir en voiture (esquiver taxis et police).","Chaque tentative coûte 1 M$. Raté : la chaleur grimpe, mais l'équipe, le matériel et le repérage restent prêts : tu peux retenter aussitôt."],"Le butin est de l'argent sale : pense au comptable pour le blanchir."],
  tower:['La Pigeon Tower',"Ton gratte-ciel à Manhattan, à construire étage par étage.",["Chaque étage rapporte un loyer chaque seconde, de plus en plus haut.","Tous les 5 étages, un étage spécial (sport, restaurant, piscine…). Paliers : 10 étages +10 %, 25 étages +15 %, 50 étages le penthouse.","À 5 étages : le liftier. Une partie par jour, chaque locataire déposé ajoute +5 % aux revenus de New York pendant 10 min (VIP x3, max x3)."],"Joue le liftier juste avant une grosse session à New York pour en profiter à fond."],
  bourse:['La Bourse',"Achète des actions, revends-les plus cher. Elle ouvre à New York, puis chaque ville a sa propre bourse.",["Les cours suivent des tendances cachées de 30 à 80 s.","La rue influence les cours : la pluie, une manif ou la nuit font bouger certaines actions.","Les analystes te révèlent les tendances (bouton « i » à côté de chacun).","Tes actions restent dans la ville où tu les as achetées."],"Sans analyse c'est un pari. Avec une analyse et une grosse mise, c'est rentable."],
@@ -732,7 +734,7 @@ const INFO={
  bj:['Blackjack',"Approche-toi le plus possible de 21 sans dépasser, et bats le croupier.",["Choisis ta mise. Tu reçois 2 cartes, le croupier aussi (une cachée).","Tirer : une carte de plus. Rester : tu t'arrêtes.","Le croupier tire jusqu'à 17. Les figures valent 10, l'As 1 ou 11.","21 avec les 2 premières cartes (As + 10 ou figure) : blackjack naturel, ta mise x2,5 au total (gain de 3:2).","21 avec 3 cartes ou plus, ou plus près de 21 que le croupier : ta mise x2 au total (gain de 1:1).","Exemple avec 10 € misés : blackjack naturel, tu récupères 25 € (15 € de bénéfice) ; 21 classique, tu récupères 20 € (10 € de bénéfice).","Attention : si le croupier fait aussi 21, il peut y avoir égalité, et ta mise t'est rendue."],"Reste souvent à partir de 17. Au-dessus de 21, tu perds tout de suite."],
  rou:['Roulette',"Lance la roue et croise les doigts.",["Choisis ta mise : 10 %, 25 %, 50 % de ton cash, ou tapis.","Case verte (14 sur 24) : mise x1,5.","Case rouge (9 sur 24) : mise perdue.","Case dorée (1 sur 24) : mise x5 !"],"Plus de 6 chances sur 10 de gagner, mais le tapis peut tout faire perdre. Ne mise que ce que tu peux perdre."],
 };
-const TIP2INFO={tools:'tools',repair:'tools',health:'health',distrib:'distrib',local:'local',staff:'staff',shops:'shops',bandits:'bandits',heat:'bandits',avocat:'bandits',casino:'bj',bar:'noir',bourse:'bourse',tower:'tower',ws:'ws',prestige:'prestige',holding:'filiales',fripe:'fripe',motors:'motors',estate:'estate',police:'police',dirty:'dirty',arms:'armory'};
+const TIP2INFO={tools:'tools',repair:'tools',health:'health',distrib:'distrib',local:'local',staff:'staff',shops:'shops',bandits:'bandits',heat:'bandits',avocat:'bandits',casino:'bj',bar:'noir',bourse:'bourse',tower:'tower',ws:'ws',drift:'drift',prestige:'prestige',holding:'filiales',fripe:'fripe',motors:'motors',estate:'estate',police:'police',dirty:'dirty',arms:'armory'};
 const ib=k=>`<button class="ib" type="button" data-act="info:${k}" title="Comment ça marche ?" aria-label="Comment ça marche ?">i</button>`;
 function infoHTML(k){const [n,what,steps,tip]=INFO[k];
   return `<p class="lead">${what}</p>`+steps.map((x,i)=>`<div class="row" style="display:flex;justify-content:flex-start;align-items:center;gap:10px"><b style="flex:none;width:26px;height:26px;border-radius:50%;background:#4cc9f0;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center">${i+1}</b><small style="font-size:13px;margin:0">${x}</small></div>`).join('')+
@@ -1063,7 +1065,8 @@ const keys={};
 addEventListener('keydown',e=>{
   if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
   if(e.key==='Escape'&&!$('panel').hidden){closePanel();return}
-  if(!$('panel').hidden){if(WSG&&pid==='wsgame'){const G=WSG;if(G.ph==='hack'&&/^[0-9]$/.test(e.key)){wsKey(e.key);return}if(G.ph==='hack'&&e.key==='Backspace'){e.preventDefault();wsKey('del');return}
+  if(!$('panel').hidden){if(DRG&&pid==='driftgame'){if(e.key===' '||e.key==='Enter'){e.preventDefault();drDrift();return}if(e.key==='n'||e.key==='N'){drNitro();return}}
+    if(WSG&&pid==='wsgame'){const G=WSG;if(G.ph==='hack'&&/^[0-9]$/.test(e.key)){wsKey(e.key);return}if(G.ph==='hack'&&e.key==='Backspace'){e.preventDefault();wsKey('del');return}
       if(G.ph==='vault'&&(e.key===' '||e.key==='Enter')){e.preventDefault();wsDrill();return}if(G.ph==='escape'&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='q'||e.key==='d')){e.preventDefault();wsLane(e.key==='ArrowLeft'||e.key==='q'?-1:1);return}}
     if(LIFT&&pid==='lift'&&['ArrowUp','ArrowDown',' ','e','E'].includes(e.key)){e.preventDefault();if(e.key==='ArrowUp')liftMove(1);else if(e.key==='ArrowDown')liftMove(-1);else liftOpen();return}
     if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&JOB&&JOB.k==='peluche'&&pid==='job'&&!(JOB.cust.wait>0)){e.preventDefault();mgAct('mgsw',e.key==='ArrowLeft'?'0':'1');if(JOB)renderPanel();return}
@@ -1168,6 +1171,8 @@ const ACH=[
  ['requin','Requin','Racheter Déchets Corp',()=>S.rivalBought],
  ['proprio','Toute la rue','Posséder toutes les boutiques, les grands lieux et Déchets Corp',()=>SHOPS.every(x=>S.shops[x.k]>0)&&ESTATE.every(e=>S.owned[e.k])&&S.rivalBought],
  ['casse','Le casse du siècle','Réussir le casse de Wall Street',()=>!!(S.meta.wsWins)],
+ ['pilote','Pilote de l\'ombre','Gagner une course clandestine à Tokyo',()=>(S.meta.drWins||0)>=1],
+ ['roidrift','Roi du drift','Gagner la course légendaire du Mont Fuji',()=>!!S.meta.legendWin],
  ['manhattan','Roi de Manhattan','Terminer les 50 étages de la Pigeon Tower',()=>(S.meta.towerDone||0)>=1],
  ['trader','Loup de la rue','Gagner 1 000 € sur une seule vente en bourse',()=>S.meta.bestTrade>=1000],
  ['kebabier','Roi de la broche','Servir 30 kebabs parfaits',()=>S.meta.kebabs>=30],
@@ -1182,7 +1187,7 @@ const ACH=[
 ];
 // ville à partir de laquelle un succès est faisable (bar, bandits et braquage arrivent à Londres) ;
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
-const ACH_CITY={casse:2,manhattan:2,trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
+const ACH_CITY={pilote:3,roidrift:3,casse:2,manhattan:2,trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
@@ -1209,14 +1214,18 @@ const STEPS=[
    w:'Entre au bar (E), va à l\'ordinateur et lance « Le casse » : choisis une cible dans le classement, puis tire sur les cibles du mini-jeu. Selon ta précision, tu repars avec jusqu\'à 30 % de son argent (moins si elle est bien plus riche que toi), ou bredouille sous 50 % de précision. Un seul casse par jour.',acts:['heist']},
  {k:'compta',h:"Bar › ordinateur › comptable.",c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
- {k:'bourse',h:"Entre au NYSE (E), ordinateur de trading.",c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E) : les analystes au fond à droite, l\'ordinateur de trading au centre. Achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'bourse',h:"Entre au NYSE (E), ordinateur de trading.",only:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E) : les analystes au fond à droite, l\'ordinateur de trading au centre. Achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
  {k:'ws',only:2,h:"Bar › ordinateur › Le casse de Wall Street.",n:'Réussir le casse de Wall Street',ok:()=>!!(S.ws&&S.ws.done),tip:'ws',
    w:'Prépare le casse sur l\'ordinateur du bar (équipe, matériel), fais le repérage auprès du vigile du NYSE, puis lance le casse : piratage, coffre et fuite. Réussis-le pour débloquer Tokyo.',acts:['ws:']},
+ {k:'drcar',only:3,h:"Daikoku PA (E), au bout de la rue.",cost:()=>C(DR_CAR),n:'Acheter la voiture de drift',ok:()=>!!drS().car,tip:'drift',w:'Va à Daikoku PA, le parking des pilotes au bout de la rue, appuie sur E et achète la Pigeon 86.',acts:['dr:car']},
+ {k:'drup',only:3,h:"Daikoku PA › Préparation.",cost:()=>drPartCost(DR_PARTS[0],0),n:'Préparer la voiture (3 améliorations)',ok:()=>drUpTot()>=3,w:'À Daikoku PA, améliore ta voiture : jantes, pneus, amortisseurs, moteur, turbo, frein à main. Il en faut 3 pour commencer.',acts:['dr:up:']},
+ {k:'drtrain',only:3,h:"Daikoku PA › Courses d'entraînement.",n:'Gagner les 3 courses d\'entraînement',ok:()=>drTrainWins()>=3,w:'Gagne le sprint de Daikoku, le touge d\'Hakone puis le Wangan de nuit. À chaque virage, appuie sur Espace (ou DRIFT) quand l\'aiguille est dans le vert.',acts:['dr:race:r1','dr:race:r2','dr:race:r3']},
+ {k:'legend',only:3,h:"Daikoku PA › La course légendaire.",n:'Gagner la course légendaire du Mont Fuji',ok:()=>!!drS().done,tip:'drift',w:'Défie le Roi du Drift sur les pentes du Fuji. Le vainqueur repart avec le pactole : c\'est la fin du jeu !',acts:['dr:race:legend']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
   return L.length>1?L.slice(0,-1).join(', ')+' ou '+L[L.length-1]:L[0]};
-const bourseOpen=()=>CI()>=2;// la Bourse n'ouvre qu'à New York (et après)
+const bourseOpen=()=>CI()===2;// la Bourse n'existe qu'à New York (à Tokyo, ce sont les courses clandestines)
 const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci&&(x.only==null||x.only===ci)&&!(x.skip&&x.skip.includes(ci))&&(!x.need||(CITY_SHOPS[CITIES[ci].k]||[]).includes(x.need)));// pas d'étape pour une boutique absente de la ville
 const stepW=x=>typeof x.w==='function'?x.w():x.w;
 const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
@@ -2019,6 +2028,7 @@ function spot(){
   if(CK()==='ny'&&Math.abs(P.x-584)<26&&P.y<300)return 'tower';
   if(dist(P.x,P.y,SNACK.x,SNACK.y+30)<50)return 'snack';
   if(CK()==='ny'&&dist(P.x,P.y,NYSE.door,222)<62)return 'nyse';
+  if(CK()==='tokyo'&&dist(P.x,P.y,DAIKOKU.door,222)<62)return 'daikoku';
   for(const p of pigeons)if(p.fly<=0&&p.love<=0&&dist(P.x,P.y,p.x,p.y)<50){feedTarget=p;return 'feed'}
   return null;
 }
@@ -2038,6 +2048,7 @@ function updAct(){
   else if(s==='snack')lbl='Snack du distrib · '+fmt(foodP(3));
   else if(s==='tower')lbl='Entrer dans la Pigeon Tower';
   else if(s==='nyse')lbl='Entrer au New York Stock Exchange';
+  else if(s==='daikoku')lbl='Entrer à Daikoku PA (courses)';
   else if(s==='feed')lbl='Nourrir le pigeon · '+fmt(C(1));
   else if(SHOPDEF[s])lbl='Entrer : '+SHOPDEF[s].n;
   else if(s==='vest')lbl='Entrer au vestiaire';
@@ -2075,6 +2086,7 @@ function doAct(){
   const s=spot();if(!s)return;
   if(s==='bar'&&S.owned.bar)return enterBar();
   if(s==='nyse')return enterNyse();
+  if(s==='daikoku')return openPanel('drift');
   if(s==='tower')return openPanel('tower');
   if(s==='snack'){const p=foodP(3);
     if(S.cash>=p){S.cash-=p;S.food=Math.min(100,S.food+18);S.stats.ate++;float(SNACK.x,SNACK.y-60,(SNACKS[CK()]||['Barre Choco-Douteuse !'])[0],'#ff9f1c');snd('eat')}
@@ -2293,8 +2305,9 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
   return [x.n,x.col,h]}
 // ================= Panneaux =================
 let pid=null,parg=null,ptab='holding',infoBack=null;
-function openPanel(id,arg){pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};renderPanel();$('panel').hidden=false;P.tx=null;for(const k in keys)keys[k]=false}
-function closePanel(){if(spinning)return;if(JOB){endJob(true);return}if(LIFT)liftEnd(true);if(WSG){$('panel').hidden=true;pid=null;return}$('panel').hidden=true;pid=null;refocus()}
+function openPanel(id,arg){if(DRG&&id!=='driftgame'&&id!=='driftend')return;// pas de fenêtre par-dessus une course
+  pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};renderPanel();$('panel').hidden=false;P.tx=null;for(const k in keys)keys[k]=false}
+function closePanel(){if(spinning)return;if(JOB){endJob(true);return}if(LIFT)liftEnd(true);if(DRG){$('panel').hidden=true;pid=null;return}if(WSG){$('panel').hidden=true;pid=null;return}$('panel').hidden=true;pid=null;refocus()}
 $('pclose').addEventListener('click',closePanel);
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')closePanel()});
 // le côté obscur (bandits, déguisements, avocat) : dans Business et sur l'ordinateur du bar
@@ -2451,7 +2464,7 @@ function renderPanel(){
         '<div class="sec">Héritage · te suit dans chaque nouvelle ville'+ib('heritage')+'</div>'+
         HER.map(([k,n,how])=>`<div class="obj${M.her[k]?' ok':''}"><div class="ck">${M.her[k]?'✓':''}</div><span>${n}${M.her[k]?'':' · '+how+' pour le garder à vie'}</span></div>`).join('');}
     else if(ptab==='bourse'&&!bourseOpen()){
-      h+='<p class="lead" style="text-align:center;font-size:18px">🔒 La Bourse ouvre à <b>New York</b>.</p><p class="lead">Wall Street n\'accepte pas encore les petits joueurs : continue de développer ta rue, puis ouvre ta filiale à New York (Menu › Prestige).</p>';
+      h+=CK()==='tokyo'?'<p class="lead" style="text-align:center;font-size:18px">🏁 Pas de bourse à Tokyo.</p><p class="lead">Ici, l\'argent se gagne sur le bitume : va à <b>Daikoku PA</b>, au bout de la rue, pour les courses clandestines.</p>':'<p class="lead" style="text-align:center;font-size:18px">🔒 La Bourse ouvre à <b>New York</b>.</p><p class="lead">Wall Street n\'accepte pas encore les petits joueurs : continue de développer ta rue, puis ouvre ta filiale à New York (Menu › Prestige).</p>';
       for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k];if(!st||!st.q)continue;const val=st.q*mk.p,pl=val-st.cost;// anciennes actions : on peut encore les revendre
         h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span></small></div><div class="btnz"><button class="buy sm red" type="button" data-act="sell:${s.k}">Tout vendre</button></div></div>`}}
     else if(ptab==='bourse'){h+=bourseHTML('all')}
@@ -2496,6 +2509,10 @@ function renderPanel(){
     else h+='<p class="foot">🛗 À 5 étages, tu débloques le mini-jeu du liftier.</p>';
     h+='<div class="sec">Paliers</div>'+TW_MS.map(([n,d])=>`<div class="obj${f>=n?' ok':''}"><div class="ck">${f>=n?'✓':''}</div><span><b>${n} étages</b> · ${d}</span></div>`).join('')+
       '<div class="sec">Étages spéciaux</div><p class="foot">'+Object.entries(TW_SP).map(([n,v])=>`${f>=n?'✓':'·'} ${n} : ${v[0]}`).join(' &nbsp; ')+'</p>'}
+  else if(pid==='drift'){t='Daikoku PA · courses clandestines';hd='#f72585';h=driftHTML()}
+  else if(pid==='driftgame'){t='Course clandestine';hd='#f72585';h=driftGameHTML()}
+  else if(pid==='driftend'){const R=parg||{};t=R.win?(R.r&&R.r.k==='legend'?'Le Roi du Drift, c\'est toi !':'Victoire !'):'Course perdue';hd=R.win?'#ffd23f':'#d62839';h=driftEndHTML(R)}
+  else if(pid==='finale'){t='Fin du jeu';hd='#ffd23f';h=finaleHTML()}
   else if(pid==='wsgame'){const G=WSG;t='Le casse de Wall Street';hd='#d62839';if(!G){h='';}
     else{const st={hack:'1 / 3 · Piratage des caméras',vault:'2 / 3 · La chambre forte',escape:'3 / 3 · La fuite'}[G.ph];h=`<div class="jbar"><span>${st}</span><b id="wst">${Math.ceil(G.t)} s</b></div><p class="jmsg" id="wsmsg" style="text-align:center">${G.msg}</p>`;
     if(G.ph==='hack'){h+=G.show>0?`<div class="big" style="font-size:44px;letter-spacing:10px;text-align:center;font-family:monospace;background:#0b3d20;color:#38ff8b;border-radius:12px;padding:14px">${G.code}</div><p class="foot" style="text-align:center">Mémorise !</p>`:
@@ -2540,6 +2557,7 @@ function renderPanel(){
     g.setTransform(d*sc,0,0,d*sc,0,0);g.translate(-440+(120/sc-180)/2,240/sc-208);cx=g;try{drawTower(440,180,f,0)}finally{cx=keep}}}
   if(document.querySelector('#pbody canvas[data-pv]'))drawPieceThumbs();
   if(pid==='job')drawFoodJob();
+  if(pid==='drift')drawDrCar();if(pid==='driftgame')drDraw();
   if(document.querySelector('#pbody canvas[data-vc]'))drawVcThumbs();
   if(pid==='trade'||pid==='anadesk'){const L=lockByKey('bourse');if(L)$('pbody').innerHTML=`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}
   if(pid==='plus'&&ptab==='bourse'){const L=lockByKey('bourse');if(L){const tb=$('pbody').querySelector('.tabs');$('pbody').innerHTML=(tb?tb.outerHTML:'')+`<p class="lead" style="text-align:center;font-size:18px">${lockText(L)}</p>`}}
@@ -2617,6 +2635,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='dr'){if(v==='drift')return drDrift();if(v==='nitro')return drNitro();if(v==='back')return openPanel('drift');if(v==='finale')return openPanel('finale');drAct(v,w);return renderPanel()}
   if(a==='ws'){if(v==='go')return wsStart();wsBuy(v,w);if(v==='scout')return renderPanel()}
   if(a==='wsk'){wsKey(v);return}
   if(a==='wsd'){wsDrill();return}
@@ -3136,8 +3155,142 @@ function tkEave(x,w,cols){const y=96;cx.save();cx.lineWidth=3;cx.strokeStyle=INK
   cx.lineWidth=2;cx.strokeStyle=INK;for(let k=x+10;k<x+w-4;k+=12){circ(k,y+24,3.2);fs('#5c6185')}cx.restore()}
 // la nuit : la rue s'assombrit pour que les néons ressortent
 function tkNight(){const dk=darkness();if(dk<=0)return;cx.fillStyle=`rgba(24,14,60,${.42*dk})`;cx.fillRect(camX-10,0,viewW+20,214);
-  drawJihanki(1);drawShibuya(1);drawPachinko(1);
+  drawJihanki(1);drawShibuya(1);drawDaikoku(1);
   cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.5*dk;for(const lx of [1440,1700]){const g=cx.createRadialGradient(lx,151,0,lx,151,40);g.addColorStop(0,'rgba(255,209,102,.9)');g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.fillRect(lx-40,111,80,80)}cx.restore()}
+// ===== Tokyo : courses clandestines à Daikoku PA (la quête finale, comme le casse à New York) =====
+const DAIKOKU={x:4680,w:430,door:4895};
+const DR_PARTS=[['jantes','Jantes forgées','Plus légères : meilleure accélération',40000],['pneus','Pneus semi-slicks','Plus d\'adhérence : zone de drift plus large',60000],
+  ['amort','Amortisseurs coilovers','Voiture plus stable : l\'aiguille de drift ralentit',60000],['moteur','Moteur gonflé','Vitesse de pointe plus haute',120000],
+  ['turbo','Turbo + nitro','+1 nitro par course, à chaque niveau',90000],['frein','Frein à main hydraulique','Zone PARFAIT plus large',40000]];
+const DR_LV=3,DR_CAR=400000;
+const DR_RACES=[
+  {k:'r1',n:'Sprint de Daikoku',rv:'Kenji · Silvia S15',col:'#f8f9fa',sp:92,len:2600,corners:8,fee:10000,prize:30000,bg:'daikoku'},
+  {k:'r2',n:'Touge d\'Hakone',rv:'Ryō · RX-7',col:'#ffd23f',sp:104,len:3000,corners:11,fee:30000,prize:90000,bg:'touge'},
+  {k:'r3',n:'Wangan de nuit',rv:'Midnight · Fairlady Z',col:'#3a86ff',sp:118,len:3400,corners:10,fee:60000,prize:200000,bg:'wangan'},
+  {k:'legend',n:'La course légendaire du Mont Fuji',rv:'Le Roi du Drift · GT-R',col:'#d62839',sp:140,len:4600,corners:16,fee:300000,prize:5000000,bg:'fuji'}];
+const drS=()=>S.drift||(S.drift={car:0,up:{},wins:{},done:0,tries:0}),drLv=k=>drS().up[k]||0,drUpTot=()=>DR_PARTS.reduce((a,p)=>a+drLv(p[0]),0);
+const drPartCost=(p,l)=>C(Math.round(p[3]*[1,2.5,6][l])),drTrainWins=()=>['r1','r2','r3'].filter(k=>drS().wins[k]).length;
+const drStats=()=>({vmax:100+drLv('moteur')*13,acc:26+drLv('jantes')*9,zw:16+drLv('pneus')*6,pz:4+drLv('frein')*2.5,nspd:1.25-drLv('amort')*.18,nitro:drLv('turbo')});
+const drOpen=r=>r.k==='r1'||(r.k==='r2'&&drS().wins.r1)||(r.k==='r3'&&drS().wins.r2)||(r.k==='legend'&&drTrainWins()>=3);
+let DRG=null;
+function drAct(v,w){const D=drS(),pay=c=>{if(S.cash<c){snd('err');toast('Il te faut '+fmt(c));return false}S.cash-=c;return true};if(CK()!=='tokyo')return;
+  if(v==='car'){if(D.car||!pay(C(DR_CAR)))return;D.car=1;snd('legend');toast('🚗 La Pigeon 86 est à toi ! Prépare-la avant de courir.')}
+  if(v==='up'){const p=DR_PARTS.find(x=>x[0]===w),l=drLv(w);if(!D.car||!p||l>=DR_LV||!pay(drPartCost(p,l)))return;D.up[w]=l+1;snd('buy');toast(p[1]+' : niveau '+(l+1))}
+  if(v==='race'){const r=DR_RACES.find(x=>x.k===w);if(!r||!D.car||!drOpen(r)||(r.k==='legend'&&D.done))return;if(!pay(C(r.fee)))return;drStart(r)}
+  updHud();save()}
+// courbes : chaque virage décale la route à gauche ou à droite
+function drStart(r){const st=drStats(),cs=[];let d=320;const gap=(r.len-500)/r.corners;
+  for(let i=0;i<r.corners;i++){d+=gap*rnd(.75,1.15);cs.push({d:Math.min(d,r.len-120),dir:Math.random()<.5?-1:1,z:rnd(8,90-st.zw),res:null})}
+  drS().tries++;DRG={r,st,cs,ci:0,pd:0,pv:0,rd:0,rv:0,t:0,nitro:st.nitro,nt:0,boost:0,drift:0,ddir:1,smoke:[],msg:'3… 2… 1… GO !',cd:2.2,ph:0,fin:null,flash:'',ft:0};
+  pid='driftgame';$('panel').hidden=false;renderPanel();drLoop()}
+const drShift=(G,D)=>{let x=0;for(const c of G.cs){const k=(D-c.d)/70;x+=c.dir*80/(1+Math.exp(-k))}return x};
+function drDrift(){const G=DRG;if(!G||G.cd>0||G.fin)return;const c=G.cs[G.ci];if(!c||c.res||c.d-G.pd>150){return}
+  const p=kPos({ph:G.ph}),mid=c.z+G.st.zw/2;let res;if(Math.abs(p-mid)<=G.st.pz/2)res='perfect';else if(p>=c.z&&p<=c.z+G.st.zw)res='ok';else res='bad';
+  c.res=res;G.drift=.9;G.ddir=c.dir;if(res==='perfect'){G.pv*=1.12;G.boost=1.2;G.flash='PARFAIT !';snd('coin')}else if(res==='ok'){G.pv*=.88;G.flash='Joli drift';snd('pick')}else{G.pv*=.55;G.flash='Sortie de route !';snd('fail')}G.ft=1}
+function drNitro(){const G=DRG;if(!G||G.cd>0||G.fin||G.nitro<=0||G.nt>0)return;G.nitro--;G.nt=2;snd('event');G.flash='NITRO !';G.ft=.8}
+function drLoop(){let last=performance.now();const tick=()=>{const G=DRG;if(!G)return;if(pid!=='driftgame'){drEnd(false,'Tu as quitté la course : abandon.');return}
+  const now=performance.now(),dt=Math.min(.05,(now-last)/1000);last=now;
+  if(G.cd>0){G.cd-=dt;if(G.cd<=0)G.msg='Espace / DRIFT dans le vert à chaque virage · N / NITRO en ligne droite'}
+  else if(!G.fin){G.t+=dt;const st=G.st,cap=st.vmax*(G.nt>0?1.4:1)*(G.boost>0?1.08:1);
+    if(G.spin>0)G.spin-=dt;else G.pv=G.pv<cap?Math.min(cap,G.pv+st.acc*(G.nt>0?2:1)*dt):Math.max(cap,G.pv-40*dt);G.pd+=G.pv*dt;G.nt-=dt;G.boost-=dt;G.drift-=dt;G.ft-=dt;
+    G.rv=Math.min(G.r.sp,G.rv+30*dt);G.rd+=G.rv*(1+.04*Math.sin(G.t*.7))*dt;G.ph+=dt*st.nspd*2;
+    const c=G.cs[G.ci];if(c){if(!c.res&&G.pd>c.d){c.res='miss';G.pv*=.3;G.spin=.6;G.drift=1;G.ddir=-c.dir;G.flash='Tête-à-queue !';G.ft=1;snd('fail')}if(c.res&&G.pd>c.d+20)G.ci++}
+    if(G.drift>0&&Math.random()<.6)G.smoke.push({x:rnd(-14,14),y:30,r:6,a:.6});
+    if(G.pd>=G.r.len||G.rd>=G.r.len){const win=G.pd>=G.r.len&&(G.rd<G.r.len||G.pd-G.r.len>=G.rd-G.r.len);G.fin={win,gap:Math.abs((G.r.len-G.rd)/Math.max(1,G.r.sp))};setTimeout(()=>drEnd(win),700)}}
+  for(const s of G.smoke){s.y+=60*dt;s.r+=24*dt;s.a-=dt*.8}G.smoke=G.smoke.filter(s=>s.a>0);
+  drDraw();const ms=$('drmsg');if(ms&&ms.textContent!==G.msg)ms.textContent=G.msg;const nb=$('drnit');if(nb){const t='NITRO ×'+G.nitro;if(nb.textContent!==t)nb.textContent=t;nb.disabled=G.nitro<=0}
+  requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+// voiture vue de dessus
+function drTopCar(g,x,y,ang,col,acc){g.save();g.translate(x,y);g.rotate(ang);g.lineWidth=2.5;g.strokeStyle=INK;g.fillStyle='#222';for(const [dx,dy] of [[-15,-16],[15,-16],[-15,15],[15,15]]){g.beginPath();g.roundRect(dx-4,dy-7,8,14,2);g.fill()}
+  g.fillStyle=col;g.beginPath();g.roundRect(-13,-26,26,52,8);g.fill();g.stroke();g.fillStyle='#cdeefd';g.beginPath();g.roundRect(-10,-14,20,10,3);g.fill();g.fillStyle='rgba(42,31,61,.5)';g.beginPath();g.roundRect(-10,8,20,8,3);g.fill();
+  if(acc){g.fillStyle=acc;g.fillRect(-13,-2,26,5)}g.fillStyle='#fff3b0';g.fillRect(-11,-27,6,3);g.fillRect(5,-27,6,3);g.restore()}
+function drDraw(){const c=$('drcv'),G=DRG;if(!c||!G)return;const d=window.devicePixelRatio||1,W=320,H=420;if(c.width!==W*d){c.width=W*d;c.height=H*d}const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
+  const bg=G.r.bg,night=bg==='wangan'||bg==='daikoku',PY=330,x0=drShift(G,G.pd);
+  g.fillStyle=bg==='touge'?'#2d6a4f':bg==='fuji'?'#3a5a40':night?'#14141f':'#495057';g.fillRect(0,0,W,H);
+  if(bg==='fuji'){g.fillStyle='#7b8fc7';g.beginPath();g.moveTo(40,120);g.lineTo(140,40);g.lineTo(180,40);g.lineTo(290,120);g.closePath();g.fill();g.fillStyle='#fff';g.beginPath();g.moveTo(118,58);g.lineTo(140,40);g.lineTo(180,40);g.lineTo(204,60);g.lineTo(186,54);g.lineTo(170,64);g.lineTo(152,52);g.lineTo(134,62);g.closePath();g.fill()}
+  // route
+  for(let sy=H;sy>=-10;sy-=6){const D=G.pd+(PY-sy)*1.6,cxr=W/2+(drShift(G,D)-x0)*.9;const rw=110;
+    g.fillStyle=night?'#2b2d42':'#5c6370';g.fillRect(cxr-rw/2,sy,rw,7);g.fillStyle=Math.floor(D/30)%2?'#d62839':'#fff';g.fillRect(cxr-rw/2-6,sy,6,7);g.fillRect(cxr+rw/2,sy,6,7);
+    if(Math.floor(D/40)%2){g.fillStyle='rgba(255,255,255,.75)';g.fillRect(cxr-2,sy,4,7)}
+    if(night&&Math.floor(D/120)%8===0){g.fillStyle=['#f72585','#4cc9f0','#ffd23f'][Math.floor(D/960)%3];g.fillRect(cxr-rw/2-26,sy,10,7);g.fillRect(cxr+rw/2+16,sy,10,7)}
+    if(bg==='touge'&&Math.floor(D/90)%5===0){g.fillStyle='#1b4332';g.beginPath();g.arc(cxr-rw/2-30,sy,12,0,7);g.arc(cxr+rw/2+30,sy+20,12,0,7);g.fill()}}
+  // ligne d'arrivée
+  {const sy=PY-(G.r.len-G.pd)/1.6;if(sy>-20&&sy<H){const cxr=W/2+(drShift(G,G.r.len)-x0)*.9;for(let k=0;k<11;k++)for(let r=0;r<2;r++){g.fillStyle=(k+r)%2?'#fff':'#14141f';g.fillRect(cxr-55+k*10,sy+r*6,10,6)}}}
+  // virages : panneaux
+  for(const cn of G.cs){const sy=PY-(cn.d-G.pd)/1.6;if(sy<-30||sy>H)continue;const cxr=W/2+(drShift(G,cn.d)-x0)*.9;g.fillStyle=cn.res==='perfect'?'#38f07a':cn.res==='ok'?'#ffd23f':cn.res?'#ef476f':'#fff';
+    g.font='bold 18px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(cn.dir<0?'⟲':'⟳',cxr+cn.dir*80,sy)}
+  // rival
+  {const sy=PY-(G.rd-G.pd)/1.6;if(sy>-40&&sy<H+40){const cxr=W/2+(drShift(G,G.rd)-x0)*.9;drTopCar(g,cxr+18,sy,0,G.r.col,'#14141f')}}
+  // fumée et joueur
+  for(const s of G.smoke){g.fillStyle=`rgba(230,230,240,${s.a})`;g.beginPath();g.arc(W/2+s.x-20,PY+s.y,s.r,0,7);g.fill()}
+  const ang=G.drift>0?G.ddir*.55*Math.min(1,G.drift*2):0;if(G.nt>0){g.fillStyle='rgba(76,201,240,.6)';g.beginPath();g.moveTo(W/2-28,PY+26);g.lineTo(W/2-20,PY+50+Math.random()*12);g.lineTo(W/2-12,PY+26);g.fill()}
+  drTopCar(g,W/2-20,PY,ang,'#f8f9fa','#14141f');
+  // HUD : progression joueur / rival
+  g.fillStyle='rgba(20,20,31,.85)';g.fillRect(0,0,W,34);const bar=(y,v,col,lab)=>{g.fillStyle='#3a3a5a';g.fillRect(70,y,230,6);g.fillStyle=col;g.fillRect(70,y,230*Math.min(1,v/G.r.len),6);g.fillStyle='#fff';g.font='bold 10px sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText(lab,8,y+3)};
+  bar(8,G.pd,'#38f07a','Toi');bar(21,G.rd,G.r.col==='#f8f9fa'?'#adb5bd':G.r.col,'Rival');
+  g.fillStyle='#fff';g.font='bold 13px sans-serif';g.textAlign='right';g.fillText(Math.round(G.pv*1.6)+' km/h',W-8,48);
+  // jauge de drift
+  const cn=G.cs[G.ci];if(cn&&!cn.res&&cn.d-G.pd<150&&G.cd<=0){const gy=H-38;g.fillStyle='rgba(20,20,31,.85)';g.beginPath();g.roundRect(20,gy-14,W-40,34,10);g.fill();
+    const gx=30,gw=W-60,p=kPos({ph:G.ph});g.fillStyle='#3a3a5a';g.fillRect(gx,gy,gw,12);g.fillStyle='#38f07a';g.fillRect(gx+gw*cn.z/100,gy,gw*G.st.zw/100,12);
+    g.fillStyle='#ffd23f';g.fillRect(gx+gw*(cn.z+G.st.zw/2-G.st.pz/2)/100,gy,gw*G.st.pz/100,12);g.fillStyle='#fff';g.fillRect(gx+gw*p/100-2,gy-6,4,24);
+    g.font='bold 11px sans-serif';g.textAlign='center';g.fillText('DRIFT ! '+(cn.dir<0?'← gauche':'droite →'),W/2,gy-7)}
+  if(G.cd>0){g.fillStyle='#fff';g.font='bold 56px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(G.cd>1.5?'3':G.cd>.8?'2':G.cd>.15?'1':'GO',W/2,180)}
+  if(G.ft>0&&G.flash){g.globalAlpha=Math.min(1,G.ft*2);g.fillStyle=G.flash.startsWith('PARFAIT')||G.flash.startsWith('NITRO')?'#ffd23f':G.flash.startsWith('Joli')?'#38f07a':'#ef476f';g.font='bold 28px sans-serif';g.textAlign='center';g.fillText(G.flash,W/2,150);g.globalAlpha=1}
+  if(G.fin){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,H);g.fillStyle=G.fin.win?'#ffd23f':'#ef476f';g.font='bold 40px sans-serif';g.textAlign='center';g.fillText(G.fin.win?'VICTOIRE !':'PERDU',W/2,H/2)}}
+function drEnd(win,why){const G=DRG;if(!G)return;DRG=null;const r=G.r,D=drS();let prize=0,first=false;
+  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=C(r.prize)*(first?1:.3);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
+  pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
+// la voiture de drift, de profil (aperçu au garage et voitures garées à Daikoku)
+function drawDriftCar(x,y,s,lv){lv=lv||{};cx.save();cx.translate(x,y);cx.scale(s,s);cx.lineWidth=3;cx.strokeStyle=INK;const low=lv.amort?4:0;
+  cx.fillStyle='rgba(0,0,0,.2)';cx.beginPath();cx.ellipse(0,4,64,7,0,0,7);cx.fill();cx.translate(0,low);
+  cx.beginPath();cx.moveTo(-62,-8);cx.lineTo(-60,-26);cx.lineTo(-30,-30);cx.lineTo(-14,-50);cx.lineTo(28,-50);cx.lineTo(44,-30);cx.lineTo(62,-26);cx.lineTo(62,-8);cx.closePath();cx.fillStyle='#f8f9fa';cx.fill();cx.stroke();
+  cx.fillStyle='#14141f';cx.beginPath();cx.moveTo(-62,-8);cx.lineTo(-61,-20);cx.lineTo(62,-20);cx.lineTo(62,-8);cx.closePath();cx.fill();
+  cx.fillStyle='#cdeefd';cx.beginPath();cx.moveTo(-26,-30);cx.lineTo(-12,-46);cx.lineTo(6,-46);cx.lineTo(6,-30);cx.closePath();cx.fill();cx.stroke();cx.beginPath();cx.moveTo(12,-30);cx.lineTo(12,-46);cx.lineTo(26,-46);cx.lineTo(38,-30);cx.closePath();cx.fill();cx.stroke();
+  cx.fillStyle='#14141f';cx.font=`900 7px ${JPF}`;cx.textAlign='center';cx.fillText('鳩とうふ店',-30,-23);
+  if(lv.turbo){cx.fillStyle='#14141f';cx.fillRect(-64,-38,6,12);cx.fillRect(-72,-42,26,5)}
+  for(const wx of [-38,40]){cx.beginPath();cx.arc(wx,-6,lv.pneus?14:12,0,7);cx.fillStyle='#222';cx.fill();cx.stroke();cx.beginPath();cx.arc(wx,-6,7,0,7);cx.fillStyle=lv.jantes?'#ffd23f':'#adb5bd';cx.fill();cx.stroke()}
+  cx.fillStyle='#fff3b0';cx.fillRect(58,-24,6,5);cx.fillStyle='#ef476f';cx.fillRect(-64,-24,5,5);if(lv.moteur){cx.fillStyle='#ef476f';cx.fillRect(-30,-16,60,3)}cx.restore()}
+// Daikoku PA : parking à étages des pilotes (à la place du pachinko)
+function drawDaikoku(lit){const {x,w}=DAIKOKU,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;
+  if(!lit){rr(x,24,w,186,6);fs('#8d99ae');cx.fillStyle='#6c757d';for(const y of [84,140])cx.fillRect(x+4,y,w-8,8);
+    cx.fillStyle='#495057';for(const y of [92,148]){cx.fillRect(x+4,y,w-8,40)}
+    drawDriftCar(x+120,128,.55,{jantes:1,turbo:1});cx.save();cx.translate(x+330,128);cx.scale(-1,1);drawDriftCar(0,0,.55,{});cx.restore();
+    // drapeau à damier
+    for(let k=0;k<10;k++)for(let r=0;r<2;r++){cx.fillStyle=(k+r)%2?'#fff':'#14141f';cx.fillRect(x+20+k*9,150+r*9,9,9)}
+    rr(x+w/2-60,168,120,42,4);fs('#3d3a5c');cx.strokeStyle='rgba(255,255,255,.25)';cx.lineWidth=2;cx.beginPath();for(let k=1;k<5;k++){cx.moveTo(x+w/2-58,168+k*8);cx.lineTo(x+w/2+58,168+k*8)}cx.stroke();cx.lineWidth=4;cx.strokeStyle=INK}
+  glowBox(x+20,32,w-40,46,'#f72585');rr(x+20,32,w-40,46,8);fs('#14141f');jtxt('大黒 DAIKOKU PA',x+w/2,48,17,'#ff70a6');jtxt('ストリートレース · COURSES CLANDESTINES',x+w/2,68,10,'#4cc9f0');
+  if(dk>.2){cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.5*dk;cx.fillStyle='#fff3b0';for(const hx of [x+150,x+300]){cx.beginPath();cx.moveTo(hx,120);cx.lineTo(hx+(hx<x+200?60:-60),104);cx.lineTo(hx+(hx<x+200?60:-60),136);cx.closePath();cx.fill()}cx.restore()}
+  cx.restore()}
+// panneaux
+function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-vous des pilotes clandestins de Tokyo. Pas de bourse ici : l\'argent se gagne sur le bitume. Achète ta voiture, prépare-la, gagne les 3 courses d\'entraînement, puis défie <b>le Roi du Drift</b> sur la course légendaire du Mont Fuji.</p>';
+  h+='<div class="sec">Ta voiture de drift'+ib('drift')+'</div>';
+  if(!D.car)return h+`<div class="row"><canvas id="drcar" style="width:150px;height:70px;flex:0 0 auto"></canvas><div class="info"><b>Pigeon 86 « Tofu »</b><small>Une vieille propulsion légère, parfaite pour drifter. Il te faut une voiture pour courir.</small></div><button class="buy" type="button" data-act="dr:car" data-cost="${C(DR_CAR)}" ${S.cash<C(DR_CAR)?'disabled':''}>${fmt(C(DR_CAR))}</button></div>`;
+  const st=drStats(),bar=(n,v,mx)=>`<div class="drst"><span>${n}</span><i><b style="width:${Math.round(v/mx*100)}%"></b></i></div>`;
+  h+=`<div class="row" style="align-items:center"><canvas id="drcar" style="width:150px;height:70px;flex:0 0 auto"></canvas><div class="info"><b>Pigeon 86 « Tofu »</b>`+bar('Vitesse',st.vmax-80,59)+bar('Accélération',st.acc-10,43)+bar('Adhérence',st.zw-10,24)+bar('Stabilité',1.4-st.nspd,.7)+'</div></div>';
+  h+='<div class="sec">Préparation</div>'+DR_PARTS.map(p=>{const l=drLv(p[0]),mx=l>=DR_LV,c=mx?0:drPartCost(p,l);return `<div class="row"><div class="info"><b>${p[1]}</b><span class="lvl">${'●'.repeat(l)}${'○'.repeat(DR_LV-l)}</span><small>${p[2]}</small></div>`+
+    (mx?'<button class="buy gold" type="button" disabled>MAX</button>':`<button class="buy" type="button" data-act="dr:up:${p[0]}" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button>`)+'</div>'}).join('');
+  const raceRow=r=>{const won=D.wins[r.k],op=drOpen(r),fee=C(r.fee),pr=C(r.prize)*(won?.3:1);const prev=DR_RACES[DR_RACES.indexOf(r)-1];
+    return `<div class="row"${won?' style="background:#d8f3dc"':''}><div class="info"><b>${won?'✓ ':''}${r.n}</b><small>Rival : ${r.rv} · ${r.corners} virages · gain ${fmt(pr)}${won?' (revanche)':''}</small></div>`+
+      (op?`<button class="buy" type="button" data-act="dr:race:${r.k}" data-cost="${fee}" ${S.cash<fee?'disabled':''}>Courir · ${fmt(fee)}</button>`:`<button class="buy" type="button" disabled>🔒 ${r.k==='legend'?'3 victoires':'Gagne '+prev.n.split(' ')[0]}</button>`)+'</div>'};
+  h+='<div class="sec">Courses d\'entraînement</div>'+DR_RACES.slice(0,3).map(raceRow).join('');
+  h+='<div class="sec">La course légendaire</div>';
+  if(D.done)h+='<p class="lead">🏆 Tu as battu le Roi du Drift sur les pentes du Fuji. <b>Tu es la légende de Tokyo.</b></p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Revoir la fin</button>';
+  else h+=`<p class="lead">Le Roi du Drift n'a jamais perdu. Le vainqueur repart avec <b>le pactole : ${fmt(C(DR_RACES[3].prize))}</b> et 5 Pigeons d'Or.</p>`+raceRow(DR_RACES[3]);
+  return h}
+function drawDrCar(){const c=$('drcar');if(!c)return;const keep=cx,d=window.devicePixelRatio||1,g=c.getContext('2d');c.width=150*d;c.height=70*d;g.setTransform(d,0,0,d,0,0);g.fillStyle='#22223b';g.beginPath();g.roundRect(0,0,150,70,10);g.fill();
+  cx=g;try{const D=drS(),L={};for(const p of DR_PARTS)L[p[0]]=drLv(p[0]);drawDriftCar(75,58,.95,D.car?L:{})}finally{cx=keep}}
+function driftGameHTML(){const G=DRG;if(!G)return '';return `<div class="jbar"><span>${G.r.n}</span><b>${G.r.rv}</b></div><p class="jmsg" id="drmsg" style="text-align:center">${G.msg}</p>`+
+  `<div style="display:flex;justify-content:center"><canvas id="drcv" data-act="dr:drift" style="width:320px;height:420px;border:3px solid var(--ink);border-radius:12px;touch-action:none"></canvas></div>`+
+  `<div class="bets"><button class="chunky" type="button" data-act="dr:drift" style="font-size:20px">DRIFT !</button><button class="chunky alt" type="button" id="drnit" data-act="dr:nitro">NITRO ×${G.nitro}</button></div>`}
+function driftEndHTML(R){const r=R.r;let h='';
+  if(R.win&&r.k==='legend')h=`<p class="lead" style="text-align:center;font-size:20px">🏆 Tu as battu <b>le Roi du Drift</b> !</p><p class="lead" style="text-align:center">Le pactole : <b>${fmt(R.prize)}</b> et <b>5 Pigeons d'Or</b>.</p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Voir la fin</button>`;
+  else if(R.win)h=`<p class="lead" style="text-align:center;font-size:18px">🏁 Victoire sur <b>${r.n}</b> en ${R.time.toFixed(1).replace('.',',')} s !</p><p class="lead" style="text-align:center">Gain : <b>${fmt(R.prize)}</b>${R.first?'':' (revanche)'}</p>`+(drTrainWins()>=3&&!drS().done?'<p class="lead">Les 3 courses d\'entraînement sont gagnées : <b>la course légendaire</b> t\'attend !</p>':'');
+  else h=`<p class="lead" style="text-align:center;font-size:18px">💨 ${R.why||r.rv+' passe la ligne avant toi.'}</p><p class="lead">Améliore ta voiture (moteur, pneus, amortisseurs…), vise les drifts <b>PARFAIT</b> et garde la nitro pour les lignes droites. Tu peux recourir quand tu veux.</p>`;
+  if(!(R.win&&r.k==='legend'))h+='<button class="chunky" type="button" data-act="dr:back" style="width:100%">Retour à Daikoku</button>';return h}
+function finaleHTML(){const m=S.meta,n=Object.keys(m.ach||{}).filter(k=>m.ach[k]).length;
+  return `<p class="lead" style="text-align:center;font-size:20px">🏁 <b>Tu as terminé Homeless Tycoon !</b></p><p class="lead" style="text-align:center">Des poubelles de Paris au trône du drift à Tokyo : sans-abri devenu magnat, puis légende des courses clandestines.</p>`+
+    `<div class="till"><span>Gains au total</span><span>${fmt(m.life||S.total||0)}</span><span>Pigeons d'Or</span><span>🐦 ${m.gold}</span><span>Succès</span><span>${n} / ${ACH.length}</span></div>`+
+    '<p class="lead">Le jeu continue : tes villes tournent toujours, et d\'autres villes arriveront bientôt. Merci d\'avoir joué !</p><button class="chunky" type="button" data-act="close" style="width:100%">Continuer à jouer</button>'}
 function drawBuildings(){
   cx.lineWidth=4;cx.lineJoin='round';
   rr(-60,60,140,148,6);fs('#c6b3d9');drawPlaque();
@@ -3157,7 +3310,7 @@ function drawBuildings(){
   rr(4880,70,240,138,6);fs('#c6b3d9');}
   {const x0=2372,x1=4880,tk=ck==='tokyo',dkn=darkness();rr(x0,92,x1-x0,116,6);fs(tk?'#5a5480':'#cbbde0');for(let wx=x0+30;wx<x1-30;wx+=70){rr(wx,110,30,24,4);fs(tk?(dkn>.2&&hsh(wx,3)<.6?TK_COLS[Math.floor(hsh(wx,7)*6)]:'#8e88b0'):'#e7dcf3')}}
   if(ck==='ny'){drawNYSE();drawTimesSq()}
-  if(ck==='tokyo'){drawShibuya();drawPachinko()}
+  if(ck==='tokyo'){drawShibuya();drawDaikoku()}
   if(CI()<1){rr(3900,70,320,138,6);fs('#b9a8cf');txt(CK()==='london'?'TO LET':'À LOUER',4060,110,16,'#fff6df',true);txt('bientôt un bar ?',4060,138,12,INK)}
   for(const b of BUILD){if(b.x+b.w<camX-50||b.x>camX+viewW+50)continue;
     if(b.id==='local'&&S.local){drawStore(b.x,b.w,'#2a9d5c','POUBELLE CORP',qgTier(),EMB.qg,20);
@@ -3959,6 +4112,13 @@ const GUIDES={
   {t:()=>'Tout est prêt. Retourne à l\'<b>ordinateur du bar</b> et clique <b>Lancer le casse</b> : chaque tentative coûte <b>1 M$</b> de frais de planque.',tg:()=>barDoor(),rx:950,room:'bar',ui:q('#pbody [data-act="ws:go"]:not([disabled])'),done:()=>!!WSG||(wsS().tries||0)>0},
   {t:()=>'<b>1.</b> Retiens le code et tape-le (3 caméras). <b>2.</b> Stoppe la molette dans le vert (4 crans). <b>3.</b> Fuis avec ← →, esquive taxis et police, ramasse les 💰.',done:()=>!WSG},
   {t:()=>wsS().done?'<b>Légendaire !</b> Blanchis ton butin avec le comptable, termine ta to-do et ouvre <b>Tokyo</b> (Menu › Prestige).':'Raté cette fois... Tout est encore prêt : <b>relance le casse</b> quand tu veux (1 M$ la tentative).',...nxt()}]},
+ drift:{n:'Les courses clandestines',start:()=>CK()==='tokyo'&&(stepCur()||{x:{}}).x.k==='drcar',steps:[
+  {t:()=>'Dernière quête du jeu : <b>les courses clandestines</b> ! Va à <b>Daikoku PA</b>, le parking des pilotes au bout de la rue (la flèche), et appuie sur <b>E</b>.',tg:()=>[DAIKOKU.door,150],done:()=>inPanel('drift')},
+  {t:()=>'Achète ta voiture de drift : la <b>Pigeon 86</b>. Ça coûte cher : Business rapporte tout seul en attendant.',ui:q('#pbody [data-act="dr:car"]'),done:()=>!!drS().car},
+  {t:()=>'<b>Prépare-la</b> : pneus, amortisseurs, moteur… Il faut 3 améliorations avant de courir.',ui:q('#pbody [data-act^="dr:up:"]:not([disabled])'),done:()=>drUpTot()>=3},
+  {t:()=>'Lance la première course : le <b>Sprint de Daikoku</b>.',ui:q('#pbody [data-act="dr:race:r1"]:not([disabled])'),done:()=>!!DRG||drS().tries>0},
+  {t:()=>'À chaque virage, <b>Espace</b> (ou DRIFT) quand l\'aiguille est dans le <b>vert</b> (le jaune = PARFAIT). <b>N</b> (ou NITRO) en ligne droite.',done:()=>!DRG},
+  {t:()=>drS().wins.r1?'Bien piloté ! Gagne les 2 autres courses, puis défie <b>le Roi du Drift</b> sur la course légendaire.':'Raté cette fois... Améliore la voiture et <b>recours</b> quand tu veux.',...nxt()}]},
  tower:{n:'La Pigeon Tower',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='tower',steps:[
   {t:()=>'Nouvelle étape : ton <b>gratte-ciel</b> ! Va au chantier de la <b>Pigeon Tower</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[584,150],done:()=>inPanel('tower')},
   {t:()=>'Chaque <b>étage</b> rapporte un loyer chaque seconde, et la tour grandit pour de vrai dans la rue. Tous les 5 étages : un <b>étage spécial</b>. À 10, 25 et 50 étages : de gros <b>bonus</b> sur tous tes revenus.',...nxt()},
@@ -3988,7 +4148,7 @@ const GUIDES={
 const GD={k:null,i:0,tx:''};
 const gStep=()=>GD.k&&!VISIT?GUIDES[GD.k].steps[GD.i]:null;
 function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if(GD.k&&!tutoOn())$('tuto').hidden=true;return}
-  if(!$('panel').hidden&&(pid==='wsgame'||pid==='lift')){if(GD.k)$('tuto').hidden=true;return}// pas de carte par-dessus les mini-jeux
+  if(!$('panel').hidden&&(pid==='wsgame'||pid==='lift'||pid==='driftgame')){if(GD.k)$('tuto').hidden=true;return}// pas de carte par-dessus les mini-jeux
   const gd=S.meta.gd||(S.meta.gd={});
   if(!GD.k){for(const k in GUIDES)if(!gd[k]&&GUIDES[k].start()){GD.k=k;GD.i=0;GD.tx='';snd('event');break}if(!GD.k)return}
   const G=GUIDES[GD.k];
@@ -4041,7 +4201,7 @@ const TIPS=[
  ['holding','Ta holding',()=>S.meta.prestige>=1,['Tes autres villes versent leurs revenus dans la <b>trésorerie</b> (Menu, Holding).','Convertis-la en <b>PigeonCoin</b> quand le cours est bas.','Avec la crypto : Pigeons d\'Or, capital de départ, gérants motivés.','Bouton <b>Y aller</b> pour retourner améliorer une ville.','<b>Héritage</b> : frigo et manager te suivent partout. Outils, véhicules et tenues sont à vie.']],
  ['city_london','Bienvenue à Londres',()=>CK()==='london',['Ici on paie en <b>livres (£)</b>, et tout rapporte 1,6 fois plus.','Il pleut <b>souvent</b> : déchets x2, mais les passants courent.','Les voitures roulent <b>à gauche</b>, attention aux bus à impériale !']],
  ['city_ny','Bienvenue à New York',()=>CK()==='ny',['Ici on paie en <b>dollars ($)</b>, et tout rapporte 2,6 fois plus.','<b>La Bourse ouvre enfin</b> : le NYSE et ses Hot Dog Holdings (Menu › Bourse).']],
- ['city_tokyo','Bienvenue à Tokyo',()=>CK()==='tokyo',['Ici on paie en <b>yens (¥)</b>, et tout rapporte 4 fois plus.','Nouvelle bourse : la bourse de Tokyo et ses robots kawaii.']],
+ ['city_tokyo','Bienvenue à Tokyo',()=>CK()==='tokyo',['Ici on paie en <b>yens (¥)</b>, et tout rapporte 4 fois plus.','Pas de bourse ici : l\'argent se gagne aux <b>courses clandestines</b> de Daikoku PA, la quête finale du jeu.']],
 ];
 let tipCD=3;
 function checkTips(){if(VISIT||JOB||tutoOn()||!$('panel').hidden||tipCD>0)return;const m=S.meta;

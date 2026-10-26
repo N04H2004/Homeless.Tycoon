@@ -1046,7 +1046,7 @@ resetWorld();
 function float(x,y,txt,col){floats.push({x,y,txt,col:col||'#1f9d5c',t:0})}
 function say(t){P.say=t;P.sayT=3}
 const autoSec=sec=>autoRate()*sec/Math.max(1e-9,gm());// travail à la main indexé sur la rue : n secondes de revenus auto
-const TRASH_SEC=1.5,CDD_SEC=6,CDD_BEST_SEC=20;
+const TRASH_SEC=1.5,CDD_SEC=6,CDD_BEST_SEC=20,REPAIR_SEC=8,PICK_SEC=3,ROB_SEC=8;
 function earn(n,x,y,col){const g=gain(n);if(x!=null)float(x,y,'+'+fmt(g),col);return g}
 const nearCop=(x,y,r)=>cops.some(c=>c.active&&dist(c.x,c.y,x,y)<r);
 const closestCop=(x,y)=>{let b=null,bd=1e9;for(const c of cops)if(c.active){const d=dist(c.x,c.y,x,y);if(d<bd){bd=d;b=c}}return b};
@@ -1319,7 +1319,7 @@ function update(dt){
   if(S.bag>=cap()&&P.sayT<=0&&Math.random()<dt*.5)say('Sac plein ! Une poubelle vite !');
   for(let i=broken.length-1;i>=0;i--){const b=broken[i];
     if(!VISIT&&!INSIDE&&dist(P.x,P.y,b.x,b.y)<50){b.prog+=dt/repT();if(Math.random()<dt*8)sparks.push({x:b.x+rnd(-14,14),y:b.y-20,t:0,star:1});
-      if(b.prog>=1){S.stats.repairs++;earn(b.b.r*mult(),b.x,b.y-50);snd('coin');say(pick(['Comme neuf !','Réparé avec du scotch.','Je suis un génie.']));broken.splice(i,1)}}}
+      if(b.prog>=1){S.stats.repairs++;earn((b.b.r+autoSec(REPAIR_SEC))*mult(),b.x,b.y-50);snd('coin');say(pick(['Comme neuf !','Réparé avec du scotch.','Je suis un génie.']));broken.splice(i,1)}}}
 
   // voitures
   carTimer-=dt;
@@ -1932,7 +1932,7 @@ function holdup(p){
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');say('Braquer un flic... bravo.');snd('siren');setTimeout(()=>snd('fail'),300);
     toast("Tu as braqué un policier en civil ! Amende de "+fmt(f)+' et une sacrée volée de matraque');
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
-  const g=rnd(40,90)*mult()*a.m*richM(p);earn(g,p.x,p.y-85,'#ffd23f');
+  const g=(rnd(40,90)+autoSec(ROB_SEC))*mult()*a.m*richM(p);earn(g,p.x,p.y-85,'#ffd23f');
   p.flee=5;p.say=pick(['Prenez tout !','Pitié, pas le visage !','AU SECOUUURS !','Mon portefeuille !']);p.sayT=2.5;
   say(a.k==='confetti'?'Haut les mains... et les confettis !':'Haut les mains !');snd('coin');
   S.heat=Math.min(100,S.heat+HEATX*(20));
@@ -1990,7 +1990,7 @@ function pickpocket(p){
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
   const copNear=nearCop(P.x,P.y,350);
   if(tutoPick||Math.random()>=.22+(copNear?.45:0)){
-    earn(rnd(5,25)*mult()*richM(p)*(ev&&ev.k==='blackout'?2:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+HEATX*(2));snd('coin');
+    earn((rnd(5,25)+autoSec(PICK_SEC))*mult()*richM(p)*(ev&&ev.k==='blackout'?2:1),p.x,p.y-85,'#9d4edd');p.robbed=true;S.stats.pick++;S.heat=Math.min(100,S.heat+HEATX*(2));snd('coin');
     say(p.rich===2?pick(['Une montre en or massif !','Merci, monsieur le millionnaire.','Ça, c\'est du gros poisson !']):p.rich?pick(['Un portefeuille en croco !','Merci monsieur le costard.']):pick(['Merci du don !','Discret comme un pigeon.',"Personne n'a rien vu."]));
   }else{
     p.robbed=true;p.flee=4;p.say='Au voleur !';p.sayT=2.5;S.heat=Math.min(100,S.heat+HEATX*(8));

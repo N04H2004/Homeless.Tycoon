@@ -675,6 +675,7 @@ const INFO={
  crypto:['PigeonCoin',"La monnaie de ta holding : elle relie toutes tes villes.",["Convertis ta trésorerie en PigeonCoin quand le cours est bas : tu en reçois plus.","Dépense-les pour des Pigeons d'Or, du capital de départ ou des gérants.","Les prix montent à chaque achat."],"Regarde la petite courbe : convertis dans un creux, pas dans un pic."],
  heritage:['Héritage',"Certains achats te suivent dans toutes les nouvelles villes.",["Le frigo connecté et le manager : achète-les une fois, ils seront là dans chaque ville.","Les outils, véhicules et tenues sont déjà à vie, partout."],"Achète frigo et manager avant d'ouvrir une nouvelle ville : tu démarreras plus vite."],
  prestige:['Prestige et villes',"Ouvre une filiale dans une nouvelle ville : tout y rapporte plus, mais tu repars de zéro pour l'argent.",["Fais grimper le total gagné dans ta ville pour gagner des Pigeons d'Or.","Ouvre la ville suivante : ta rue actuelle passe en gérance et continue de rapporter.","Tu gardes Pigeons d'Or, bonus, PigeonCoin, tenues, Héritage et succès."],"Dépense tes Pigeons d'Or dans les bonus permanents : ils s'appliquent dans toutes les villes."],
+ ws:['Le casse de Wall Street',"Le coup du siècle : la chambre forte du New York Stock Exchange. Il faut le réussir pour ouvrir Tokyo.",["Préparation (ordinateur du bar) : recrute un hacker, un perceur et un chauffeur (3 bandits minimum), achète la clé USB pirate, la perceuse thermique et le van banalisé.","Repérage : au NYSE, paie le vigile pour obtenir le plan de la chambre forte.","Le casse : 1. pirater les caméras (retenir des codes), 2. percer le coffre (stopper la molette dans le vert), 3. fuir en voiture (esquiver taxis et police).","Raté : le matériel est perdu et la chaleur grimpe. Une tentative par jour."],"Le butin est de l'argent sale : pense au comptable pour le blanchir."],
  tower:['La Pigeon Tower',"Ton gratte-ciel à Manhattan, à construire étage par étage.",["Chaque étage rapporte un loyer chaque seconde, de plus en plus haut.","Tous les 5 étages, un étage spécial (sport, restaurant, piscine…). Paliers : 10 étages +10 %, 25 étages +15 %, 50 étages le penthouse.","À 5 étages : le liftier. Une partie par jour, chaque locataire déposé ajoute +5 % aux revenus de New York pendant 10 min (VIP x3, max x3)."],"Joue le liftier juste avant une grosse session à New York pour en profiter à fond."],
  bourse:['La Bourse',"Achète des actions, revends-les plus cher. Elle ouvre à New York, puis chaque ville a sa propre bourse.",["Les cours suivent des tendances cachées de 30 à 80 s.","La rue influence les cours : la pluie, une manif ou la nuit font bouger certaines actions.","Les analystes te révèlent les tendances (bouton « i » à côté de chacun).","Tes actions restent dans la ville où tu les as achetées."],"Sans analyse c'est un pari. Avec une analyse et une grosse mise, c'est rentable."],
  noir:['Marché noir',"L'ordinateur du fond du bar : ici on achète les armes.",["Achète une arme : elle est livrée à l'armurerie du bar.","Les armes augmentent les chances de réussite des braquages de tes bandits.","Tu peux aussi en équiper une pour toi à l'armurerie, et acheter des munitions ici."],"La meilleure arme que tu possèdes compte automatiquement pour les braquages."],
@@ -684,7 +685,7 @@ const INFO={
  bj:['Blackjack',"Approche-toi le plus possible de 21 sans dépasser, et bats le croupier.",["Choisis ta mise. Tu reçois 2 cartes, le croupier aussi (une cachée).","Tirer : une carte de plus. Rester : tu t'arrêtes.","Le croupier tire jusqu'à 17. Les figures valent 10, l'As 1 ou 11.","21 avec les 2 premières cartes (As + 10 ou figure) : blackjack naturel, ta mise x2,5 au total (gain de 3:2).","21 avec 3 cartes ou plus, ou plus près de 21 que le croupier : ta mise x2 au total (gain de 1:1).","Exemple avec 10 € misés : blackjack naturel, tu récupères 25 € (15 € de bénéfice) ; 21 classique, tu récupères 20 € (10 € de bénéfice).","Attention : si le croupier fait aussi 21, il peut y avoir égalité, et ta mise t'est rendue."],"Reste souvent à partir de 17. Au-dessus de 21, tu perds tout de suite."],
  rou:['Roulette',"Lance la roue et croise les doigts.",["Choisis ta mise : 10 %, 25 %, 50 % de ton cash, ou tapis.","Case verte (14 sur 24) : mise x1,5.","Case rouge (9 sur 24) : mise perdue.","Case dorée (1 sur 24) : mise x5 !"],"Plus de 6 chances sur 10 de gagner, mais le tapis peut tout faire perdre. Ne mise que ce que tu peux perdre."],
 };
-const TIP2INFO={tools:'tools',repair:'tools',health:'health',distrib:'distrib',local:'local',staff:'staff',shops:'shops',bandits:'bandits',heat:'bandits',avocat:'bandits',casino:'bj',bar:'noir',bourse:'bourse',tower:'tower',prestige:'prestige',holding:'filiales',fripe:'fripe',motors:'motors',estate:'estate',police:'police',dirty:'dirty',arms:'armory'};
+const TIP2INFO={tools:'tools',repair:'tools',health:'health',distrib:'distrib',local:'local',staff:'staff',shops:'shops',bandits:'bandits',heat:'bandits',avocat:'bandits',casino:'bj',bar:'noir',bourse:'bourse',tower:'tower',ws:'ws',prestige:'prestige',holding:'filiales',fripe:'fripe',motors:'motors',estate:'estate',police:'police',dirty:'dirty',arms:'armory'};
 const ib=k=>`<button class="ib" type="button" data-act="info:${k}" title="Comment ça marche ?" aria-label="Comment ça marche ?">i</button>`;
 function infoHTML(k){const [n,what,steps,tip]=INFO[k];
   return `<p class="lead">${what}</p>`+steps.map((x,i)=>`<div class="row" style="display:flex;justify-content:flex-start;align-items:center;gap:10px"><b style="flex:none;width:26px;height:26px;border-radius:50%;background:#4cc9f0;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center">${i+1}</b><small style="font-size:13px;margin:0">${x}</small></div>`).join('')+
@@ -1008,7 +1009,9 @@ const keys={};
 addEventListener('keydown',e=>{
   if(typeof BOOT!=='undefined'&&BOOT){if($('boot').classList.contains('map')&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){if(e.key==='ArrowLeft')wsMove(-1);if(e.key==='ArrowRight')wsMove(1);if(e.key==='Enter'){const b=document.querySelector('[data-wgo]');if(b&&!b.disabled)b.click()}}return}
   if(e.key==='Escape'&&!$('panel').hidden){closePanel();return}
-  if(!$('panel').hidden){if(LIFT&&pid==='lift'&&['ArrowUp','ArrowDown',' ','e','E'].includes(e.key)){e.preventDefault();if(e.key==='ArrowUp')liftMove(1);else if(e.key==='ArrowDown')liftMove(-1);else liftOpen();return}
+  if(!$('panel').hidden){if(WSG&&pid==='wsgame'){const G=WSG;if(G.ph==='hack'&&/^[0-9]$/.test(e.key)){wsKey(e.key);return}if(G.ph==='hack'&&e.key==='Backspace'){e.preventDefault();wsKey('del');return}
+      if(G.ph==='vault'&&(e.key===' '||e.key==='Enter')){e.preventDefault();wsDrill();return}if(G.ph==='escape'&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='q'||e.key==='d')){e.preventDefault();wsLane(e.key==='ArrowLeft'||e.key==='q'?-1:1);return}}
+    if(LIFT&&pid==='lift'&&['ArrowUp','ArrowDown',' ','e','E'].includes(e.key)){e.preventDefault();if(e.key==='ArrowUp')liftMove(1);else if(e.key==='ArrowDown')liftMove(-1);else liftOpen();return}
     if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&JOB&&JOB.k==='peluche'&&pid==='job'&&!(JOB.cust.wait>0)){e.preventDefault();mgAct('mgsw',e.key==='ArrowLeft'?'0':'1');if(JOB)renderPanel();return}
     if(e.key===' '&&JOB&&JOB.k==='karaoke'&&pid==='job'){e.preventDefault();if(!(JOB.cust.wait>0)){mgAct('ksing');if(JOB)renderPanel()}}return}
   if(document.activeElement&&document.activeElement!==cv&&document.activeElement.tagName==='BUTTON'&&e.key.startsWith('Arrow'))document.activeElement.blur();
@@ -1110,6 +1113,7 @@ const ACH=[
  ['parrain','Parrain','Avoir 5 bandits',()=>S.band>=5],
  ['requin','Requin','Racheter Déchets Corp',()=>S.rivalBought],
  ['proprio','Toute la rue','Posséder toutes les boutiques, les grands lieux et Déchets Corp',()=>SHOPS.every(x=>S.shops[x.k]>0)&&ESTATE.every(e=>S.owned[e.k])&&S.rivalBought],
+ ['casse','Le casse du siècle','Réussir le casse de Wall Street',()=>!!(S.meta.wsWins)],
  ['manhattan','Roi de Manhattan','Terminer les 50 étages de la Pigeon Tower',()=>(S.meta.towerDone||0)>=1],
  ['trader','Loup de la rue','Gagner 1 000 € sur une seule vente en bourse',()=>S.meta.bestTrade>=1000],
  ['kebabier','Roi de la broche','Servir 30 kebabs parfaits',()=>S.meta.kebabs>=30],
@@ -1124,7 +1128,7 @@ const ACH=[
 ];
 // ville à partir de laquelle un succès est faisable (bar, bandits et braquage arrivent à Londres) ;
 // pour mettre une ville en gérance, il faut tous les succès faisables jusqu'à elle
-const ACH_CITY={manhattan:2,trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
+const ACH_CITY={casse:2,manhattan:2,trader:2,barman:1,parrain:1,braqueur:1,depart:9,monaco:9};
 // pour mettre une ville en gérance, il faut avoir essayé une fois chaque fonctionnalité de la ville (pas besoin de tout améliorer)
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
@@ -1152,6 +1156,8 @@ const STEPS=[
  {k:'compta',h:"Bar › ordinateur › comptable.",c:1,cost:()=>compCost(),n:'Engager le comptable',ok:()=>(S.compta||0)>=1,tip:'dirty',
    w:'Entre au bar (E) et va à l\'ordinateur : le comptable blanchit tout seul l\'argent sale de tes bandits, avec seulement 10 % de frais.',acts:['compta']},
  {k:'bourse',h:"Entre au NYSE (E), ordinateur de trading.",c:2,n:'Acheter une action en Bourse',ok:()=>!!S.bourse||Object.values(S.stk).some(x=>x&&x.q>0),tip:'bourse',w:'Entre au New York Stock Exchange (E) : les analystes au fond à droite, l\'ordinateur de trading au centre. Achète une action, revends-la quand elle monte.',acts:['stk:','ana:']},
+ {k:'ws',only:2,h:"Bar › ordinateur › Le casse de Wall Street.",n:'Réussir le casse de Wall Street',ok:()=>!!(S.ws&&S.ws.done),tip:'ws',
+   w:'Prépare le casse sur l\'ordinateur du bar (équipe, matériel), fais le repérage auprès du vigile du NYSE, puis lance le casse : piratage, coffre et fuite. Réussis-le pour débloquer Tokyo.',acts:['ws:']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
@@ -1809,7 +1815,7 @@ function roomMove(dx,dy,dt){RP.t+=dt;
   const m=Math.hypot(dx,dy);RP.moving=m>0;if(m){RP.x+=dx/m*210*dt;RP.y+=dy/m*210*dt;if(Math.abs(dx)>.1)RP.face=dx>0?1:-1}
   RP.x=clamp(RP.x,40,RW-40);RP.y=clamp(RP.y,375,610)}
 const RSPOTS={exit:[95,'Sortir dans la rue'],counter:[390,null],armory:[710,'Armurerie'],pc:[950,'Ordinateur · marché noir']},
-  NSPOTS={exit:[95,'Sortir dans la rue'],trade:[470,'Ordinateur de trading'],anadesk:[880,'Bureau des analystes']},curSpots=()=>INSIDE&&INSIDE.k==='nyse'?NSPOTS:RSPOTS;
+  NSPOTS={exit:[95,'Sortir dans la rue'],trade:[470,'Ordinateur de trading'],guard:[680,'Parler au vigile'],anadesk:[880,'Bureau des analystes']},curSpots=()=>INSIDE&&INSIDE.k==='nyse'?NSPOTS:RSPOTS;
 function roomSpot(){if(RP.y>470)return null;let best=null,bd=95;const SP=curSpots();for(const k in SP){const d=Math.abs(RP.x-SP[k][0]);if(d<bd){bd=d;best=k}}return best}
 function pickpocket(p){
   if(pickCD>0)return;pickCD=1.2;const tutoPick=tutoOn()&&S.meta.tuto===4;
@@ -1912,7 +1918,7 @@ function doAct(){
   if(INSIDE){const r=roomSpot();if(!r)return;if(r==='exit')return exitBar();
     if(r==='counter'){const c=C(8);if(S.cash<c){say('Le patron ne fait pas crédit');snd('err');return}S.cash-=c;S.food=Math.min(100,S.food+10);S.hp=Math.min(100,S.hp+3);S.stats.ate++;
       say(pick(['Santé !','Elle est tiède mais elle est bonne','Une pour la route !']));snd('eat');return}
-    return openPanel(r)}
+    return openPanel(r==='guard'?'wsguard':r)}
   const s=spot();if(!s)return;
   if(s==='bar'&&S.owned.bar)return enterBar();
   if(s==='nyse')return enterNyse();
@@ -2134,7 +2140,7 @@ function shopPanel(k){const x=SHOPS.find(z=>z.k===k),l=S.shops[k]||0,mx=l>=10,F=
 // ================= Panneaux =================
 let pid=null,parg=null,ptab='holding',infoBack=null;
 function openPanel(id,arg){pid=id;parg=arg;if(id==='casino')BJ.seen={p:0,d:0};renderPanel();$('panel').hidden=false;P.tx=null;for(const k in keys)keys[k]=false}
-function closePanel(){if(spinning)return;if(JOB){endJob(true);return}if(LIFT)liftEnd(true);$('panel').hidden=true;pid=null;refocus()}
+function closePanel(){if(spinning)return;if(JOB){endJob(true);return}if(LIFT)liftEnd(true);if(WSG){$('panel').hidden=true;pid=null;return}$('panel').hidden=true;pid=null;refocus()}
 $('pclose').addEventListener('click',closePanel);
 $('panel').addEventListener('pointerdown',e=>{if(e.target.id==='panel')closePanel()});
 // le côté obscur (bandits, déguisements, avocat) : dans Business et sur l'ordinateur du bar
@@ -2182,6 +2188,7 @@ function renderPanel(){
         '<div class="sec">Marché noir'+ib('noir')+'</div>'+
         ARMS.map(a=>S.arms[a.k]?row(a.n,'à toi',a.d):row(a.n,'',a.d,'arm:'+a.k,C(a.p))).join('')+
         row('Boîte de munitions',ammo()+' en stock','+12 balles (ou cailloux, ou confettis). Chaque tir en consomme une','ammo',C(250))+
+        (CK()==='ny'?wsPlanHTML():'')+
         '<div class="sec">Braquer un joueur</div>'+(()=>{const pb=bqBlock();return `<div class="row"><div class="info"><b>Le casse</b><small>${pb||'Choisis une cible dans le classement : mini-jeu de tir, tu repars avec 5 à 30 % de son argent selon ta précision.'}</small></div><button class="buy red" type="button" data-act="heist" ${pb?'disabled':''}>Choisir</button></div>`})()+
         '<p class="foot">Le casse a lieu la nuit : tes bandits libres entrent chez Déchets Corp, sous tes yeux. Réussi : le butin est blanchi et versé le lendemain matin, chaleur +35. Raté : alarme, bandits au trou 2 min, amende et chaleur +50. Un braquage par jour, 65 % de réussite au maximum.</p>'}}
   else if(pid==='armory'){t='Armurerie';hd='#d62839';const a=armed();
@@ -2333,6 +2340,22 @@ function renderPanel(){
     else h+='<p class="foot">🛗 À 5 étages, tu débloques le mini-jeu du liftier.</p>';
     h+='<div class="sec">Paliers</div>'+TW_MS.map(([n,d])=>`<div class="obj${f>=n?' ok':''}"><div class="ck">${f>=n?'✓':''}</div><span><b>${n} étages</b> · ${d}</span></div>`).join('')+
       '<div class="sec">Étages spéciaux</div><p class="foot">'+Object.entries(TW_SP).map(([n,v])=>`${f>=n?'✓':'·'} ${n} : ${v[0]}`).join(' &nbsp; ')+'</p>'}
+  else if(pid==='wsgame'){const G=WSG;t='Le casse de Wall Street';hd='#d62839';if(!G){h='';}
+    else{const st={hack:'1 / 3 · Piratage des caméras',vault:'2 / 3 · La chambre forte',escape:'3 / 3 · La fuite'}[G.ph];h=`<div class="jbar"><span>${st}</span><b id="wst">${Math.ceil(G.t)} s</b></div><p class="jmsg" id="wsmsg" style="text-align:center">${G.msg}</p>`;
+    if(G.ph==='hack'){h+=G.show>0?`<div class="big" style="font-size:44px;letter-spacing:10px;text-align:center;font-family:monospace;background:#0b3d20;color:#38ff8b;border-radius:12px;padding:14px">${G.code}</div><p class="foot" style="text-align:center">Mémorise !</p>`:
+      `<div class="big" style="font-size:36px;letter-spacing:8px;text-align:center;font-family:monospace;background:#0b3d20;color:#38ff8b;border-radius:12px;padding:12px">${G.inp.padEnd(G.code.length,'_')}</div><div class="ings" style="grid-template-columns:repeat(5,1fr);margin-top:8px">`+
+      '1234567890'.split('').map(k=>`<button class="ing" type="button" style="background:#fff;font-size:20px" data-act="wsk:${k}">${k}</button>`).join('')+'</div><div class="bets"><button class="chunky alt" type="button" data-act="wsk:del" style="grid-column:1/-1">Effacer</button></div>'}
+    if(G.ph==='vault')h+=`<p class="foot" style="text-align:center">Crans : ${'🔓'.repeat(G.pins)}${'🔒'.repeat(4-G.pins)} · ratés : ${G.miss} / 3</p><div style="position:relative;height:50px;margin:8px 0;background:#22223b;border:3px solid var(--ink);border-radius:25px;overflow:hidden">
+      <div style="position:absolute;top:0;bottom:0;left:${G.zone}%;width:${G.zw}%;background:#06d6a0;opacity:.85"></div><div id="wscur" style="position:absolute;top:4px;width:10px;height:36px;margin-left:-5px;left:${kPos({ph:G.ph2})}%;background:#ffd23f;border:2px solid #fff;border-radius:5px"></div></div>
+      <div class="bets"><button class="chunky" type="button" data-act="wsd" style="grid-column:1/-1;font-size:20px;padding:12px">🔩 Percer ! (Espace)</button></div>`;
+    if(G.ph==='escape')h+=`<div style="display:flex;gap:10px;justify-content:center;align-items:center"><button class="chunky" type="button" data-act="wsl:-1" style="font-size:24px">◀</button><canvas id="wscv" style="width:300px;height:380px;border:3px solid var(--ink);border-radius:12px;max-width:70%"></canvas><button class="chunky" type="button" data-act="wsl:1" style="font-size:24px">▶</button></div>`}}
+  else if(pid==='wsend'){const R=parg||{};t=R.ok?'Le casse du siècle !':'Casse raté';hd=R.ok?'#ffd23f':'#d62839';
+    h=R.ok?`<p class="lead" style="text-align:center;font-size:18px">💰 Tu ressors de Wall Street avec <b>${fmt(R.loot)}</b> d'argent sale${R.bags?' (dont '+R.bags+' sac'+(R.bags>1?'s':'')+' ramassé'+(R.bags>1?'s':'')+')':''} !</p><p class="lead">Il est au coffre du bar : laisse le comptable le blanchir. Et surtout : <b>Tokyo est débloqué</b> (Menu › Prestige quand tu as fini ta to-do).</p>`:
+      `<p class="lead" style="text-align:center;font-size:18px">🚨 ${R.m||'Le casse a échoué.'}</p><p class="lead">Le matériel est perdu et la chaleur grimpe. Ton équipe et ton repérage restent prêts : rachète le matériel et retente demain.</p>`;
+    h+='<button class="chunky" type="button" data-act="close" style="width:100%">'+(R.ok?'Légendaire !':'Compris')+'</button>'}
+  else if(pid==='wsguard'){t='Le vigile du NYSE';hd='#1d3557';const W=wsS();h=W.scout?'<p class="lead">« Tu as déjà le plan. Et on ne s\'est jamais vus. »</p>':
+    `<p class="lead">Earl, vigile de nuit depuis 22 ans, regarde ses chaussures. « Les plans de la chambre forte ? Ça peut s'arranger... pour ${fmt(C(80000))}. »</p><div class="bets"><button class="chunky" type="button" data-act="ws:scout" style="grid-column:1/-1" ${S.cash<C(80000)?'disabled':''}>Glisser ${fmt(C(80000))}</button></div>`;
+    if(!S.owned.bar)h='<p class="lead">« Je ne parle pas aux inconnus. Reviens quand tu auras un vrai QG. »</p>'}
   else if(pid==='lift'){t='Liftier de la Pigeon Tower';hd='#ffd23f';h=`<div style="display:flex;gap:10px;align-items:flex-start;justify-content:center"><canvas id="liftcv" style="width:320px;height:380px;border:3px solid var(--ink);border-radius:12px;max-width:100%"></canvas>`+
     `<div style="display:flex;flex-direction:column;gap:8px;width:110px"><button class="chunky" type="button" data-act="lift:up" style="font-size:22px">▲</button><button class="chunky" type="button" data-act="lift:open">Ouvrir</button><button class="chunky" type="button" data-act="lift:down" style="font-size:22px">▼</button>`+
     `<small style="font-size:11px;line-height:1.3">Flèches ↑ ↓ et Espace. 4 personnes max. Le chiffre sur chaque locataire = son étage. <b style="color:#b8860b">Or</b> = VIP pour le penthouse (compte triple). Chaque locataire : +5 % de revenus auto à New York pendant 10 min (max x3).</small></div></div><p class="jmsg" id="liftmsg" style="text-align:center"></p>`}
@@ -2433,6 +2456,10 @@ $('pbody').addEventListener('click',e=>{
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
   if(a==='vtab'){vestTab=v;return renderPanel()}
+  if(a==='ws'){if(v==='go')return wsStart();wsBuy(v,w);if(v==='scout')return renderPanel()}
+  if(a==='wsk'){wsKey(v);return}
+  if(a==='wsd'){wsDrill();return}
+  if(a==='wsl'){wsLane(+v);return}
   if(a==='lift'){if(v==='go')return liftStart();if(v==='up')liftMove(1);else if(v==='down')liftMove(-1);else if(v==='open')liftOpen();return}
   if(a==='tower'){const f=S.tower||0;if(CK()!=='ny'||!S.local||f>=TW_MAX||!pay(twCost(f)))return;S.tower=f+1;const n=S.tower,sp=TW_SP[n];snd('buy');
     const r0=b.getBoundingClientRect();burst(r0.left+r0.width/2,r0.top,14,['🏗️','✨','🧱'],140);
@@ -2656,6 +2683,54 @@ function drawStreet(ck,x0,w0,dk){const G=GRND[ck]||GRND.paris,ct=CITY();
 function facade(x,w,col,winCol){rr(x,40,w,170,10);fs(col);
   if(CK()==='london'){cx.save();rr(x,40,w,170,10);cx.clip();cx.strokeStyle='rgba(42,31,61,.16)';cx.lineWidth=1.5;cx.beginPath();// façades en briques
     for(let r=0,y=46;y<210;r++,y+=12){cx.moveTo(x,y);cx.lineTo(x+w,y);for(let bx=x+(r%2?15:0);bx<x+w;bx+=30){cx.moveTo(bx,y);cx.lineTo(bx,y+12)}}cx.stroke();cx.restore();rr(x,40,w,170,10);cx.lineWidth=4;cx.strokeStyle=INK;cx.stroke()}if(CK()==='ny'){nyFacade(x,w);if(w>=260&&typeof winCol!=='function')return nyBoard(x+66,48,w-90,48,x)}for(let wx=x+24;wx<x+w-40;wx+=62){rr(wx,58,40,30,5);fs(typeof winCol==='function'?winCol(wx):winCol)}}
+// ===== le casse de Wall Street : préparation chère, 3 mini-jeux enchaînés, débloque Tokyo =====
+const WS_CREW=[['hack','Hacker','pirate les caméras',60000],['drill','Perceur','ouvre la chambre forte',60000],['drive','Chauffeur','conduit la fuite',60000]],
+  WS_GEAR=[['usb','Clé USB pirate','indispensable pour le piratage',100000],['drill','Perceuse thermique','indispensable pour le coffre',150000],['van','Van banalisé','indispensable pour la fuite',200000]];
+const wsS=()=>S.ws||(S.ws={crew:{},gear:{},scout:0,day:'',done:0}),wsReady=()=>{const W=wsS();return WS_CREW.every(c=>W.crew[c[0]])&&WS_GEAR.every(g=>W.gear[g[0]])&&W.scout},wsToday=()=>wsS().day===dayKey();
+let WSG=null;
+function wsBuy(v,w){const W=wsS(),pay=c=>{if(S.cash<c){snd('err');return false}S.cash-=c;return true};if(CK()!=='ny'||!S.owned.bar)return;
+  if(v==='crew'){const c=WS_CREW.find(x=>x[0]===w);if(!c||W.crew[w])return;if(S.band<3){toast('Il te faut au moins 3 bandits dans ta bande');snd('err');return}if(!pay(C(c[3])))return;W.crew[w]=1;toast(c[1]+' recruté pour le casse');snd('buy')}
+  if(v==='gear'){const g=WS_GEAR.find(x=>x[0]===w);if(!g||W.gear[w])return;if(!pay(C(g[3])))return;W.gear[w]=1;toast(g[1]+' livré au QG');snd('buy')}
+  if(v==='scout'){if(W.scout||!pay(C(80000)))return;W.scout=1;toast('Le vigile glisse le plan de la chambre forte dans ta poche...');snd('event')}
+  updHud();save()}
+function wsStart(){const W=wsS();if(!wsReady()||wsToday()||W.done||CK()!=='ny')return;W.day=dayKey();S.heat=Math.min(100,S.heat+HEATX*(30));
+  WSG={ph:'hack',t:45,codes:[],ci:0,inp:'',show:2.6,err:0,loot:0,bags:0,msg:'Retiens le code affiché, puis tape-le avant la fin du chrono.'};wsNewCode();pid='wsgame';renderPanel();wsLoop()}
+function wsNewCode(){const n=4+WSG.ci;let c='';for(let i=0;i<n;i++)c+=Math.floor(Math.random()*10);WSG.code=c;WSG.inp='';WSG.show=Math.max(1.6,2.8-WSG.ci*.4)}
+function wsKey(d){const G=WSG;if(!G||G.ph!=='hack'||G.show>0)return;if(d==='del'){G.inp=G.inp.slice(0,-1);return renderPanel()}G.inp+=d;snd('tick');
+  if(G.inp.length>=G.code.length){if(G.inp===G.code){G.ci++;snd('coin');if(G.ci>=3){wsPhase('vault');return}G.msg='Caméra '+G.ci+' / 3 coupée !';wsNewCode()}
+    else{G.err++;snd('err');if(G.err>1)return wsFail('Mauvais code : l\'alarme se déclenche !');G.msg='Mauvais code ! Encore une erreur et l\'alarme sonne.';wsNewCode()}}renderPanel()}
+function wsPhase(ph){const G=WSG;G.ph=ph;snd('event');
+  if(ph==='vault')Object.assign(G,{t:35,pins:0,miss:0,ph2:0,spd:.8,zone:rnd(10,76),zw:14,msg:'Arrête la molette dans la zone verte : 4 crans pour ouvrir la chambre forte.'});
+  if(ph==='escape')Object.assign(G,{t:30,lane:1,obs:[],sp:0,crash:0,inv:0,msg:'Fuis ! ← → pour changer de voie. Esquive les taxis et la police, ramasse les sacs de billets.'});
+  renderPanel()}
+function wsDrill(){const G=WSG;if(!G||G.ph!=='vault')return;const p=kPos({ph:G.ph2});if(p>=G.zone&&p<=G.zone+G.zw){G.pins++;snd('coin');if(G.pins>=4)return wsPhase('escape');G.zone=rnd(5,86-G.zw);G.spd+=.22;G.zw=Math.max(9,G.zw-1.5);G.msg='Cran '+G.pins+' / 4 !'}
+  else{G.miss++;snd('err');if(G.miss>=3)return wsFail('La perceuse a surchauffé : le coffre se verrouille !');G.msg='Raté ! Encore '+(3-G.miss)+' essai'+(3-G.miss>1?'s':'')+'.'}renderPanel()}
+function wsLane(d){const G=WSG;if(!G||G.ph!=='escape')return;G.lane=clamp(G.lane+d,0,2);snd('tick')}
+function wsLoop(){let last=performance.now();const tick=()=>{const G=WSG;if(!G)return;if(pid!=='wsgame'){wsFail('Tu as abandonné le casse en pleine action !');return}const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;G.t-=dt;
+  if(G.ph==='hack'){if(G.show>0){G.show-=dt;if(G.show<=0)renderPanel()}if(G.t<=0)return wsFail('Trop lent : les caméras t\'ont repéré !')}
+  if(G.ph==='vault'){G.ph2+=dt*G.spd;const el=$('wscur');if(el)el.style.left=kPos({ph:G.ph2})+'%';if(G.t<=0)return wsFail('Le temps est écoulé : les vigiles arrivent !')}
+  if(G.ph==='escape'){G.sp-=dt;G.inv-=dt;const sp=260+(30-G.t)*9;if(G.sp<=0){G.sp=Math.max(.38,.85-(30-G.t)*.015);const l=Math.floor(Math.random()*3);G.obs.push({l,y:-40,k:Math.random()<.22?'bag':Math.random()<.4?'cop':'taxi'})}
+    for(const o of G.obs)o.y+=sp*dt;G.obs=G.obs.filter(o=>{if(o.y>290&&o.y<350&&o.l===G.lane){if(o.k==='bag'){G.bags++;snd('coin');return false}if(G.inv<=0){G.crash++;G.inv=1;snd('fail');G.msg='Collision ! '+(3-G.crash)+' avant de te faire coincer.';if(G.crash>=3){wsFail('La police t\'a coincé !');return false}}}return o.y<420});
+    if(!WSG)return;wsDrawEscape();if(G.t<=0)return wsWin()}
+  const tm=$('wst');if(tm)tm.textContent=Math.ceil(G.t)+' s';const ms=$('wsmsg');if(ms&&ms.textContent!==G.msg)ms.textContent=G.msg;requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+function wsDrawEscape(){const c=$('wscv'),G=WSG;if(!c||!G)return;const d=window.devicePixelRatio||1;if(c.width!==300*d){c.width=300*d;c.height=380*d}const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);
+  g.fillStyle='#36373d';g.fillRect(0,0,300,380);g.fillStyle='#ffd23f';const off=(performance.now()/6)%40;for(const x of [100,200])for(let y=-40+off;y<380;y+=40)g.fillRect(x-2,y,4,22);
+  g.fillStyle='#d8d4ce';g.fillRect(0,0,8,380);g.fillRect(292,0,8,380);
+  const car=(x,y,col,top)=>{g.fillStyle=col;g.strokeStyle='#2a1f3d';g.lineWidth=3;g.beginPath();g.roundRect(x-22,y-34,44,68,10);g.fill();g.stroke();g.fillStyle='#cdeefd';g.fillRect(x-15,y-22,30,14);g.fillRect(x-15,y+10,30,10);if(top){g.fillStyle=top;g.fillRect(x-12,y-4,24,8)}};
+  for(const o of G.obs){const x=50+o.l*100;if(o.k==='bag'){g.font='30px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('💰',x,o.y)}else car(x,o.y,o.k==='cop'?'#fff':'#ffd23f',o.k==='cop'?(Math.floor(performance.now()/150)%2?'#ef476f':'#118ab2'):'#2a1f3d')}
+  if(!(G.inv>0&&Math.floor(performance.now()/100)%2))car(50+G.lane*100,320,'#495057','#14141a');
+  g.fillStyle='#2a1f3d';g.fillRect(0,0,300,22);g.fillStyle='#fff';g.font='bold 12px sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText('💰 '+G.bags+'   💥 '+G.crash+' / 3',8,11)}
+function wsLoot(){return Math.round(Math.max(C(300000),autoRate()*3*3600)*(1+.1*(WSG?WSG.bags:0)))}
+function wsWin(){const G=WSG,W=wsS(),loot=wsLoot();WSG=null;W.done=1;S.meta.wsWins=(S.meta.wsWins||0)+1;S.dirty=(S.dirty||0)+loot;S.heat=Math.min(99,S.heat+HEATX*(40));
+  pid='wsend';parg={ok:true,loot,bags:G.bags};renderPanel();snd('legend');burst(innerWidth/2,innerHeight/3,46,['💰','💵','🎉','✨'],280);save();updHud()}
+function wsFail(m){const W=wsS();WSG=null;W.gear={};S.heat=Math.min(100,S.heat+HEATX*(50));pid='wsend';parg={ok:false,m};$('panel').hidden=false;renderPanel();snd('siren');save();updHud()}
+function wsPlanHTML(){const W=wsS(),row2=(done,name,desc,act,cost,lock)=>`<div class="row"${done?' style="background:#d8f3dc"':''}><div class="info"><b>${done?'✓ ':''}${name}</b><small>${desc}</small></div>`+(done?'<button class="buy gold" type="button" disabled>Prêt</button>':`<button class="buy" type="button" data-act="${act}" data-cost="${cost}" ${S.cash<cost||lock?'disabled':''}>${lock||fmt(cost)}</button>`)+'</div>';
+  if(W.done)return '<div class="sec">Le casse de Wall Street</div><p class="lead">🏆 Le casse du siècle est derrière toi. Tokyo t\'attend !</p>';
+  let h='<div class="sec">Le casse de Wall Street'+ib('ws')+'</div><p class="lead">Le coup du siècle : la chambre forte du NYSE. Réussis-le pour ouvrir <b>Tokyo</b>. Raté : le matériel est perdu.</p>';
+  h+='<p class="foot" style="margin:2px 0">ÉQUIPE (3 bandits minimum)</p>'+WS_CREW.map(c=>row2(W.crew[c[0]],c[1],c[2],'ws:crew:'+c[0],C(c[3]),S.band<3?'3 bandits':'')).join('');
+  h+='<p class="foot" style="margin:2px 0">MATÉRIEL (perdu si le casse rate)</p>'+WS_GEAR.map(g=>row2(W.gear[g[0]],g[1],g[2],'ws:gear:'+g[0],C(g[3]))).join('');
+  h+=row2(W.scout,'Repérage','Paie le vigile du NYSE pour le plan de la chambre forte (au NYSE, près de l\'écran des cours)','',0,'Au NYSE');
+  const ok=wsReady(),td=wsToday();h+=`<div class="bets"><button class="chunky" type="button" data-act="ws:go" style="grid-column:1/-1" ${ok&&!td?'':'disabled'}>${td?'Prochaine tentative demain':ok?'💣 Lancer le casse':'Prépare tout avant de lancer'}</button></div>`;return h}
 // ===== le liftier de la Pigeon Tower : conduis l'ascenseur, dépose les locataires au bon étage, pourboires selon la vitesse =====
 let LIFT=null;
 // récompense du liftier : un multiplicateur des revenus auto de New York pendant 10 min (1 partie par vrai jour)
@@ -3103,12 +3178,13 @@ function drawNyseRoom(){
   const tr=[[220,470,1,'#22223b'],[640,450,-1,'#14213d'],[300,580,1,'#495057'],[700,600,-1,'#6d597a'],[560,530,1,'#22223b']];
   tr.forEach(([x,y,fc,col],i)=>Lp.push([y,()=>{const bx=x+Math.sin(T*1.3+i*2)*24;drawGuy(bx,y,{s:.95,t:T*1.4+i,moving:Math.sin(T*1.3+i*2)!==0,face:Math.cos(T*1.3+i*2)>0?1:-1,shirt:col,pants:'#22223b',skin:SKINS[(i+1)%5],hair:HAIRS[i%5],suit:true,tie:['#d62839','#ffd23f','#118ab2'][i%3]});
     if(((T+i*1.7)%5)<1.8)drawBubble(bx,y-80,TL[(Math.floor(T/5)+i)%TL.length],'#fff')}]));
+  Lp.push([345,()=>{drawGuy(680,345,{s:1,t:T,face:-1,shirt:'#1d3557',pants:'#14213d',skin:'#8d5524',hat:'#14213d',hatMark:'SECU',badge:1});if(!(S.ws&&S.ws.scout)&&CK()==='ny'&&((T%6)<2))drawBubble(680,265,'Psst...','#cdeefd')}]);
   Lp.push([350,()=>drawGuy(905,350,{s:1,t:T,face:-1,shirt:'#fff',pants:'#3d405b',skin:'#8d5524',hair:'#2b2118',hairS:'chignon',tie:'#1d3557',suit:true,glass:'round'})]);
   Lp.push([RP.y,()=>{const lk=Object.assign(playerLook(),{moving:RP.moving,face:RP.face,t:RP.t,ride:null,lift:0});drawGuy(RP.x,RP.y,lk);if(P.sayT>0)drawBubble(RP.x,RP.y-92,P.say)}]);
   Lp.sort((a,b)=>a[0]-b[0]);for(const [,f] of Lp)f();
   // lustres et lumière
   for(const lx of [180,560,920]){cx.beginPath();cx.moveTo(lx,0);cx.lineTo(lx,40);cx.stroke();cx.beginPath();cx.ellipse(lx,48,26,8,0,0,7);fs('#ffd23f');const g=cx.createRadialGradient(lx,60,10,lx,300,320);g.addColorStop(0,'rgba(255,240,200,.18)');g.addColorStop(1,'rgba(255,240,200,0)');cx.fillStyle=g;cx.fillRect(lx-330,50,660,H)}
-  const rs=roomSpot();if(rs){const x=NSPOTS[rs][0],y=rs==='exit'?110:rs==='trade'?205:226;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
+  const rs=roomSpot();if(rs){const x=NSPOTS[rs][0],y=rs==='exit'?110:rs==='trade'?205:rs==='guard'?240:226;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
   drawGuideRoom()}
 // garde-robe en pièces (vendues chez Fripe & Chic à New York) et personnalisation libre au vestiaire
 const LSLOTS=[['top','Hauts'],['bot','Bas'],['hat','Chapeaux'],['gl','Lunettes'],['sh','Chaussures']];
@@ -3507,6 +3583,14 @@ const GUIDES={
   {t:()=>'Choisis ta cible dans le classement : clique sur <b>Braquer</b>. Plus elle est riche par rapport à toi, plus c\'est dur.',ui:()=>document.querySelector('#pbody [data-act^="braq:go:"]'),done:()=>BQ.st!=='pick'},
   {t:()=>'Choisis combien de bandits partent (chacun en plus pardonne 0,5 raté), puis <b>Lance le casse</b>.',ui:()=>$('pbody').querySelector('[data-act="braq:start"]'),done:()=>BQ.st==='play'||BQ.st==='send'||BQ.st==='done'},
   {t:()=>'Clique sur chaque <b>🎯</b> avant qu\'elle disparaisse. Sous 50 % de précision, tu repars bredouille !',done:()=>BQ.st==='done'}]},
+ ws:{n:'Le casse de Wall Street',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='ws',steps:[
+  {t:()=>'Dernière étape avant Tokyo : <b>le casse de Wall Street</b> ! Va au <b>bar</b> (la flèche), puis à l\'<b>ordinateur du fond</b>.',tg:()=>barDoor(),rx:950,done:()=>inPanel('pc')},
+  {t:()=>'Recrute ton <b>équipe</b> : hacker, perceur et chauffeur (il te faut au moins <b>3 bandits</b>). Ça coûte cher : Business rapporte tout seul en attendant.',ui:q('#pbody [data-act^="ws:crew:"]:not([disabled])'),done:()=>WS_CREW.every(c=>wsS().crew[c[0]])},
+  {t:()=>'Achète le <b>matériel</b> : clé USB pirate, perceuse thermique, van banalisé. Attention : il est <b>perdu</b> si le casse rate.',ui:q('#pbody [data-act^="ws:gear:"]:not([disabled])'),done:()=>WS_GEAR.every(g=>wsS().gear[g[0]])},
+  {t:()=>'<b>Repérage</b> : va au <b>NYSE</b> et parle au <b>vigile</b> (près de l\'écran des cours) pour obtenir le plan de la chambre forte.',tg:()=>[NYSE.door,150],rx:680,ui:()=>inPanel('pc')?$('pclose'):q('#pbody [data-act="ws:scout"]')(),done:()=>!!wsS().scout},
+  {t:()=>'Tout est prêt. Retourne à l\'<b>ordinateur du bar</b> et clique <b>Lancer le casse</b>. Une seule tentative par jour !',tg:()=>barDoor(),rx:950,ui:q('#pbody [data-act="ws:go"]:not([disabled])'),done:()=>!!WSG||wsToday()},
+  {t:()=>'<b>1.</b> Retiens le code et tape-le (3 caméras). <b>2.</b> Stoppe la molette dans le vert (4 crans). <b>3.</b> Fuis avec ← →, esquive taxis et police, ramasse les 💰.',done:()=>!WSG},
+  {t:()=>wsS().done?'<b>Légendaire !</b> Blanchis ton butin avec le comptable, termine ta to-do et ouvre <b>Tokyo</b> (Menu › Prestige).':'Raté cette fois... Rachète le matériel et <b>retente demain</b> : l\'équipe et le repérage restent prêts.',...nxt()}]},
  tower:{n:'La Pigeon Tower',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='tower',steps:[
   {t:()=>'Nouvelle étape : ton <b>gratte-ciel</b> ! Va au chantier de la <b>Pigeon Tower</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[584,150],done:()=>inPanel('tower')},
   {t:()=>'Chaque <b>étage</b> rapporte un loyer chaque seconde, et la tour grandit pour de vrai dans la rue. Tous les 5 étages : un <b>étage spécial</b>. À 10, 25 et 50 étages : de gros <b>bonus</b> sur tous tes revenus.',...nxt()},
@@ -3536,6 +3620,7 @@ const GUIDES={
 const GD={k:null,i:0,tx:''};
 const gStep=()=>GD.k&&!VISIT?GUIDES[GD.k].steps[GD.i]:null;
 function guideUpdate(){if(tutoOn()||VISIT||(typeof BOOT!=='undefined'&&BOOT)){if(GD.k&&!tutoOn())$('tuto').hidden=true;return}
+  if(!$('panel').hidden&&(pid==='wsgame'||pid==='lift')){if(GD.k)$('tuto').hidden=true;return}// pas de carte par-dessus les mini-jeux
   const gd=S.meta.gd||(S.meta.gd={});
   if(!GD.k){for(const k in GUIDES)if(!gd[k]&&GUIDES[k].start()){GD.k=k;GD.i=0;GD.tx='';snd('event');break}if(!GD.k)return}
   const G=GUIDES[GD.k];

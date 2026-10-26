@@ -3179,7 +3179,8 @@ const DR_RACES=[
   {k:'r2',n:'Touge d\'Hakone',rv:'Ryō · RX-7',col:'#ffd23f',sp:100,len:3000,corners:11,fee:30000,prize:90000,ps:420,bg:'touge'},
   {k:'r3',n:'Wangan de nuit',rv:'Midnight · Fairlady Z',col:'#3a86ff',sp:113,len:3400,corners:10,fee:60000,prize:200000,ps:900,bg:'wangan'},
   {k:'legend',n:'La course légendaire du Mont Fuji',rv:'Le Roi du Drift · GT-R',col:'#d62839',sp:132,len:4600,corners:16,fee:300000,prize:8000000,ps:36000,bg:'fuji'}];
-const drPrize=r=>Math.round(Math.max(C(r.prize),autoRate()*r.ps));// le gain suit les revenus de ta rue
+const DR_LEGEND_PRIZE=250e6;// le pactole de la course légendaire : 250 M¥, une seule fois
+const drPrize=r=>r.k==='legend'?DR_LEGEND_PRIZE:Math.round(Math.max(C(r.prize),autoRate()*r.ps));// courses d'entraînement : le gain suit les revenus de ta rue
 const drS=()=>S.drift||(S.drift={car:0,up:{},wins:{},done:0,tries:0}),drLv=k=>drS().up[k]||0,drUpTot=()=>DR_PARTS.reduce((a,p)=>a+drLv(p[0]),0);
 const drPartCost=(p,l)=>C(Math.round(p[3]*[1,2.5,6][l])),drTrainWins=()=>['r1','r2','r3'].filter(k=>drS().wins[k]).length;
 const drStats=()=>({vmax:100+drLv('moteur')*13,acc:26+drLv('jantes')*9,zw:16+drLv('pneus')*6,pz:4+drLv('frein')*2.5,nspd:1.25-drLv('amort')*.18,nitro:drLv('turbo')});
@@ -3287,7 +3288,7 @@ function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-
   h+='<div class="sec">Courses d\'entraînement</div>'+DR_RACES.slice(0,3).map(raceRow).join('');
   h+='<div class="sec">La course légendaire</div>';
   if(D.done)h+='<p class="lead">🏆 Tu as battu le Roi du Drift sur les pentes du Fuji. <b>Tu es la légende de Tokyo.</b></p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Revoir la fin</button>';
-  else h+=`<p class="lead">Le Roi du Drift n'a jamais perdu. Le vainqueur repart avec <b>le pactole : ${fmt(drPrize(DR_RACES[3]))}</b> (10 h de tes revenus auto, jamais moins de ${fmt(C(DR_RACES[3].prize))}) et 5 Pigeons d'Or.</p>`+raceRow(DR_RACES[3]);
+  else h+=`<p class="lead">Le Roi du Drift n'a jamais perdu. Le vainqueur repart avec <b>le pactole : ${fmt(drPrize(DR_RACES[3]))}</b> et 5 Pigeons d'Or. Elle ne se gagne qu'une fois : une fois battu, le Roi du Drift prend sa retraite (si tu perds, tu peux retenter).</p>`+raceRow(DR_RACES[3]);
   return h}
 function drawDrCar(){const c=$('drcar');if(!c)return;const keep=cx,d=window.devicePixelRatio||1,g=c.getContext('2d');c.width=150*d;c.height=70*d;g.setTransform(d,0,0,d,0,0);g.fillStyle='#22223b';g.beginPath();g.roundRect(0,0,150,70,10);g.fill();
   cx=g;try{const D=drS(),L={};for(const p of DR_PARTS)L[p[0]]=drLv(p[0]);drawDriftCar(75,58,.95,D.car?L:{})}finally{cx=keep}}

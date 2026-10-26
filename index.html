@@ -1221,7 +1221,6 @@ const STEPS=[
  {k:'ws',only:2,h:"Bar › ordinateur › Le casse de Wall Street.",n:'Réussir le casse de Wall Street',ok:()=>!!(S.ws&&S.ws.done),tip:'ws',
    w:'Prépare le casse sur l\'ordinateur du bar (équipe, matériel), fais le repérage auprès du vigile du NYSE, puis lance le casse : piratage, coffre et fuite. Réussis-le pour débloquer Tokyo.',acts:['ws:']},
  {k:'drcar',only:3,h:"Daikoku PA (E), au bout de la rue.",cost:()=>C(DR_CAR),n:'Acheter la voiture de drift',ok:()=>!!drS().car,tip:'drift',w:'Va à Daikoku PA, le parking des pilotes au bout de la rue, appuie sur E et achète la Pigeon 86.',acts:['dr:car']},
- {k:'drup',only:3,h:"Daikoku PA › Préparation.",cost:()=>drPartCost(DR_PARTS[0],0),n:'Préparer la voiture (3 améliorations)',ok:()=>drUpTot()>=3,w:'À Daikoku PA, améliore ta voiture : jantes, pneus, amortisseurs, moteur, turbo, frein à main. Il en faut 3 pour commencer.',acts:['dr:up:']},
  {k:'drtrain',only:3,h:"Daikoku PA › Courses d'entraînement.",n:'Gagner les 3 courses d\'entraînement',ok:()=>drTrainWins()>=3,w:'Gagne le sprint de Daikoku, le touge d\'Hakone puis le Wangan de nuit. À chaque virage, appuie sur Espace (ou DRIFT) quand l\'aiguille est dans le vert.',acts:['dr:race:r1','dr:race:r2','dr:race:r3']},
  {k:'legend',only:3,h:"Daikoku PA › La course légendaire.",n:'Gagner la course légendaire du Mont Fuji',ok:()=>!!drS().done,tip:'drift',w:'Défie le Roi du Drift sur les pentes du Fuji. Le vainqueur repart avec le pactole : c\'est la fin du jeu !',acts:['dr:race:legend']},
 ];
@@ -3176,10 +3175,11 @@ const DR_PARTS=[['jantes','Jantes forgées','Plus légères : meilleure accélé
   ['turbo','Turbo + nitro','+1 nitro par course, à chaque niveau',90000],['frein','Frein à main hydraulique','Zone PARFAIT plus large',40000]];
 const DR_LV=3,DR_CAR=400000;
 const DR_RACES=[
-  {k:'r1',n:'Sprint de Daikoku',rv:'Kenji · Silvia S15',col:'#f8f9fa',sp:92,len:2600,corners:8,fee:10000,prize:30000,bg:'daikoku'},
-  {k:'r2',n:'Touge d\'Hakone',rv:'Ryō · RX-7',col:'#ffd23f',sp:104,len:3000,corners:11,fee:30000,prize:90000,bg:'touge'},
-  {k:'r3',n:'Wangan de nuit',rv:'Midnight · Fairlady Z',col:'#3a86ff',sp:118,len:3400,corners:10,fee:60000,prize:200000,bg:'wangan'},
-  {k:'legend',n:'La course légendaire du Mont Fuji',rv:'Le Roi du Drift · GT-R',col:'#d62839',sp:140,len:4600,corners:16,fee:300000,prize:5000000,bg:'fuji'}];
+  {k:'r1',n:'Sprint de Daikoku',rv:'Kenji · Silvia S15',col:'#f8f9fa',sp:88,len:2600,corners:8,fee:10000,prize:30000,ps:180,bg:'daikoku'},
+  {k:'r2',n:'Touge d\'Hakone',rv:'Ryō · RX-7',col:'#ffd23f',sp:100,len:3000,corners:11,fee:30000,prize:90000,ps:420,bg:'touge'},
+  {k:'r3',n:'Wangan de nuit',rv:'Midnight · Fairlady Z',col:'#3a86ff',sp:113,len:3400,corners:10,fee:60000,prize:200000,ps:900,bg:'wangan'},
+  {k:'legend',n:'La course légendaire du Mont Fuji',rv:'Le Roi du Drift · GT-R',col:'#d62839',sp:132,len:4600,corners:16,fee:300000,prize:8000000,ps:36000,bg:'fuji'}];
+const drPrize=r=>Math.round(Math.max(C(r.prize),autoRate()*r.ps));// le gain suit les revenus de ta rue
 const drS=()=>S.drift||(S.drift={car:0,up:{},wins:{},done:0,tries:0}),drLv=k=>drS().up[k]||0,drUpTot=()=>DR_PARTS.reduce((a,p)=>a+drLv(p[0]),0);
 const drPartCost=(p,l)=>C(Math.round(p[3]*[1,2.5,6][l])),drTrainWins=()=>['r1','r2','r3'].filter(k=>drS().wins[k]).length;
 const drStats=()=>({vmax:100+drLv('moteur')*13,acc:26+drLv('jantes')*9,zw:16+drLv('pneus')*6,pz:4+drLv('frein')*2.5,nspd:1.25-drLv('amort')*.18,nitro:drLv('turbo')});
@@ -3250,7 +3250,7 @@ function drDraw(){const c=$('drcv'),G=DRG;if(!c||!G)return;const d=window.device
   if(G.ft>0&&G.flash){g.globalAlpha=Math.min(1,G.ft*2);g.fillStyle=G.flash.startsWith('PARFAIT')||G.flash.startsWith('NITRO')?'#ffd23f':G.flash.startsWith('Joli')?'#38f07a':'#ef476f';g.font='bold 28px sans-serif';g.textAlign='center';g.fillText(G.flash,W/2,150);g.globalAlpha=1}
   if(G.fin){g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,0,W,H);g.fillStyle=G.fin.win?'#ffd23f':'#ef476f';g.font='bold 40px sans-serif';g.textAlign='center';g.fillText(G.fin.win?'VICTOIRE !':'PERDU',W/2,H/2)}}
 function drEnd(win,why){const G=DRG;if(!G)return;DRG=null;const r=G.r,D=drS();let prize=0,first=false;
-  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=C(r.prize)*(first?1:.3);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
+  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.3);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
   pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
 // la voiture de drift, de profil (aperçu au garage et voitures garées à Daikoku)
 function drawDriftCar(x,y,s,lv){lv=lv||{};cx.save();cx.translate(x,y);cx.scale(s,s);cx.lineWidth=3;cx.strokeStyle=INK;const low=lv.amort?4:0;
@@ -3281,13 +3281,13 @@ function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-
   h+=`<div class="row" style="align-items:center"><canvas id="drcar" style="width:150px;height:70px;flex:0 0 auto"></canvas><div class="info"><b>Pigeon 86 « Tofu »</b>`+bar('Vitesse',st.vmax-80,59)+bar('Accélération',st.acc-10,43)+bar('Adhérence',st.zw-10,24)+bar('Stabilité',1.4-st.nspd,.7)+'</div></div>';
   h+='<div class="sec">Préparation</div>'+DR_PARTS.map(p=>{const l=drLv(p[0]),mx=l>=DR_LV,c=mx?0:drPartCost(p,l);return `<div class="row"><div class="info"><b>${p[1]}</b><span class="lvl">${'●'.repeat(l)}${'○'.repeat(DR_LV-l)}</span><small>${p[2]}</small></div>`+
     (mx?'<button class="buy gold" type="button" disabled>MAX</button>':`<button class="buy" type="button" data-act="dr:up:${p[0]}" data-cost="${c}" ${S.cash<c?'disabled':''}>${fmt(c)}</button>`)+'</div>'}).join('');
-  const raceRow=r=>{const won=D.wins[r.k],op=drOpen(r),fee=C(r.fee),pr=C(r.prize)*(won?.3:1);const prev=DR_RACES[DR_RACES.indexOf(r)-1];
+  const raceRow=r=>{const won=D.wins[r.k],op=drOpen(r),fee=C(r.fee),pr=drPrize(r)*(won?.3:1);const prev=DR_RACES[DR_RACES.indexOf(r)-1];
     return `<div class="row"${won?' style="background:#d8f3dc"':''}><div class="info"><b>${won?'✓ ':''}${r.n}</b><small>Rival : ${r.rv} · ${r.corners} virages · gain ${fmt(pr)}${won?' (revanche)':''}</small></div>`+
       (op?`<button class="buy" type="button" data-act="dr:race:${r.k}" data-cost="${fee}" ${S.cash<fee?'disabled':''}>Courir · ${fmt(fee)}</button>`:`<button class="buy" type="button" disabled>🔒 ${r.k==='legend'?'3 victoires':'Gagne '+prev.n.split(' ')[0]}</button>`)+'</div>'};
   h+='<div class="sec">Courses d\'entraînement</div>'+DR_RACES.slice(0,3).map(raceRow).join('');
   h+='<div class="sec">La course légendaire</div>';
   if(D.done)h+='<p class="lead">🏆 Tu as battu le Roi du Drift sur les pentes du Fuji. <b>Tu es la légende de Tokyo.</b></p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Revoir la fin</button>';
-  else h+=`<p class="lead">Le Roi du Drift n'a jamais perdu. Le vainqueur repart avec <b>le pactole : ${fmt(C(DR_RACES[3].prize))}</b> et 5 Pigeons d'Or.</p>`+raceRow(DR_RACES[3]);
+  else h+=`<p class="lead">Le Roi du Drift n'a jamais perdu. Le vainqueur repart avec <b>le pactole : ${fmt(drPrize(DR_RACES[3]))}</b> (10 h de tes revenus auto, jamais moins de ${fmt(C(DR_RACES[3].prize))}) et 5 Pigeons d'Or.</p>`+raceRow(DR_RACES[3]);
   return h}
 function drawDrCar(){const c=$('drcar');if(!c)return;const keep=cx,d=window.devicePixelRatio||1,g=c.getContext('2d');c.width=150*d;c.height=70*d;g.setTransform(d,0,0,d,0,0);g.fillStyle='#22223b';g.beginPath();g.roundRect(0,0,150,70,10);g.fill();
   cx=g;try{const D=drS(),L={};for(const p of DR_PARTS)L[p[0]]=drLv(p[0]);drawDriftCar(75,58,.95,D.car?L:{})}finally{cx=keep}}
@@ -4127,10 +4127,9 @@ const GUIDES={
  drift:{n:'Les courses clandestines',start:()=>CK()==='tokyo'&&(stepCur()||{x:{}}).x.k==='drcar',steps:[
   {t:()=>'Dernière quête du jeu : <b>les courses clandestines</b> ! Va à <b>Daikoku PA</b>, le parking des pilotes au bout de la rue (la flèche), et appuie sur <b>E</b>.',tg:()=>[DAIKOKU.door,150],done:()=>inPanel('drift')},
   {t:()=>'Achète ta voiture de drift : la <b>Pigeon 86</b>. Ça coûte cher : Business rapporte tout seul en attendant.',ui:q('#pbody [data-act="dr:car"]'),done:()=>!!drS().car},
-  {t:()=>'<b>Prépare-la</b> : pneus, amortisseurs, moteur… Il faut 3 améliorations avant de courir.',ui:q('#pbody [data-act^="dr:up:"]:not([disabled])'),done:()=>drUpTot()>=3},
-  {t:()=>'Lance la première course : le <b>Sprint de Daikoku</b>.',ui:q('#pbody [data-act="dr:race:r1"]:not([disabled])'),done:()=>!!DRG||drS().tries>0},
+  {t:()=>'Lance la première course : le <b>Sprint de Daikoku</b>. Elle se gagne avec la voiture d\'origine.',ui:q('#pbody [data-act="dr:race:r1"]:not([disabled])'),done:()=>!!DRG||drS().tries>0},
   {t:()=>'À chaque virage, <b>Espace</b> (ou DRIFT) quand l\'aiguille est dans le <b>vert</b> (le jaune = PARFAIT). <b>N</b> (ou NITRO) en ligne droite.',done:()=>!DRG},
-  {t:()=>drS().wins.r1?'Bien piloté ! Gagne les 2 autres courses, puis défie <b>le Roi du Drift</b> sur la course légendaire.':'Raté cette fois... Améliore la voiture et <b>recours</b> quand tu veux.',...nxt()}]},
+  {t:()=>drS().wins.r1?'Bien piloté ! Entre deux courses, <b>améliore la voiture</b> (moteur, jantes, pneus…) : chaque rival est plus rapide. Puis défie <b>le Roi du Drift</b>.':'Raté cette fois... Améliore la voiture et <b>recours</b> quand tu veux.',...nxt()}]},
  tower:{n:'La Pigeon Tower',start:()=>CK()==='ny'&&(stepCur()||{x:{}}).x.k==='tower',steps:[
   {t:()=>'Nouvelle étape : ton <b>gratte-ciel</b> ! Va au chantier de la <b>Pigeon Tower</b> (la flèche) et appuie sur <b>E</b>.',tg:()=>[584,150],done:()=>inPanel('tower')},
   {t:()=>'Chaque <b>étage</b> rapporte un loyer chaque seconde, et la tour grandit pour de vrai dans la rue. Tous les 5 étages : un <b>étage spécial</b>. À 10, 25 et 50 étages : de gros <b>bonus</b> sur tous tes revenus.',...nxt()},

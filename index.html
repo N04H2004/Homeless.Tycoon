@@ -741,8 +741,8 @@ function infoHTML(k){const [n,what,steps,tip]=INFO[k];
     `<div class="row" style="display:block;background:#fff3b0"><b>Conseil</b><small style="display:block">${tip}</small></div><button class="chunky" type="button" data-act="infoback">Compris !</button>`}
 const PERKS=[
  {k:'cash',n:'Magot du pigeon',d:'+10 % sur tous tes gains',max:20},
- {k:'start',n:'Bas de laine',d:'Tu démarres chaque partie avec plus de cash',max:10},
- {k:'sac',n:'Poches profondes',d:'+2 places dans ton sac, dès le départ',max:5},
+ {k:'dodo',n:'Sommeil rentable',d:'+10 min de gains comptés pendant ton absence',max:10},
+ {k:'lucky',n:'Pigeon porte-bonheur',d:'Le Pigeon Légendaire (gains x3) dure 30 s de plus',max:5},
  {k:'emp',n:'Réseau de pistons',d:'Employés 8 % moins chers à embaucher et à payer',max:5},
 ];
 const EVENTS={
@@ -757,17 +757,17 @@ const EVENTS={
 
 // ================= Sauvegarde =================
 const KEY='poubelle-tycoon-v1';
-const freshMeta=()=>({gold:0,prestige:0,perk:{cash:0,start:0,sac:0,emp:0},wardrobe:['classic'],outfit:'classic',ach:{},life:0,snd:true,mus:true,legend:0,fed:0,escapes:0,casinoLost:0,jackpot:0,bestTrade:0,kebabs:0,changes:0,beers:0,heists:0,her:{},worlds:[],pgc:0,pc:{p:50,h:[]},poBought:0,treas:0,tips:{}});
+const freshMeta=()=>({gold:0,prestige:0,perk:{cash:0,dodo:0,lucky:0,emp:0},wardrobe:['classic'],outfit:'classic',ach:{},life:0,snd:true,mus:true,legend:0,fed:0,escapes:0,casinoLost:0,jackpot:0,bestTrade:0,kebabs:0,changes:0,beers:0,heists:0,her:{},worlds:[],pgc:0,pc:{p:50,h:[]},poBought:0,treas:0,tips:{}});
 const CMS=[1,5,10,18];// prix par ville : bien plus que les gains (x1,6 / x2,6 / x4) pour rester longtemps dans chaque ville
 function fresh(m){const o=fresh0(m);const h=(m||o.meta).her||{};if(h.frigo)o.frigo=true;if(h.manager)o.manager=true;if(h.trott){o.veh.trott=1;o.ride='trott'}return o}
 function fresh0(m){m=m||freshMeta();const ci=m.cur??Math.min(m.prestige,3);
-  return {cash:Math.round((20+250*m.perk.start)*CMS[ci]),total:0,hp:100,food:80,bag:0,bagVal:0,up:{pince:0,sac:0,basket:0,cle:0,oeil:0,tri:0},
+  return {cash:Math.round(20*CMS[ci]),total:0,hp:100,food:80,bag:0,bagVal:0,up:{pince:0,sac:0,basket:0,cle:0,oeil:0,tri:0},
   distrib:0,distUp:0,local:false,emp:0,staff:[],emUp:{form:0,chariot:0},manager:false,frigo:false,secu:false,shops:{},band:0,bandUp:{nez:0,pigeon:0},avocat:false,heat:0,
   owned:{},veh:{},ride:'',rivalBought:false,stk:{},mkt:null,hist:[],clock:0,
   pay:{timer:60,due:0,late:0,strike:false},stats:{trash:0,repairs:0,ate:0,casino:0,pick:0,fines:0,bpick:0,raids:0,cdd:0},cdd:{},arms:{},heistDay:-1,heist:null,capBought:0,done:0,last:Date.now(),meta:m}}
 let S=fresh();
 try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw),om=o.meta||{};
-  const m=Object.assign(freshMeta(),om);m.perk=Object.assign(freshMeta().perk,om.perk||{});m.ach=Object.assign({},om.ach||{});if(!Array.isArray(m.wardrobe))m.wardrobe=['classic'];
+  const m=Object.assign(freshMeta(),om);m.perk=Object.assign(freshMeta().perk,om.perk||{});for(const k of ['start','sac']){const l=m.perk[k]||0;if(l){m.gold+=l*(l+1)/2;m.refund=(m.refund||0)+l*(l+1)/2}delete m.perk[k]}// anciens bonus remplacés : Pigeons d'Or rendusm.ach=Object.assign({},om.ach||{});if(!Array.isArray(m.wardrobe))m.wardrobe=['classic'];
   m.her=Object.assign({},om.her||{});m.tips=Object.assign({},om.tips||{});if(!Array.isArray(m.worlds))m.worlds=[];if(!m.pc||!m.pc.p)m.pc={p:50,h:[]};
   for(let i=m.worlds.length;i<Math.min(m.prestige,3);i++)m.worlds.push({i,rate:5*(i+1),g:.2});
   const f=fresh(m);S=Object.assign(f,o);S.meta=m;
@@ -794,7 +794,7 @@ const fpc=n=>(n<100?n.toFixed(2):Math.floor(n).toLocaleString('fr-FR')).replace(
 const rnd=(a,b)=>a+Math.random()*(b-a), dist=(a,b,c,d)=>Math.hypot(a-c,b-d), clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sideY=()=>Math.random()<.5?rnd(240,290):rnd(458,515);
 const rideB=()=>{const v=VEH.find(v=>v.k===S.ride);return v?v.b:0};
-const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac+2*S.meta.perk.sac, speed=()=>170*(1+(S.ride?.06:.12)*S.up.basket)*(1+rideB()),
+const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac, speed=()=>170*(1+(S.ride?.06:.12)*S.up.basket)*(1+rideB()),
       repT=()=>4/(1+.3*S.up.cle), mult=()=>1+.25*S.up.tri, lynx=()=>1+.1*S.up.oeil,
       trashV=t=>TR[t.t].v*mult()*(ev&&ev.k==='pluie'?2:ev&&ev.k==='neige'?1.5:1),
       distInc=()=>S.distrib*.8*(1+.3*S.distUp),
@@ -1058,7 +1058,7 @@ function catchUp(el,away){
   const tg=el*gerRate();S.meta.treas+=tg;
   if(away)S.meta.treas-=tg;
   if(g>=1||tg>=1){S.cash+=g;S.total+=g;S.meta.life+=g;setTimeout(()=>toast((away?'Pendant ta visite, ta rue de '+CITY().n+' a rapporté ':'Pendant ton absence, ton business a rapporté ')+fmt(g)+(tg>=1&&!away?' et tes filiales '+fmt(tg):'')),600)}}
-catchUp(Math.min(AFK_MAX,(Date.now()-(S.last||Date.now()))/1000),false);
+catchUp(Math.min(AFK_MAX*(1+S.meta.perk.dodo),(Date.now()-(S.last||Date.now()))/1000),false);
 
 // ================= Entrées =================
 const keys={};
@@ -1291,7 +1291,7 @@ function update(dt){
   if(LP){LP.t+=dt;LP.life-=dt;const d=dist(P.x,P.y,LP.x,LP.y);
     if(d<160){LP.vx=(LP.x-P.x)/Math.max(1,d)*145;LP.vy=(LP.y-P.y)/Math.max(1,d)*145}else if(Math.random()<dt*1.5){LP.vx=rnd(-70,70);LP.vy=rnd(-30,30)}
     LP.x=clamp(LP.x+LP.vx*dt,30,W-30);LP.y=clamp(LP.y+LP.vy*dt,225,625);
-    if(d<32&&!INSIDE){frenzy=30;S.meta.legend++;earn(C(100),LP.x,LP.y-60,'#ffd23f');toast('PIGEON LÉGENDAIRE ! Tous tes gains x3 pendant 30 s');snd('legend');LP=null}
+    if(d<32&&!INSIDE){frenzy=30*(1+S.meta.perk.lucky);S.meta.legend++;earn(C(100),LP.x,LP.y-60,'#ffd23f');toast('PIGEON LÉGENDAIRE ! Tous tes gains x3 pendant '+frenzy+' s');snd('legend');LP=null}
     else if(LP.life<=0){toast("Le Pigeon Légendaire s'est envolé...");LP=null}}
 
   // nuit : un deuxième flic patrouille
@@ -4177,7 +4177,7 @@ const TIPS=[
  ['tools','Les outils de Brico Dédé',()=>Object.values(S.up).some(v=>v>0),['<b>Pince</b> : attrape les déchets de plus loin.','<b>Sac XXL</b> : moins d\'allers-retours à la poubelle.','<b>Baskets</b> : plus rapide, pratique pour semer la police.','<b>Œil de lynx</b> : booste tous les revenus automatiques.','Chaque outil se voit sur ton perso !']],
  ['cdd',"Les CDD d'une journée",()=>S.stats.cdd>=1,['Un CDD par boutique et par jour du jeu.','Chaque client réussi est payé tout de suite, avec un pourboire si tu es rapide.','Aucun raté et 5 clients ou plus : bonus "Employé de la journée".','L\'Offre du jour paie un des CDD 50 % de plus.']],
  ['health','Ta vie',()=>S.hp<70,['Ta vie <b>ne remonte pas toute seule</b>.','Soigne-toi au <b>rayon santé du supermarché</b>, ou avec les gros repas.','Voitures, matraques et faim à zéro font mal. À zéro, tu tombes dans les pommes et perds la moitié de ton cash.']],
- ['distrib','Les revenus automatiques',()=>S.distrib>=1,['Les distributeurs rapportent <b>même quand tu ne joues pas</b> (jusqu\'à 10 min d\'absence).','Améliore leur gamme : BIO puis LUXE.','Le compteur sous ton argent montre tout ce qui tombe tout seul chaque seconde.']],
+ ['distrib','Les revenus automatiques',()=>S.distrib>=1,['Les distributeurs rapportent <b>même quand tu ne joues pas</b> (10 min d\'absence, plus avec le bonus Sommeil rentable).','Améliore leur gamme : BIO puis LUXE.','Le compteur sous ton argent montre tout ce qui tombe tout seul chaque seconde.']],
  ['local','Ton QG',()=>S.local,['Le local débloque : <b>employés, rachat des boutiques et frigo</b> (menu Business). Les bandits viendront à Londres.','Attention : ton rival <b>Déchets Corp</b> envoie ses ramasseurs voler tes déchets. Sabote-le ou rachète-le !']],
  ['staff','Tes employés',()=>S.emp>=1,['Chaque recrue est <b>tirée au sort</b> : commune, rare ou légendaire (7 %).','<b>Équipe de jour</b> le jour, <b>équipe de nuit</b> la nuit.','Paie toutes les 60 s, sinon <b>grève</b>. Le <b>manager</b> paie tout seul.','Licencier coûte 3 jours de salaire.']],
  ['shops','Ta première boutique',()=>SHOPS.some(x=>S.shops[x.k]>0),['Une boutique rachetée verse un <b>loyer</b> chaque seconde.','Chaque niveau augmente le loyer, la vitrine évolue jusqu\'au luxe au niveau 10.','Chaque ville a ses 4 boutiques à racheter.']],
@@ -4196,7 +4196,7 @@ const TIPS=[
  ['avocat','Maître Lafouine',()=>av()>=1,['Chaque niveau d\'avocat : chaleur qui retombe <b>+15 %</b> plus vite, amendes et impôts <b>-8 %</b>.','Jusqu\'au niveau 5, dans Business, section Le côté obscur.']],
  ['arms','Armes et tir',()=>Object.keys(S.arms||{}).some(k=>S.arms[k]),['Équipe une arme à l\'<b>armurerie</b> du bar.','Dans la rue : <b>G</b>, clic droit ou bouton <b>Tirer</b>. <b>F</b> reste le pickpocket.','Un policier touché est sonné 4 s. Chaque tir lance toute la police à tes trousses.','Les <b>munitions</b> se rachètent sur l\'ordinateur du bar.']],
  ['event','Les événements',()=>!!ev,['Averse : déchets x2. Manif : route bloquée et canettes partout.','Marché : courses à -50 %. Contrôle fiscal : le fisc se sert si tu es riche.']],
- ['legend','Le Pigeon Légendaire',()=>!!LP,['Un pigeon doré traîne dans le coin.','Attrape-le : <b>tous tes gains x3</b> pendant 30 s !']],
+ ['legend','Le Pigeon Légendaire',()=>!!LP,['Un pigeon doré traîne dans le coin.','Attrape-le : <b>tous tes gains x3</b> pendant 30 s (plus avec le bonus Pigeon porte-bonheur) !']],
  ['bourse','La bourse',()=>CI()>=2&&S.total>=3000,['Au <b>New York Stock Exchange</b> (E), ou dans le <b>Menu</b>, onglet Bourse.','Chaque ville a sa propre bourse et ses actions. Les cours suivent des tendances cachées.','Les <b>analystes</b> te révèlent les tendances : analyse rapide, complète, et même un délit d\'initié (1 fois par ville).','Le bouton <b>i</b> à côté de chaque analyste explique comment le rentabiliser.']],
  ['prestige','Ouvrir une filiale',()=>pg()>=1&&S.meta.prestige<3,['Tu as assez gagné pour <b>ouvrir une nouvelle ville</b> (Menu, Prestige).','Ta rue actuelle n\'est pas perdue : elle tourne <b>en gérance</b>.','Tu gagnes aussi des <b>Pigeons d\'Or</b> pour des bonus permanents.']],
  ['holding','Ta holding',()=>S.meta.prestige>=1,['Tes autres villes versent leurs revenus dans la <b>trésorerie</b> (Menu, Holding).','Convertis-la en <b>PigeonCoin</b> quand le cours est bas.','Avec la crypto : Pigeons d\'Or, capital de départ, gérants motivés.','Bouton <b>Y aller</b> pour retourner améliorer une ville.','<b>Héritage</b> : frigo et manager te suivent partout. Outils, véhicules et tenues sont à vie.']],
@@ -4269,7 +4269,7 @@ function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat'
   let h=0;for(const ch of day)h=(h*31+ch.charCodeAt(0))>>>0;const pk=[];while(pk.length<2){h=(h*1103515245+12345)>>>0;const k=pool[h%pool.length];if(!pk.includes(k))pk.push(k)}
   const D=S.meta.daily||{},ms=['earn',...pk].map(k=>({k,g:k==='earn'?nice(Math.max(C(1000),autoRate()*600)):DM[k][2],p:0,b:DM[k][1](),c:CURI(),cl:false}));
   S.meta.daily={day,ms,rw:dReward(),ci:CURI(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
-function dailyTick(){if(BOOT||VISIT)return;if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
+function dailyTick(){if(BOOT||VISIT)return;if(S.meta.refund){toast('Bonus de prestige remaniés : '+S.meta.refund+' Pigeon'+(S.meta.refund>1?'s':'')+' d\'Or rendu'+(S.meta.refund>1?'s':'')+'. Place-les dans Sommeil rentable ou Pigeon porte-bonheur !');delete S.meta.refund;save()}if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
   // changement de ville : récompenses et objectif « Gagner » recalculés selon les revenus de la nouvelle ville
   if(D.ci!==CURI()){D.ci=CURI();D.rw=dReward();for(const m of D.ms)if(m.k==='earn'&&!m.cl&&m.p<m.g){m.g=nice(Math.max(C(1000),autoRate()*600));m.p=0}}
   for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){missionFx(m)}}if(m.p>=m.g&&!m.cl)ready++}

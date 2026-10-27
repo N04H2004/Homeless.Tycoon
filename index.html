@@ -19,7 +19,34 @@
 html,body{height:100%}
 body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:none}
 #game{position:fixed;inset:0}
-#cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;outline:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;outline:none;touch-action:none}
+/* écrans tactiles : joystick flottant à gauche, 3 boutons ronds fixes à droite (action, poches, tir) */
+#joy{position:fixed;left:96px;bottom:96px;width:128px;height:128px;margin:0 0 -64px -64px;border-radius:50%;background:rgba(255,246,223,.22);border:4px solid rgba(42,31,61,.45);z-index:6;pointer-events:none;display:none}
+#joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#ffd23f;border:4px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+#joy.idle{opacity:.55}#joy.on{opacity:1}
+#actl{position:absolute;display:none;z-index:6;pointer-events:none;background:#fff6df;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-family:var(--display);font-size:13px;color:var(--ink);max-width:180px;text-align:center;line-height:1.15}
+body.touch #joy{display:block}
+body.touch #hint{display:none}
+body.touch #act,body.touch #steal,body.touch #shoot{width:84px;height:84px;padding:0;border-radius:50%;font-size:0!important;max-width:none;display:flex;align-items:center;justify-content:center}
+body.touch #act::before,body.touch #steal::before,body.touch #shoot::before{font-size:36px;line-height:1}
+body.touch #act::before{content:'✋'}body.touch #steal::before{content:'👛'}body.touch #shoot::before{content:'🎯'}
+body.touch #act{right:max(20px,env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:92px;height:92px}
+body.touch #steal{right:calc(max(20px,env(safe-area-inset-right,0px)) + 104px);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:70px;height:70px}
+body.touch #shoot{right:calc(max(20px,env(safe-area-inset-right,0px)) + 104px);bottom:calc(100px + env(safe-area-inset-bottom,0px));width:70px;height:70px}
+body.touch #steal::before,body.touch #shoot::before{font-size:30px}
+body.touch #act,body.touch #steal,body.touch #shoot{z-index:5}body.touch #act kbd,body.touch #steal kbd,body.touch #shoot kbd{display:none}
+body.touch #act[hidden],body.touch #steal[hidden]{display:flex!important;opacity:.38;pointer-events:none;filter:grayscale(1)}
+body.touch #actl{display:block}body.touch #actl:empty{display:none}
+body.touch #goal{left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:min(420px,calc(100% - 430px));font-size:12px}
+body.touch #tuto{bottom:calc(110px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 430px))}
+body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));font-size:13px;padding:6px 10px}
+@media (max-width:760px){
+  body.touch #goal{left:12px;right:12px;transform:none;max-width:none;bottom:calc(212px + env(safe-area-inset-bottom,0px))}
+  body.touch #tuto{width:calc(100% - 24px);bottom:calc(212px + env(safe-area-inset-bottom,0px))}
+  body.touch #adx2{bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));right:auto;left:50%;transform:translateX(-50%)}
+  body.touch.tuto-on #goal{display:none}
+}
+
 #hud{position:absolute;top:0;left:0;right:0;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;
   padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 0 max(12px,env(safe-area-inset-left,0px));pointer-events:none}
 #hud>*{pointer-events:auto}
@@ -446,6 +473,7 @@ if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<sc
   </div>
   <div id="evb" class="card" hidden></div>
   <div id="goal" class="card"><b id="goalh">Objectif</b><span id="goalt"></span><div id="goalp" hidden><div class="gp"><i id="goalpb"></i></div><small id="goalps"></small></div></div>
+  <div id="joy" class="idle" aria-hidden="true"><i></i></div><div id="actl" aria-hidden="true"></div>
   <div id="hint">ZQSD / flèches ou clic pour bouger · E pour entrer · F pour faire les poches</div>
   <button id="adx2" class="chunky" type="button" hidden>📺 Revenus x2 · 30 s</button>
   <div id="adov" hidden role="dialog" aria-label="Publicité"><div class="card"><b>📺 Publicité</b><div class="adbox" id="adbox"><span>Espace publicitaire</span><small id="adwhy"></small></div><div class="adbar"><i id="adbar"></i></div><span id="adt"></span><button class="chunky alt" type="button" id="adx">Fermer sans récompense</button></div></div>
@@ -1229,8 +1257,21 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;const m={arrowleft:'l',q:'l',a:'l',arrowright:'r',d:'r',arrowdown:'b',s:'b',' ':'h'}[k];if(m)DRK[m]=0});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 cv.addEventListener('contextmenu',e=>{e.preventDefault();if(INSIDE||!armed())return;const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/scale+camX;if(Math.abs(x-P.x)>4)P.face=x>P.x?1:-1;shoot()});
+// ---- joystick tactile : il apparaît sous le pouce sur la moitié gauche de l'écran ; toucher la moitié droite = aller à cet endroit
+const JOY={on:false,id:null,ox:0,oy:0,x:0,y:0};
+const touchUI=on=>{document.body.classList.toggle('touch',on)};
+try{if(matchMedia('(pointer: coarse)').matches)touchUI(true)}catch(e){}
+addEventListener('pointerdown',e=>{if(e.pointerType==='touch')touchUI(true)},true);
+addEventListener('keydown',()=>touchUI(false),true);
+function joyPut(cx0,cy0){const j=$('joy');j.style.left=cx0+'px';j.style.top=cy0+'px';j.style.bottom='auto';j.style.margin='-64px 0 0 -64px'}
+function joyRest(){const j=$('joy');j.className='idle';j.style.left='';j.style.top='';j.style.bottom='';j.style.margin='';j.firstChild.style.transform='';JOY.on=false;JOY.id=null;JOY.x=JOY.y=0}
+function joyMove(e){if(!JOY.on||e.pointerId!==JOY.id)return;let dx=e.clientX-JOY.ox,dy=e.clientY-JOY.oy;const d=Math.hypot(dx,dy),R=48;if(d>R){dx*=R/d;dy*=R/d}
+  $('joy').firstChild.style.transform=`translate(${dx}px,${dy}px)`;const k=Math.min(1,d/R);JOY.x=d>6?dx/R/Math.max(k,1e-6)*k:0;JOY.y=d>6?dy/R/Math.max(k,1e-6)*k:0;if(k<.25)JOY.x=JOY.y=0}
+addEventListener('pointermove',joyMove,{passive:true});
+addEventListener('pointerup',e=>{if(JOY.on&&e.pointerId===JOY.id)joyRest()});addEventListener('pointercancel',e=>{if(JOY.on&&e.pointerId===JOY.id)joyRest()});
 cv.addEventListener('pointerdown',e=>{
   if(e.button===2)return;
+  if(e.pointerType==='touch'&&e.clientX<innerWidth*.5){e.preventDefault();JOY.on=true;JOY.id=e.pointerId;JOY.ox=e.clientX;JOY.oy=e.clientY;joyPut(e.clientX,e.clientY);$('joy').className='on';P.tx=null;if(INSIDE)RP.tx=null;return}
   refocus();
   const r=cv.getBoundingClientRect();
   if(INSIDE){RP.tx=clamp((e.clientX-r.left)/scale+roomCam,40,RW-40);RP.ty=clamp((e.clientY-r.top)/scale,375,610);return}
@@ -1431,6 +1472,7 @@ function update(dt){
   T+=dt;bumpCD-=dt;pickCD-=dt;S.clock+=dt;S.meta.play=(S.meta.play||0)+dt;
   let dx=(keys['d']||keys['arrowright']?1:0)-(keys['q']||keys['a']||keys['arrowleft']?1:0);
   let dy=(keys['s']||keys['arrowdown']?1:0)-(keys['z']||keys['w']||keys['arrowup']?1:0);
+  if(JOY.on&&(JOY.x||JOY.y)){dx=JOY.x;dy=JOY.y}
   if(INSIDE){roomMove(dx,dy,dt);dx=0;dy=0;P.tx=null}
   if(dx||dy){P.tx=null}
   else if(P.tx!=null){const d=dist(P.x,P.y,P.tx,P.ty);if(d<6)P.tx=null;else{dx=(P.tx-P.x)/d;dy=(P.ty-P.y)/d}}
@@ -2286,6 +2328,9 @@ function doAct(){
 }
 function doSteal(){if(VISIT)return visitMsg();if(INSIDE)return;const p=spotPick();if(p)pickpocket(p)}
 $('act').addEventListener('click',()=>{doAct();if($('panel').hidden)refocus()});
+// sur écran tactile, le bouton rond n'a qu'une icône : le texte de l'action s'affiche au-dessus
+{const a=$('act'),l=$('actl'),sync=()=>{const t=a.hidden?'':(a.textContent||'').replace(/\s*[A-Z]$/,'').trim();if(l.textContent!==t)l.textContent=t;const r=a.getBoundingClientRect();if(t&&r.width){const sh=$('shoot'),rs=!sh.hidden&&sh.getBoundingClientRect(),top=Math.min(r.top,rs&&rs.width?rs.top:r.top);l.style.right=Math.max(8,innerWidth-r.right)+'px';l.style.bottom=(innerHeight-top+10)+'px'}};
+  new MutationObserver(sync).observe(a,{attributes:true,childList:true,subtree:true,characterData:true});addEventListener('resize',sync)}
 for(const el of document.querySelectorAll('.hudi'))el.addEventListener('click',()=>{if(JOB||VISIT)return;infoBack={pid:null};openPanel('info',el.dataset.info)});
 $('shoot').addEventListener('click',()=>{shoot();refocus()});
 $('steal').addEventListener('click',()=>{doSteal();refocus()});
@@ -4385,7 +4430,7 @@ const tutoJobs=()=>SHOPS.filter(sh=>sh.job&&JOBS[sh.job]&&jobOk(sh.job)).map(sh=
 const tutoNextJob=()=>{let b=null,bd=1e9;for(const j of tutoJobs())if(!j.ok){const d=Math.abs(P.x-j.sh.door);if(d<bd){bd=d;b=j}}return b};
 const tutoJobBtn=()=>{for(const j of tutoJobs())if(!j.ok){const e=document.querySelector(`#pbody [data-act="job:${j.k}"]:not(:disabled),#pbody [data-act="jobgo:${j.k}"]`);if(e)return e}return null};
 const TUTO=[
- {t:()=>'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
+ {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce à gauche de l\'écran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
  {t:()=>`Un objet cassé traîne près de toi (il fait des étincelles). <b>Reste juste à côté</b> : tu le répares tout seul, puis tu le revends !`,tg:()=>{const b=tutoBroken();return b&&[b.x,b.y-20]},bar:()=>{const b=tutoBroken();return b?b.prog:0}},
@@ -4409,7 +4454,7 @@ function tutoOn(){return S.meta.tutoDone===false&&!VISIT}
 function tutoSet(i){if(S.meta.tuto===i&&!$('tuto').hidden)return;S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;if(i<=1)TUT.n=0;snd('tick');renderTuto()}
 function tutoEnd(done){S.meta.tutoDone=true;$('tuto').hidden=true;tutoUI();save();setTimeout(()=>{if(!S.meta.tips.welcome){S.meta.tips.welcome=Date.now()}},10);
   if(done){snd('ach');toast('Tutoriel terminé ! Ton distributeur rapporte maintenant de l\'argent tout seul. Suis tes objectifs en bas à gauche.')}}
-function renderTuto(){const el=$('tuto');if(!tutoOn()){el.hidden=true;tutoUI();return}const i=Math.min(S.meta.tuto||0,TUTO.length-1),st=TUTO[i];el.hidden=false;el.classList.toggle('top',i===TUTO.length-1);TUT.tx='';
+function renderTuto(){const el=$('tuto');document.body.classList.toggle('tuto-on',tutoOn());if(!tutoOn()){el.hidden=true;tutoUI();return}const i=Math.min(S.meta.tuto||0,TUTO.length-1),st=TUTO[i];el.hidden=false;el.classList.toggle('top',i===TUTO.length-1);TUT.tx='';
   el.innerHTML=`<div class="tt"><span>Tutoriel · ${i+1} / ${TUTO.length}</span><span class="dots">${TUTO.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span><button type="button" id="tskip">Passer</button></div><div class="tx" id="ttx"></div>`+(st.bar?'<div class="gp tbar"><i id="tbar"></i></div>':'');
   $('tskip').onclick=()=>{tutoEnd();refocus()};tutoText()}
 function tutoText(){const st=TUTO[Math.min(S.meta.tuto||0,TUTO.length-1)],t=st.t(),el=$('ttx');if(el&&t!==TUT.tx){TUT.tx=t;el.innerHTML=t}

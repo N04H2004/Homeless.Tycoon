@@ -883,7 +883,7 @@ function mpRouHTML(){const s=MP.st.rou,me=LB.pseudo,mates=mpMates('rou');let h=`
   if(!s)return h+'<div class="msg">Connexion à la table…</div>';const sec=mpSec(s),mine=s.bets[me];
   const msg=s.ph==='bet'?(sec!=null?'Rien ne va plus dans&nbsp;<span id="mpcd">'+sec+'</span>&nbsp;s…':'Faites vos jeux !'):s.ph==='spin'?'Ça tourne…':(()=>{const r=SEG[s.k];return 'Bille sur '+(r==='or'?'la case dorée !':'le '+SEGL[s.k]+' '+(r==='rouge'?'🔴':'🟢'))})();
   h+=`<div class="msg ${s.ph==='done'?(RPAY[SEG[s.k]]?'ok':'ko'):''}">${msg}</div><div class="mpseats">`+[me,...mates].map(p=>{const b=s.bets[p],r=s.ph==='done'&&b?(s.res||{})[p]:null;
-    return `<div class="mpseat${p===me?' me':''}"><b>${p===me?'Toi':p}</b><small>${b?'mise '+fmt(b):'pas encore misé'}</small>${r!=null?`<small class="${r?'up':'dn'}">${r?'+'+fmt(b*r-b):'-'+fmt(b)}</small>`:''}</div>`}).join('')+'</div>';
+    return `<div class="mpseat${p===me?' me':''}"><b>${p===me?'Toi':p}</b><small>${b?'Mise : '+fmt(b):'pas encore misé'}</small>${r!=null?`<small class="${r?'up':'dn'}">${r?'+'+fmt(b*r-b):'-'+fmt(b)}</small>`:''}</div>`}).join('')+'</div>';
   if(s.ph==='bet'&&!mine)h+='<div class="bets">'+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="mpbet:rou:${p}">${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+'</div>';
   else if(s.ph==='bet')h+='<p class="foot" style="text-align:center">Mise placée, on attend les autres joueurs…</p>';
   return h+'<p class="foot">Argent fictif du jeu. Chacun mise et encaisse avec son propre argent.</p>'}
@@ -902,7 +902,7 @@ function mpBjHTML(){const s=MP.st.bj,me=LB.pseudo,mates=mpMates('bj');let h=`<p 
   h+=`<div class="felt"><div class="top"><span class="lbl">Croupier ${dv!==''?`<span class="score">${dv}</span>`:''}</span><span class="chipc"><span class="chip"></span>Mise : ${s.bets[me]?fmt(s.bets[me]):'—'}</span></div><div class="hand">${dh}</div>`;
   for(const [p,hh] of hands){const b=s.bets[p],hd=s.hands&&s.hands[p],r=s.ph==='done'?(s.res||{})[p]:null;
     const res=r==null?'':r>1?` <span class="mpr up">+${fmt(b*r-b)}</span>`:r===1?' <span class="mpr">égalité</span>':` <span class="mpr dn">-${fmt(b)}</span>`;
-    h+=`<div class="lbl mpl${s.turn===p?' turn':''}"><span>${p===me?'Toi':p} ${hd?`<span class="score">${hv(hd)}</span>`:''}${res}</span><span>${[s.turn===p&&p!==me?'son tour…':'',b&&p!==me?'mise '+fmt(b):''].filter(Boolean).join(' · ')}</span></div><div class="hand">${hh}</div>`}
+    h+=`<div class="lbl mpl${s.turn===p?' turn':''}"><span>${p===me?'Toi':p} ${hd?`<span class="score">${hv(hd)}</span>`:''}${res}</span><span>${[s.turn===p&&p!==me?'son tour…':'',b&&p!==me?'Mise : '+fmt(b):''].filter(Boolean).join(' · ')}</span></div><div class="hand">${hh}</div>`}
   if(!ps.length)h+='<div class="lbl"><span>Joueurs</span></div><div class="hand"></div>';
   h+='</div>';
   const cd=sec!=null?`&nbsp;<span id="mpcd">${sec}</span>&nbsp;s`:'';
@@ -3487,7 +3487,7 @@ function drDraw(){const c=$('drcv'),G=DRG;if(!c||!G)return;const d=window.device
   // interface
   g.fillStyle='rgba(20,20,31,.8)';g.fillRect(0,0,W,30);const bar=(y,v,col,lab)=>{g.fillStyle='#3a3a5a';g.fillRect(52,y,W-140,6);g.fillStyle=col;g.fillRect(52,y,(W-140)*Math.min(1,v/G.len),6);g.fillStyle='#fff';g.font='bold 10px sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText(lab,8,y+3)};
   bar(7,G.z,'#38f07a','Toi');bar(19,G.rz,G.r.col==='#f8f9fa'?'#adb5bd':G.r.col,'Rival');
-  g.textAlign='right';g.font='bold 18px sans-serif';g.fillStyle=G.rank===1?'#38f07a':'#ef476f';g.fillText((G.rank===1?'1er':G.rank+'e')+'/'+(DR_PACK.length+2),W-8,16);
+  g.textAlign='right';g.font='bold 18px sans-serif';g.fillStyle=G.rank===1?'#38f07a':'#ef476f';g.fillText((window.HT_LANG==='en'?(G.rank===1?'1st':G.rank===2?'2nd':G.rank+'th'):(G.rank===1?'1er':G.rank+'e'))+'/'+(DR_PACK.length+2),W-8,16);
   const wn=G.segs[(base+8)%G.segs.length].warn;if(wn&&!G.fin&&G.cd<=0){const a=.6+.4*Math.sin(G.t*12);g.globalAlpha=a;g.fillStyle='#ffd23f';g.strokeStyle=INK;g.lineWidth=3;g.beginPath();g.roundRect(W/2-62,76,124,26,8);g.fill();g.stroke();g.fillStyle=INK;g.font='bold 15px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(wn>0?'VIRAGE ▶▶':'◀◀ VIRAGE',W/2,90);g.globalAlpha=1}
   g.fillStyle='#fff';g.font='bold 14px sans-serif';g.fillText(Math.round(G.v/R3.MS*180)+' km/h',W-8,46);
   if(G.drift>0){g.textAlign='center';g.fillStyle='#ffd23f';g.font='bold 20px sans-serif';g.fillText('DRIFT '+(G.drift>2?'🔥🔥':G.drift>.5?'🔥':''),W/2,52);g.fillStyle='rgba(255,255,255,.3)';g.fillRect(W/2-50,62,100,6);g.fillStyle='#ffd23f';g.fillRect(W/2-50,62,Math.min(100,G.drift/2*100),6)}
@@ -4115,7 +4115,7 @@ const VC_PRICE={long:8000,elec:20000,chopper:60000,cross:80000,sport:120000},vcP
 const vcHas=st=>!VC_PRICE[st]||!!(S.meta.vcm||{})[st];
 let VCBUY=null;
 const vcBuyHTML=k=>{if(!VCBUY||VCBUY.k!==k||vcHas(VCBUY.v))return '';const v=VCBUY.v,n=(VC_STY[k].find(x=>x[0]===v)||['',''])[1],c=vcPrice(v);
-  return `<div class="row" style="display:block;background:#fff3b0;margin:4px 0"><b>Acheter le modèle ${n} pour ${fmt(c)} ?</b><small style="display:block">Acheté une fois, à vie, dans toutes les villes.</small><div class="bets" style="margin-top:6px"><button class="chunky alt" type="button" data-act="vcno">Annuler</button><button class="chunky" type="button" data-act="vc:${k}:s:${v}" data-live-cost="${c}" ${S.cash<c?'disabled':''}>Acheter · ${fmt(c)}</button></div></div>`};// modèle payant cliqué : on demande confirmation avant d'acheter
+  return `<div class="row" style="display:block;background:#fff3b0;margin:4px 0"><b>Acheter le modèle ${n} : ${fmt(c)}</b><small style="display:block">Acheté une fois, à vie, dans toutes les villes.</small><div class="bets" style="margin-top:6px"><button class="chunky alt" type="button" data-act="vcno">Annuler</button><button class="chunky" type="button" data-act="vc:${k}:s:${v}" data-live-cost="${c}" ${S.cash<c?'disabled':''}>Acheter · ${fmt(c)}</button></div></div>`};// modèle payant cliqué : on demande confirmation avant d'acheter
 function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;
   if(p==='s'&&!vcHas(v)&&!(VCBUY&&VCBUY.k===k&&VCBUY.v===v)){VCBUY={k,v};snd('tick');return}
   if(p==='s'&&!vcHas(v)){VCBUY=null;const c=vcPrice(v);if(S.cash<c){toast('Il te faut '+fmt(c)+' pour ce modèle');snd('err');return}S.cash-=c;(S.meta.vcm=S.meta.vcm||{})[v]=1;toast('🏍️ Nouveau modèle : '+(VC_STY[k].find(x=>x[0]===v)||['',''])[1]+' !');updHud()}

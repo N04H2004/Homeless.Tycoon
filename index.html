@@ -1480,7 +1480,7 @@ function update(dt){
   if(S.food<25){hungerT-=dt;if(hungerT<=0){hungerT=1.2;snd('hunger')}}else hungerT=0;
   if(S.hp<25){hpT-=dt;if(hpT<=0){hpT=1;snd('lowhp')}}else hpT=0;
   if(S.food<=0)S.hp-=dt*3;
-  if(S.frigo&&!VISIT&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
+  if((VISIT?VISIT.saved.frigo:S.frigo)&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
   if(FA){FA.t+=dt;if(FA.t>=.95&&!FA.ate){FA.ate=1;S.food=Math.min(100,S.food+45);float(P.x,P.y-95,'MIAM !','#ff9f1c');snd('eat')}if(FA.t>1.6)FA=null}
   if(S.hp<=0)knockout();
   gain(passive()*dt);

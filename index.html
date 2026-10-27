@@ -86,6 +86,12 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
   background:#c77dff;color:#fff;-webkit-text-stroke:.5px var(--ink);max-width:min(420px,calc(100% - 32px));transform:rotate(-1deg)}
 #act{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:18px;padding:12px 18px;max-width:190px}
 #act.thief{background:#c77dff}
+#adx2{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:calc(96px + env(safe-area-inset-top,0px));font-size:14px;padding:7px 12px;background:#ffd23f;z-index:5}
+#adx2.on{background:#7ee08a}
+#adov{position:fixed;inset:0;z-index:9000;background:rgba(20,14,40,.88);display:flex;align-items:center;justify-content:center;padding:16px}
+#adov .card{width:min(440px,100%);display:flex;flex-direction:column;gap:10px;text-align:center}
+#adov .adbox{aspect-ratio:16/9;border:3px dashed var(--ink);border-radius:12px;background:repeating-linear-gradient(45deg,#e9e4f5 0 14px,#f5f1fb 14px 28px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700}
+#adov .adbar{height:10px;border:2px solid var(--ink);border-radius:6px;overflow:hidden;background:#fff}#adov .adbar i{display:block;height:100%;background:#ffd23f;width:0}
 #steal{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));font-size:16px;padding:10px 16px;max-width:190px;background:#c77dff}
 #steal.armed{background:#d62839;color:#fff}
 #shoot{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(136px + env(safe-area-inset-bottom,0px));font-size:16px;padding:10px 16px;max-width:190px;background:#1b1b1e;color:#ffd23f}
@@ -437,6 +443,8 @@ if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<sc
   <div id="evb" class="card" hidden></div>
   <div id="goal" class="card"><b id="goalh">Objectif</b><span id="goalt"></span><div id="goalp" hidden><div class="gp"><i id="goalpb"></i></div><small id="goalps"></small></div></div>
   <div id="hint">ZQSD / flèches ou clic pour bouger · E pour entrer · F pour faire les poches</div>
+  <button id="adx2" class="chunky" type="button" hidden>📺 Revenus x2 · 30 s</button>
+  <div id="adov" hidden role="dialog" aria-label="Publicité"><div class="card"><b>📺 Publicité</b><div class="adbox" id="adbox"><span>Espace publicitaire</span><small id="adwhy"></small></div><div class="adbar"><i id="adbar"></i></div><span id="adt"></span><button class="chunky alt" type="button" id="adx">Fermer sans récompense</button></div></div>
   <button id="steal" class="chunky" type="button" hidden>Faire les poches</button>
   <button id="shoot" class="chunky" type="button" hidden>Tirer</button>
   <button id="act" class="chunky" type="button" hidden>Action</button>
@@ -913,7 +921,8 @@ const TW_MAX=50,twF=()=>CK()==='ny'?(S.tower||0):0,towerInc=()=>{const f=twF();r
   twCost=n=>C(Math.round(5000*Math.pow(1.13,n))),
   TW_SP={5:['Salle de sport','#06d6a0'],10:['Restaurant panoramique','#f77f00'],15:['Piscine','#4cc9f0'],20:['Cinéma','#7209b7'],25:['Spa','#ff8fab'],30:['Club','#f72585'],35:['Bibliothèque','#8d5a3b'],40:['Héliport','#adb5bd'],45:['Observatoire','#118ab2'],50:['Penthouse','#ffd23f']},
   TW_MS=[[10,'+10 % sur tous tes revenus auto'],[25,'+15 % de plus sur tes revenus auto'],[50,'Penthouse : +25 % de plus, 3 Pigeons d\'Or et le succès « Roi de Manhattan »']];
-const gm=()=>CITY().m*(1+.1*S.meta.perk.cash)*(frenzy>0?3:1);
+const gm=()=>CITY().m*(1+.1*S.meta.perk.cash)*(frenzy>0?3:1)*(adBoostOn()?2:1);
+let adBoostT=0;const adBoostOn=()=>adBoostT>Date.now()&&!VISIT;// revenus x2 pendant 30 s après une vidéo
 const fmt=n=>{const c=CUR();n=Math.floor(n);const s=n<0?'-':'';n=Math.abs(n);if(n>=1e9)return s+(n/1e9).toFixed(2).replace('.',',')+' Md'+c;if(n>=1e6)return s+(n/1e6).toFixed(2).replace('.',',')+' M'+c;if(n>=1e4)return s+(n/1e3).toFixed(1).replace('.',',')+' k'+c;return s+n.toLocaleString('fr-FR')+' '+c};
 const fmt2=n=>n.toFixed(2).replace('.',',')+' '+CUR();
 const fpc=n=>(n<100?n.toFixed(2):Math.floor(n).toLocaleString('fr-FR')).replace('.',',')+' PGC';
@@ -1188,7 +1197,10 @@ function catchUp(el,away){
   g=Math.max(0,g);
   const tg=el*gerRate();S.meta.treas+=tg;
   if(away)S.meta.treas-=tg;
-  if(g>=1||tg>=1){S.cash+=g;S.total+=g;S.meta.life+=g;setTimeout(()=>toast((away?'Pendant ta visite, ta rue de '+CITY().n+' a rapporté ':'Pendant ton absence, ton business a rapporté ')+fmt(g)+(tg>=1&&!away?' et tes filiales '+fmt(tg):'')),600)}}
+  if(g>=1||tg>=1){S.cash+=g;S.total+=g;S.meta.life+=g;
+    if(away)setTimeout(()=>toast('Pendant ta visite, ta rue de '+CITY().n+' a rapporté '+fmt(g)),600);
+    else{const A=AFKG&&!AFKG.shown?AFKG:null;AFKG={g:(A?A.g:0)+g,tg:(A?A.tg:0)+tg,el:(A?A.el:0)+el,ci:CURI()}}}}// au retour : fenêtre « pendant ton absence », gains doublables avec une vidéo
+let AFKG=null;
 catchUp(Math.min(AFK_MAX*(1+S.meta.perk.dodo),(Date.now()-(S.last||Date.now()))/1000),false);
 
 // ================= Entrées =================
@@ -2651,7 +2663,8 @@ function renderPanel(){
           stepState().map(e=>`<div class="obj${e.d?' ok':''}" style="${e.o?'':'opacity:.5'}"><span class="ck">${e.d?'✓':e.o?'':'🔒'}</span><span>${e.i+1}. ${e.x.n}</span></div>`).join(''))+
         `<button class="chunky" type="button" data-act="prestige" ${g>=1&&!miss.length?'':'disabled'}>${miss.length?'Encore '+miss.length+' fonctionnalité'+(miss.length>1?'s':'')+' à essayer':g<1?(last?'Fais grimper le total gagné dans cette ville':'Gagne '+fmt(PGB())+' ici pour partir ('+fmt(S.total)+')'):last?'Encaisser · +'+g+" Pigeon"+(g>1?'s':'')+" d'Or":'Mettre '+CITY().n+' en gérance et ouvrir '+nx.n+' · +'+g+" Pigeons d'Or"}</button>`+
         '<div class="sec">Bonus permanents</div>'+
-        PERKS.map(p=>{const l=S.meta.perk[p.k],c=l+1,mx=l>=p.max;return `<div class="row"><div class="info"><b>${p.n}</b><span class="lvl">niv. ${l}</span><small>${p.d}</small></div><button class="buy gold" type="button" data-act="perk:${p.k}" ${mx||S.meta.gold<c?'disabled':''}>${mx?'MAX':c+' P. d\'Or'}</button></div>`}).join('')+
+        PERKS.map(p=>{const l=S.meta.perk[p.k],c=l+1,mx=l>=p.max;return `<div class="row"><div class="info"><b>${p.n}</b><span class="lvl">niv. ${l}</span><small>${p.d}</small></div><button class="buy gold" type="button" data-act="perk:${p.k}" ${mx||S.meta.gold<c?'disabled':''}>${mx?'MAX':c+' P. d\'Or'}</button></div>`+
+          (S.meta.perkAd===p.k&&!mx?`<button class="chunky" type="button" data-act="perkad:${p.k}" style="width:100%;margin:-2px 0 6px">📺 Regarde une vidéo : ${p.n} niveau ${l+1} offert (une fois)</button>`:'')}).join('')+
         "<p class=\"foot\">Tu gardes : filiales, PigeonCoin, Pigeons d'Or, bonus, Héritage, tenues et succès. Dans la nouvelle ville, tu repars de zéro pour l'argent, les outils, l'entreprise et les actions. Pigeons d'Or : racine carrée de (total gagné / 20 000).</p>";}
     else if(ptab==='guide'){const m=S.meta,seen=TIPS.filter(x=>m.tips[x[0]]),n=TIPS.length;
       h+=evGuideHTML()+`<p class="lead">Les fiches se débloquent au fil du jeu : ${seen.length} sur ${n}.</p><div class="guide" style="display:flex;flex-direction:column;gap:8px">`+
@@ -2715,6 +2728,7 @@ function renderPanel(){
   if(pid==='braq'){t='Le casse';hd='#ef476f';h=bqHTML()}
   if(pid==='bqn'){t='🚨 Tu t\'es fait braquer !';hd='#ef476f';h=bqnHTML(parg)}
   if(pid==='tipn'){t='💰 Pourboire reçu !';hd='#7ee08a';h=tipnHTML(parg)}
+  if(pid==='afkgain'){t='Pendant ton absence';hd='#7ee08a';h=afkGainHTML()}
   if(pid==='step'){t=parg>=stepsFor(CI()).length?'Bravo !':'Nouvelle étape débloquée !';hd='#ffd23f';h=stepHTML(parg)}
   $('ptitle').textContent=t;$('phead').style.setProperty('--hd',hd);$('pbody').innerHTML=h;
   if(pid==='vest')drawLookPreview();
@@ -2787,7 +2801,7 @@ $('pbody').addEventListener('click',e=>{
     if(v==='po'){const c=poCost();if(M.pgc<c){snd('err');return}M.pgc-=c;M.poBought++;M.gold++;snd('buy');toast("+1 Pigeon d'Or")}
     if(v==='cap'){const c=capCost();if(M.pgc<c){snd('err');return}M.pgc-=c;S.capBought++;const g=capAmt();S.cash+=g;snd('win');toast('+'+fmt(g)+' de capital de départ')}
     if(v==='mot'){const w=M.worlds[+b.dataset.act.split(':')[2]];if(!w||w.g>=.5-1e-9)return;const c=motCost(w);if(M.pgc<c){snd('err');return}M.pgc-=c;w.g=Math.round((w.g+.05)*100)/100;snd('buy');toast('Le gérant de '+CITIES[w.i].n+' passe à '+Math.round(w.g*100)+' %')}}
-  if(a==='perk'){const p=PERKS.find(x=>x.k===v),l=S.meta.perk[v];if(l>=p.max||S.meta.gold<l+1){snd('err');return}S.meta.gold-=l+1;S.meta.perk[v]++;snd('buy');toast(p.n+' niveau '+S.meta.perk[v])}
+  if(a==='perk'){const p=PERKS.find(x=>x.k===v),l=S.meta.perk[v];if(l>=p.max||S.meta.gold<l+1){snd('err');return}S.meta.gold-=l+1;S.meta.perk[v]++;S.meta.perkAd=S.meta.perk[v]<p.max?v:null;snd('buy');toast(p.n+' niveau '+S.meta.perk[v])}// après un achat : une vidéo peut offrir le niveau suivant, une seule fois
   if(a==='opt'&&v==='lang'){save();try{localStorage.setItem('ht-lang',window.HT_LANG==='en'?'fr':'en')}catch(er){}location.reload();return}
   if(a==='opt'){if(v==='snd'){S.meta.snd=!S.meta.snd;updSnd()}else S.meta.mus=!S.meta.mus;auInit()}
   if(a==='food'){const f=FOODS_NOW()[+v];if(!pay(foodP(f.p)))return;S.food=Math.min(100,S.food+f.f);S.hp=Math.min(100,S.hp+f.h);S.stats.ate++;snd('eat');toast('Miam : '+f.n)}
@@ -2869,6 +2883,9 @@ $('pbody').addEventListener('click',e=>{
     if(v==='secu'&&S.emp>=2&&!S.secu){if(!pay(secuCost()))return;S.secu=true;toast('Raymond, agent de sécurité, prend son poste')}
   }
   if(a==='fw'){fireworks();return}
+  if(a==='afkok'){AFKG=null;return closePanel()}
+  if(a==='afkx2'){const G=AFKG;if(!G||G.dbl)return;watchAd('Doubler tes gains').then(ok=>{if(!ok||!AFKG||AFKG.dbl)return;AFKG.dbl=1;S.cash+=G.g;S.total+=G.g;S.meta.life+=G.g;snd('legend');updHud();save();toast('Gains doublés : +'+fmt(G.g));if(pid==='afkgain')renderPanel()});return}
+  if(a==='perkad'){const p=PERKS.find(x=>x.k===v);if(!p||S.meta.perkAd!==v||S.meta.perk[v]>=p.max)return;watchAd(p.n+' : +1 niveau').then(ok=>{if(!ok||S.meta.perkAd!==v||S.meta.perk[v]>=p.max)return;S.meta.perk[v]++;S.meta.perkAd=null;snd('legend');toast(p.n+' niveau '+S.meta.perk[v]+' grâce à la vidéo !');save();renderPanel()});return}
   if(a==='bjdeal')bjDeal(+v);
   if(a==='mpbet'){mpBet(v,+w);return renderPanel()}
   if(a==='mpact'){mpAct(v);return renderPanel()}
@@ -4628,6 +4645,25 @@ function endStatsHTML(){const m=S.meta,cell=(k,v)=>`<div class="row" style="disp
     cell('🗑️ Déchets ramassés',sum('trash').toLocaleString('fr-FR'))+cell('📝 CDD signés',sum('cdd').toLocaleString('fr-FR'))+
     cell('🏁 Courses gagnées',m.drWins||0)+cell('💰 Casses réussis',(m.heists||0)+(m.wsWins?1:0))+
     cell('✨ Pigeons Légendaires',m.legend||0)+cell('🎰 Gains au casino',fmt(m.casinoWon||0))+'</div>'}
+// ===== Vidéos récompensées (30 s) : Google H5 Games Ads (adBreak) si la régie est branchée, sinon un espace pub de 30 s =====
+const AD_SEC=30;let adBusy=false;
+function watchAd(why){return new Promise(res=>{if(adBusy)return res(false);adBusy=true;const done=ok=>{adBusy=false;$('adov').hidden=true;res(ok)};
+  if(typeof window.adBreak==='function'){let got=false;try{window.adBreak({type:'reward',name:why,beforeReward:show=>show(),adViewed:()=>{got=true},adDismissed:()=>{},adBreakDone:()=>done(got)});return}catch(e){}}
+  const o=$('adov'),t0=Date.now();o.hidden=false;$('adwhy').textContent='Récompense : '+why;$('adx').textContent='Fermer sans récompense';
+  const tick=()=>{if(o.hidden)return;const left=Math.max(0,AD_SEC-(Date.now()-t0)/1000);$('adbar').style.width=Math.round((1-left/AD_SEC)*100)+'%';
+    if(left>0){$('adt').textContent='Récompense dans '+Math.ceil(left)+' s';setTimeout(tick,250)}else{$('adt').textContent='C\'est bon, récompense débloquée !';$('adx').textContent='Récupérer la récompense';$('adx').dataset.ok='1'}};
+  $('adx').dataset.ok='';$('adx').onclick=()=>done($('adx').dataset.ok==='1');tick()})}
+function adBoost(){if(adBoostOn()||VISIT)return;watchAd('revenus x2 pendant 30 s').then(ok=>{if(!ok)return;adBoostT=Date.now()+30000;snd('legend');toast('📺 Tous tes revenus x2 pendant 30 s !');updHud()})}
+// bouton « revenus x2 » et fenêtre de retour
+setInterval(()=>{const b=$('adx2');if(!b)return;const show=!BOOT&&!VISIT&&!JOB&&!DRG&&!INSIDE&&S.meta.tutoDone;b.hidden=!show;if(!show)return;
+  const on=adBoostOn(),txt=on?'⚡ Revenus x2 · '+Math.ceil((adBoostT-Date.now())/1000)+' s':'📺 Revenus x2 · 30 s';if(b.textContent!==txt)b.textContent=txt;b.classList.toggle('on',on);b.disabled=on||adBusy;
+  if(AFKG&&!AFKG.shown&&!BOOT&&!VISIT&&!JOB&&!DRG&&$('panel').hidden&&$('afk').hidden&&(typeof cloudBusy==='undefined'||!cloudBusy)&&AFKG.ci===CURI()){AFKG.shown=1;openPanel('afkgain')}},250);
+$('adx2').onclick=()=>{adBoost();refocus()};
+function afkGainHTML(){const G=AFKG;if(!G)return '';const t=Math.round(G.el/60);
+  return `<p class="lead" style="text-align:center">Tu étais absent ${t>=60?Math.floor(t/60)+' h '+String(t%60).padStart(2,'0'):t+' min'}${t>=AFK_MAX*(1+S.meta.perk.dodo)/60-1?' (maximum de ton bonus Sommeil rentable)':''}. Ton business a tourné sans toi :</p>`+
+    `<div class="big" style="text-align:center">+${fmt(G.g*(G.dbl?2:1))}</div>`+(G.tg>=1?`<p class="foot" style="text-align:center">Tes filiales ont aussi versé ${fmt(G.tg)} à ta holding.</p>`:'')+
+    (G.dbl?'<div class="msg ok">Gains doublés, merci !</div><button class="chunky" type="button" data-act="afkok">Super !</button>':
+      `<div class="bets"><button class="chunky" type="button" data-act="afkx2" style="grid-column:1/-1">📺 Doubler : +${fmt(G.g)} avec une vidéo de 30 s</button><button class="chunky alt" type="button" data-act="afkok" style="grid-column:1/-1">Récupérer ${fmt(G.g)}</button></div>`)}
 // feu d'artifice plein écran (fin du jeu) : fusées qui montent puis explosent en étincelles
 function fireworks(){const c=document.createElement('canvas'),d=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;c.width=W*d;c.height=H*d;
   c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';document.body.appendChild(c);const g=c.getContext('2d');g.scale(d,d);

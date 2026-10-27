@@ -1374,6 +1374,11 @@ const featMiss=ci=>featList(ci).filter(f=>!f[1]);
 const optHTML=()=>{const O=stepsFor(CI(),1);return O.length?'<div class="sec">Facultatif</div>'+O.map(x=>`<div class="obj${stepDone(x)?' ok':''}"><span class="ck">${stepDone(x)?'✓':''}</span><span>${x.n} <small style="opacity:.7">· ${x.h}</small></span></div>`).join(''):''};
 function stepHTML(i){return stepHTML0(i)+optHTML()}
 function stepHTML0(i){const L=stepsFor(CI());
+  if(i>=L.length&&CK()==='tokyo'){if(!S.meta.endFw){S.meta.endFw=1;save();setTimeout(fireworks,250)}// fin du jeu : feu d'artifice la première fois
+    return `<div class="tip" style="text-align:center"><h3>🎆 Tu as fini Homeless Tycoon ! 🎆</h3></div><p class="lead" style="text-align:center">Parti d'une poubelle à Paris, te voilà <b>Roi du Drift</b> de Tokyo, à la tête d'une holding qui tourne à Paris, Londres, New York et Tokyo.</p>`+
+      `<div class="row" style="display:block;text-align:center;background:#fff3b0"><b>Argent gagné dans toute ta vie : ${fmt(S.meta.life||S.total)}</b><small style="display:block">Pigeons d'Or : ${S.meta.gold} · Pigeons Légendaires attrapés : ${S.meta.legend||0}</small></div>`+
+      `<p class="lead" style="text-align:center">Merci d'avoir joué ! Tu peux continuer à faire grimper ta fortune, améliorer ta rue et grimper au classement. De nouvelles villes arriveront bientôt.</p>`+
+      `<div class="bets"><button class="chunky alt" type="button" data-act="fw">🎆 Encore un feu d'artifice</button><button class="chunky" type="button" data-act="close">Continuer à jouer</button></div>`}
   if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné ${fmt(PGB())} ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
   const x=L[i],need=x.cost?x.cost():0;return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${stepW(x)}</p>`+
     (need>S.cash?`<div class="row" style="display:block;background:#fff3b0"><b>Il te faut ${fmt(need)} (tu as ${fmt(S.cash)})</b><small style="display:block">Dans Business, tu peux ${passiveTip()} : ça rapporte de l'argent tout seul, même quand tu ne fais rien. Tu peux aussi ramasser des déchets, réparer des objets et refaire tes CDD.</small></div>`:'')+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}
@@ -2863,6 +2868,7 @@ $('pbody').addEventListener('click',e=>{
     if(v==='frigo'&&S.local&&!S.frigo){if(!pay(C(600)))return;S.frigo=true;S.meta.her.frigo=1;toast('Frigo connecté installé')}
     if(v==='secu'&&S.emp>=2&&!S.secu){if(!pay(secuCost()))return;S.secu=true;toast('Raymond, agent de sécurité, prend son poste')}
   }
+  if(a==='fw'){fireworks();return}
   if(a==='bjdeal')bjDeal(+v);
   if(a==='mpbet'){mpBet(v,+w);return renderPanel()}
   if(a==='mpact'){mpAct(v);return renderPanel()}
@@ -4611,6 +4617,19 @@ function dailyTick(){if(BOOT||VISIT)return;if(S.meta.refund){toast('Bonus de pre
   if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login');return}
   if(!hid&&!dailyShown&&!D.chest&&$('panel').hidden&&!JOB&&!INSIDE){dailyShown=true;openPanel('daily')}}
 // animations : bannière + confettis à la réussite, pièces qui filent vers l'argent quand on récupère
+// feu d'artifice plein écran (fin du jeu) : fusées qui montent puis explosent en étincelles
+function fireworks(){const c=document.createElement('canvas'),d=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;c.width=W*d;c.height=H*d;
+  c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';document.body.appendChild(c);const g=c.getContext('2d');g.scale(d,d);
+  const COL=['#ffd23f','#f72585','#4cc9f0','#06d6a0','#ff9f1c','#c77dff','#ffffff'],R=[],P=[];let t0=performance.now(),last=t0,next=0;snd('legend');
+  const step=now=>{const dt=Math.min(.05,(now-last)/1000),el=(now-t0)/1000;last=now;
+    if(el<8&&now>=next){next=now+rnd(180,420);R.push({x:rnd(W*.12,W*.88),y:H+10,vy:-rnd(H*.9,H*1.25),ty:rnd(H*.12,H*.45),col:pick(COL)})}
+    g.clearRect(0,0,W,H);
+    for(let i=R.length-1;i>=0;i--){const r=R[i];r.y+=r.vy*dt;r.vy*=.985;g.fillStyle='#fff3b0';g.beginPath();g.arc(r.x,r.y,2.5,0,7);g.fill();
+      if(r.y<=r.ty){R.splice(i,1);snd('confetti');const n=Math.round(rnd(40,70)),sp=rnd(140,260),c2=Math.random()<.4?pick(COL):null;
+        for(let k=0;k<n;k++){const a=k/n*Math.PI*2+rnd(-.05,.05),v=sp*rnd(.6,1);P.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rnd(1,1.7),col:k%2&&c2?c2:r.col})}}}
+    for(let i=P.length-1;i>=0;i--){const p=P[i];p.life-=dt;if(p.life<=0){P.splice(i,1);continue}p.vx*=.97;p.vy=p.vy*.97+120*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
+      g.globalAlpha=Math.min(1,p.life);g.fillStyle=p.col;g.beginPath();g.arc(p.x,p.y,2.2,0,7);g.fill()}g.globalAlpha=1;
+    if(el<8||R.length||P.length)requestAnimationFrame(step);else c.remove()};requestAnimationFrame(step)}
 function burst(x,y,n,chars,spread){for(let i=0;i<n;i++){const e=document.createElement('span');e.className='cfx';e.textContent=pick(chars);const a=Math.random()*Math.PI*2,d=(spread||160)*(.4+Math.random()*.8);
   e.style.left=x+'px';e.style.top=y+'px';e.style.setProperty('--dx',Math.cos(a)*d+'px');e.style.setProperty('--dy',Math.sin(a)*d+60+'px');e.style.setProperty('--r',(Math.random()*720-360)+'deg');e.style.animationDelay=(Math.random()*.15)+'s';
   document.body.appendChild(e);setTimeout(()=>e.remove(),1800)}}

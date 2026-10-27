@@ -3514,6 +3514,11 @@ function drawGuy(x,y,o){
   if(o.shP){drawShoe(o.shP,-11+lg,f,o.skin,t);drawShoe(o.shP,0-lg,f,o.skin,t)}
   else if(g||o.shoes){const sc=o.shoes||(out==='peignoir'?'#ff8fab':out==='armure'?'#6c757d':g.basket>=6?'#ffd23f':g.basket>0?'#ef476f':'#5c4b73');rr(-11+lg,-5,12,6,3);fs(sc);rr(0-lg,-5,12,6,3);fs(sc)}
   cx.translate(0,-bob);
+  if(o.ninja){// katana rangé dans le dos
+    cx.save();cx.lineCap='round';cx.beginPath();cx.moveTo(f*13,-14);cx.lineTo(-f*12,-70);cx.lineWidth=7;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=4;cx.strokeStyle='#3d2314';cx.stroke();
+    if(!o.ninjaDraw){cx.beginPath();cx.moveTo(-f*12,-70);cx.lineTo(-f*17,-82);cx.lineWidth=6;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=3.5;cx.strokeStyle='#d62839';cx.stroke();cx.setLineDash([2,3]);cx.strokeStyle='#14141f';cx.lineWidth=3.5;cx.stroke();cx.setLineDash([]);
+      cx.beginPath();cx.ellipse(-f*12,-70,5,2.5,f*.4,0,7);cx.fillStyle='#ffd23f';cx.fill();cx.lineWidth=1.5;cx.strokeStyle=INK;cx.stroke()}
+    cx.restore();cx.lineWidth=3;cx.strokeStyle=INK}
   if(o.bag){const r=7+o.bag*1.6;const bc=g?(g.sac>=6?'#ffd23f':g.sac>=3?'#2a9d5c':'#8d99ae'):'#8d99ae';
     cx.beginPath();cx.ellipse(-f*13,-30,r*.75,r,0,0,7);fs(bc);cx.beginPath();cx.moveTo(-f*13-3,-30-r);cx.lineTo(-f*13,-34-r);cx.lineTo(-f*13+3,-30-r);cx.strokeStyle='#ffd23f';cx.stroke();cx.strokeStyle=INK}
   if(out==='hotdog'){rr(-8,-92,16,46,8);fs('#c1121f')}
@@ -3544,6 +3549,18 @@ function drawGuy(x,y,o){
   cx.beginPath();if(o.sad)cx.arc(ex,-45,4,Math.PI*1.15,Math.PI*1.85);else cx.arc(ex,-50,4,.15*Math.PI,.85*Math.PI);cx.lineWidth=2.5;cx.stroke();cx.lineWidth=3;
   if(o.nose){circ(ex+f*3,-52,5);fs('#ff8fa3');cx.beginPath();cx.moveTo(ex-9,-46);cx.quadraticCurveTo(ex,-50,ex+9,-46);cx.lineWidth=4;cx.stroke();cx.lineWidth=3}
   else if(o.mask){rr(ex-13,-53,26,10,4);fs('#d62839')}
+  if(o.ninja){// cagoule noire, fente pour les yeux, bandeau rouge qui flotte
+    circ(0,-56,15.5);fs('#14141f');rr(ex-13,-63,27,10,4);fs(o.skin);
+    cx.fillStyle='#fff';circ(ex-5,-58,3.6);cx.fill();circ(ex+6,-58,3.6);cx.fill();cx.fillStyle=INK;circ(ex-4+f*1.2,-58,1.9);cx.fill();circ(ex+7+f*1.2,-58,1.9);cx.fill();
+    cx.lineWidth=2;cx.beginPath();cx.moveTo(ex-10,-63);cx.lineTo(ex-1,-61);cx.moveTo(ex+11,-63);cx.lineTo(ex+2,-61);cx.stroke();
+    rr(-15,-70,30,5,2);fs('#d62839');const wv=Math.sin(t*9)*3;cx.lineCap='round';
+    for(const dy of [0,4]){cx.beginPath();cx.moveTo(-f*14,-68+dy);cx.quadraticCurveTo(-f*22,-70+dy+wv,-f*30,-64+dy-wv);cx.lineWidth=5;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=3;cx.strokeStyle='#d62839';cx.stroke()}
+    cx.lineWidth=3;cx.strokeStyle=INK;
+    if(o.ninjaDraw){// katana dégainé dans la main
+      const hx=f*15,hy=-24;cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(hx+f*6,hy-8);cx.lineWidth=6;cx.stroke();cx.lineWidth=3.5;cx.strokeStyle='#14141f';cx.stroke();
+      cx.beginPath();cx.ellipse(hx+f*6,hy-8,5,2.5,-f*.9,0,7);cx.fillStyle='#ffd23f';cx.fill();cx.lineWidth=1.5;cx.strokeStyle=INK;cx.stroke();
+      cx.beginPath();cx.moveTo(hx+f*7,hy-10);cx.quadraticCurveTo(hx+f*18,hy-30,hx+f*30,hy-44);cx.lineWidth=5;cx.strokeStyle=INK;cx.stroke();cx.lineWidth=3;cx.strokeStyle='#e9ecef';cx.stroke();
+      cx.lineWidth=1;cx.strokeStyle='#fff';cx.beginPath();cx.moveTo(hx+f*10,hy-15);cx.quadraticCurveTo(hx+f*18,hy-28,hx+f*27,hy-40);cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK}}
   if(o.hair)hairFront(o.hairS||'court',o.hair,f,t,hatOn);
   else if(o.hairS==='chauve'&&!hatOn){cx.strokeStyle='rgba(255,255,255,.7)';cx.lineWidth=2.5;cx.beginPath();cx.arc(-3,-62,8,Math.PI*1.15,Math.PI*1.45);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=3}
   if(out==='armure'){cx.beginPath();cx.arc(0,-60,17,Math.PI,0);cx.closePath();fs('#ced4da');cx.fillStyle=INK;cx.fillRect(-14,-62,28,3);cx.beginPath();cx.moveTo(0,-77);cx.quadraticCurveTo(-f*14,-96,-f*24,-80);cx.strokeStyle='#d62839';cx.lineWidth=5;cx.stroke();cx.lineWidth=3;cx.strokeStyle=INK}
@@ -3620,7 +3637,7 @@ function drawRoom(){if(INSIDE&&INSIDE.k==='nyse')return drawNyseRoom();
   for(const [tx,ty] of TB)L.push([ty,()=>{cx.beginPath();cx.ellipse(tx,ty-34,62,16,0,0,7);fs('#7f3a17');rr(tx-6,ty-30,12,30,2);fs('#5a2a0f');cx.beginPath();cx.ellipse(tx,ty,26,6,0,0,7);fs('#5a2a0f');
     for(const k of [-20,16]){rr(tx+k-5,ty-58,10,18,3);fs('rgba(255,209,102,.9)')}}]);
   const n=Math.min(5,Math.max(2,nb));
-  for(let i=0;i<n;i++){const [sx,sy,fc]=seats[i],band=i<nb;L.push([sy-1+(sy===610?0:-40),()=>{drawGuy(sx,sy-40,{s:.9,t:T+i,face:fc,shirt:band?'#3d405b':SHIRTS[i%7],pants:'#22223b',skin:SKINS[(i+2)%5],hat:band&&!S.bandUp.pigeon?'#22223b':null,hair:band?null:HAIRS[i%HAIRS.length],mask:band?1:0,stripes:band?1:0});
+  for(let i=0;i<n;i++){const [sx,sy,fc]=seats[i],band=i<nb;L.push([sy-1+(sy===610?0:-40),()=>{drawGuy(sx,sy-40,band&&CK()==='tokyo'?{s:.9,t:T+i,face:fc,shirt:'#1b1b2a',pants:'#14141f',skin:SKINS[(i+2)%5],ninja:1}:{s:.9,t:T+i,face:fc,shirt:band?'#3d405b':SHIRTS[i%7],pants:'#22223b',skin:SKINS[(i+2)%5],hat:band&&!S.bandUp.pigeon?'#22223b':null,hair:band?null:HAIRS[i%HAIRS.length],mask:band?1:0,stripes:band?1:0});
     const ph=Math.floor((T+i*3.3)/4)%n;if(ph===i&&((T+i*3.3)%4)<2.4)drawBubble(sx,sy-118,band?BL[(Math.floor(T/4)+i)%BL.length]:'Santé !','#fff')}])}
   L.push([RP.y,()=>{const lk=Object.assign(playerLook(),{moving:RP.moving,face:RP.face,t:RP.t,ride:null,lift:0});drawGuy(RP.x,RP.y,lk);if(P.sayT>0)drawBubble(RP.x,RP.y-92,P.say)}]);
   L.sort((a,b)=>a[0]-b[0]);for(const [,f] of L)f();
@@ -4010,7 +4027,8 @@ function draw(){
     if(S.pay.strike)drawBubble(e.x,e.y-88,'GRÈVE !','#ffccd5');else if(e.pz>0)txt('Zzz',e.x+16,e.y-70-Math.sin(T*3)*4,14,'#fff',true)}])});
   for(const r of rivals)if(inV(r.x))L.push([r.y,()=>{drawGuy(r.x,r.y,{s:.85,t:r.t,moving:r.moving,face:r.face,shirt:'#6c757d',pants:'#343a40',skin:'#e0ac69',hat:'#343a40',hatMark:'DC',vest:1,bag:r.carry});
     if(rivalStrike>0)drawBubble(r.x,r.y-74,'Grève !','#dee2e6');else if(r.sayT>0)drawBubble(r.x,r.y-74,r.say,'#dee2e6')}]);
-  for(const b of bands)if(b.jail<=0&&!b.home&&!b.inside&&inV(b.x))L.push([b.y,()=>{drawGuy(b.x,b.y,{s:.9,t:b.t,moving:b.moving,face:b.face,shirt:'#3d405b',pants:'#22223b',skin:SKINS[(bands.indexOf(b)+2)%5],hat:S.bandUp.pigeon?null:'#22223b',pigeon:S.bandUp.pigeon>0,mask:1,nose:S.bandUp.nez>0,stripes:1});
+  for(const b of bands)if(b.jail<=0&&!b.home&&!b.inside&&inV(b.x))L.push([b.y,()=>{if(CK()==='tokyo')drawGuy(b.x,b.y,{s:.9,t:b.t,moving:b.moving,face:b.face,shirt:'#1b1b2a',pants:'#14141f',skin:SKINS[(bands.indexOf(b)+2)%5],ninja:1,ninjaDraw:!!b.tgt&&!b.loot});// Tokyo : ninjas cagoulés au katana
+    else drawGuy(b.x,b.y,{s:.9,t:b.t,moving:b.moving,face:b.face,shirt:'#3d405b',pants:'#22223b',skin:SKINS[(bands.indexOf(b)+2)%5],hat:S.bandUp.pigeon?null:'#22223b',pigeon:S.bandUp.pigeon>0,mask:1,nose:S.bandUp.nez>0,stripes:1});
     if(b.loot||b.lootT>0){cx.lineWidth=2.5;cx.beginPath();cx.ellipse(b.x-b.face*16,b.y-40,11,13,0,0,7);fs('#c8b88a');txt(CUR(),b.x-b.face*16,b.y-38,11,'#1f9d5c')}
     if(b.crew&&S.heist&&S.heist.st==='go')txt('!',b.x,b.y-92,18,'#ffd23f',true);
     if(b.flee>0)drawBubble(b.x,b.y-74,'Sauve qui peut !','#ffccd5')}]);

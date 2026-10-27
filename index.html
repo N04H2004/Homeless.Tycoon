@@ -791,7 +791,7 @@ function presTick(dt){const now=performance.now();
   const street=VISIT&&VISIT.other?VISIT.other.pseudo:null,ci=VISIT?VISIT.i:CURI();let look=null;
   if(!VISIT){const j=JSON.stringify(presLook());if(j!==PRES.look||now-PRES.lookAt>60000){PRES.look=j;PRES.lookAt=now;look=JSON.parse(j)}}
   (async()=>{try{const r=await SB.rpc('heartbeat',{p_street:street,p_ci:ci,p_x:Math.round(P.x),p_y:Math.round(P.y),p_face:P.face,p_moving:!!P.moving,p_room:INSIDE?INSIDE.k:null,p_look:look});
-      if(r.error){if(/heartbeat|function/i.test(r.error.message||''))PRES.off=true;return}
+      if(r.error){if(/heartbeat|function|schema cache/i.test(r.error.message||''))PRES.off='sql';return}PRES.ok=true;
       const q=await SB.rpc('street_people',{p_street:street,p_ci:ci});if(q.error)return;const seen={};
       for(const p of q.data||[]){seen[p.pseudo]=1;let o=PRES.others[p.pseudo];
         if(!o){o=PRES.others[p.pseudo]={x:p.x,y:p.y,face:p.face};if(!VISIT&&!p.owner){toast('👀 '+p.pseudo+' visite ta rue !');snd('event')}}
@@ -2171,7 +2171,7 @@ function payNow(){
 // ================= HUD =================
 function updHud(){
   {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT;const sk=$('btnSk'),skh=!!VISIT||CURI()<1;if(sk.hidden!==skh)sk.hidden=skh}
-  if(VISIT){const w=S.meta.worlds[VISIT.k],own=Object.values(PRES.others).find(o=>o.owner);$('cash').textContent=fmt(VISIT.saved.cash);$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo+(own?' · 🟢 en ligne'+(own.room?' (au bar)':''):' · hors ligne'):'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
+  if(VISIT){const w=S.meta.worlds[VISIT.k],own=Object.values(PRES.others).find(o=>o.owner);$('cash').textContent=fmt(VISIT.saved.cash);$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo+(PRES.off==='sql'?' · présence indisponible (script SQL à relancer)':!LB.ready?' · connecte-toi pour voir qui est là':own?' · 🟢 en ligne'+(own.room?' (au bar)':''):PRES.ok?' · hors ligne':' · …'):'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
     if(VISIT.other){$('goalh').textContent='Visite · rue de '+VISIT.other.pseudo+' · '+CITY().n;$('goalt').textContent='Balade-toi chez '+VISIT.other.pseudo+'. Visite seulement : clique sur "Retour à '+HOME().n+'" pour rentrer (et laisser un pourboire si tu veux).'}
     else{$('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.'}
     $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';critHud();$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
@@ -4061,6 +4061,7 @@ function drawMini(){
   for(const t of trash)dot(t.x,t.y,1.4,'#6c757d');
   emps.forEach((e,i)=>{if(!e.home)dot(e.x,e.y,2.2,(S.staff[i]||{}).sh==='nuit'?'#4cc9f0':'#ff7f11')});
   for(const r of rivals)dot(r.x,r.y,2.2,'#495057');
+  for(const o of Object.values(PRES.others))if(!o.room){dot(o.x,o.y,4.2,INK);dot(o.x,o.y,3,o.owner?'#ffd23f':'#f72585')}// autres joueurs connectés
   for(const b of bands)if(b.jail<=0&&!b.home&&!b.inside)dot(b.x,b.y,2.2,'#9d4edd');
   for(const q of squad)if(q.delay<=0)dot(q.x,q.y,2.6,Math.floor(T*6)%2?'#ef476f':'#4cc9f0');
   for(const c of cops)if(c.active)dot(c.x,c.y,2.8,c.chase>0&&Math.floor(T*6)%2?'#ef476f':'#1d3557');

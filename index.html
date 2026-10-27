@@ -125,6 +125,8 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .vcrow{align-items:flex-start;gap:10px}.vcl{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}.vcl>span{font-size:11px;font-weight:700;width:58px}
 .vcs{display:flex;flex-wrap:wrap;gap:4px}.vcb{border:2px solid var(--ink);border-radius:8px;background:#fff;padding:2px 6px;font:600 11px var(--body,sans-serif);cursor:pointer;color:var(--ink)}
 .vcb i{display:block;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink)}.vcb.on{background:#ffd23f;box-shadow:0 0 0 2px var(--ink)}
+.mpseats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin:6px 0}.mpseat{border:2.5px solid var(--ink);border-radius:10px;background:#fff;padding:5px 8px;font-size:13px}.mpseat small{display:block;opacity:.75}.mpseat.me{background:#fff3b0}.mpseat.turn{outline:3px dashed #f72585;outline-offset:2px}.mpseat .up{color:#1f9d5c;opacity:1;font-weight:700}.mpseat .dn{color:#d62839;opacity:1;font-weight:700}
+.mpc{display:inline-block;min-width:24px;margin:2px;padding:3px 4px;border:2px solid var(--ink);border-radius:6px;background:#fff;font-weight:700;text-align:center;color:var(--ink)}.mpc.red{color:#d62839}.mpc.back{background:#7b2cbf;color:#fff}.mpdeal{text-align:center;margin:4px 0}
 .drpad{display:grid;grid-template-columns:1fr 1fr 1fr 1.4fr 1fr;gap:6px;margin-top:8px}.drpad .chunky{padding:12px 4px;font-size:16px;touch-action:none;user-select:none}
 .drst{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:2px}.drst span{width:84px}.drst i{flex:1;height:8px;background:#e6dcc6;border-radius:4px;overflow:hidden;border:1.5px solid var(--ink)}.drst b{display:block;height:100%;background:#f72585}
 .godds{width:100%;max-width:340px;margin:6px auto 0;border-collapse:separate;border-spacing:0;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;background:#fff;font-size:13px}
@@ -785,8 +787,9 @@ let frenzy=0,ev=null,RIDEFX=[];
 // ===== présence en ligne : on voit les joueurs connectés dans la même rue (propriétaire et visiteurs) =====
 const PRES={hb:0,poll:0,look:'',others:{},off:false,busy:false};
 function presLook(){const L=playerLook(),o={};for(const k in L)if(!['t','moving','face','bag','sad','gun','lift','ride'].includes(k))o[k]=L[k];o.vc=S.meta.vc||{};o.rd=S.ride||'';return o}
-function presTick(dt){const now=performance.now();
-  for(const o of Object.values(PRES.others)){const d=dist(o.x,o.y,o.tx,o.ty);if(d>1){const st=Math.min(d,Math.max(260,d*1.5)*dt);o.x+=(o.tx-o.x)/d*st;o.y+=(o.ty-o.y)/d*st;o.mv=true;if(Math.abs(o.tx-o.x)>2)o.face=o.tx>o.x?1:-1}else o.mv=o.moving}
+function presTick(dt){const now=performance.now();rtTick();mpTick();
+  for(const k in PRES.others){const o=PRES.others[k];if(now-(o.rt||0)>6000&&now-(o.rpc||0)>8000)delete PRES.others[k]}// parti sans prévenir
+  for(const o of Object.values(PRES.others)){const d=dist(o.x,o.y,o.tx,o.ty);if(d>1){const st=Math.min(d,Math.max(300,d*(o.rt&&now-o.rt<1500?10:1.5))*dt);o.x+=(o.tx-o.x)/d*st;o.y+=(o.ty-o.y)/d*st;o.mv=true;if(Math.abs(o.tx-o.x)>2)o.face=o.tx>o.x?1:-1}else o.mv=o.moving}
   if(PRES.off||!SB||!LB.ready||BOOT||(typeof AFK!=='undefined'&&AFK)||document.hidden||PRES.busy||now-PRES.hb<3000)return;PRES.hb=now;PRES.busy=true;
   const street=VISIT&&VISIT.other?VISIT.other.pseudo:null,ci=VISIT?VISIT.i:CURI();let look=null;
   if(!VISIT){const j=JSON.stringify(presLook());if(j!==PRES.look||now-PRES.lookAt>60000){PRES.look=j;PRES.lookAt=now;look=JSON.parse(j)}}
@@ -795,8 +798,91 @@ function presTick(dt){const now=performance.now();
       const q=await SB.rpc('street_people',{p_street:street,p_ci:ci});if(q.error)return;const seen={};
       for(const p of q.data||[]){seen[p.pseudo]=1;let o=PRES.others[p.pseudo];
         if(!o){o=PRES.others[p.pseudo]={x:p.x,y:p.y,face:p.face};if(!VISIT&&!p.owner){toast('👀 '+p.pseudo+' visite ta rue !');snd('event')}}
-        Object.assign(o,{pseudo:p.pseudo,tx:p.x,ty:p.y,moving:p.moving,room:p.room,owner:p.owner,look:p.look||o.look||{}});if(p.room)o.face=p.face}
-      for(const k in PRES.others)if(!seen[k])delete PRES.others[k]}catch(e){}finally{PRES.busy=false}})()}
+        o.rpc=performance.now();if(!(o.rt&&performance.now()-o.rt<4000))Object.assign(o,{tx:p.x,ty:p.y,moving:p.moving,room:p.room});Object.assign(o,{pseudo:p.pseudo,owner:p.owner,look:p.look||o.look||{}});if(p.room)o.face=p.face}
+      for(const k in PRES.others)if(!seen[k]&&!(PRES.others[k].rt&&performance.now()-PRES.others[k].rt<6000))delete PRES.others[k]}catch(e){}finally{PRES.busy=false}})()}
+// ===== Temps réel dans la rue (Supabase Realtime) : positions ~10 fois par seconde, et tables de casino partagées =====
+const RT={ch:null,key:'',ok:false,sent:0,lastPos:'',lookAt:0,myLook:null};
+function rtKey(){if(!SB||!SB.channel||!LB.ready||!LB.pseudo||BOOT)return '';const ow=VISIT?(VISIT.other?VISIT.other.pseudo:''):LB.pseudo;return ow?ow.toLowerCase()+'-'+(VISIT?VISIT.i:CURI()):''}
+function rtSend(ev,payload){if(RT.ch&&RT.ok)try{RT.ch.send({type:'broadcast',event:ev,payload})}catch(e){}}
+function rtTick(){const k=rtKey();
+  if(k!==RT.key){if(RT.ch){try{SB.removeChannel(RT.ch)}catch(e){}}RT.ch=null;RT.ok=false;RT.key=k;MP.st={bj:null,rou:null};
+    if(k){try{RT.ch=SB.channel('rue-'+k,{config:{broadcast:{self:false}}});RT.ch.on('broadcast',{event:'pos'},m=>rtPos(m.payload)).on('broadcast',{event:'cas'},m=>mpMsg(m.payload)).subscribe(st=>{RT.ok=st==='SUBSCRIBED'})}catch(e){RT.ch=null}}}
+  if(!VISIT&&performance.now()-RT.lookAt>2500)RT.myLook=presLook();
+  if(!RT.ch||!RT.ok)return;const now=performance.now(),room=INSIDE?INSIDE.k:null,cas=mpAtTable();
+  const pos=[Math.round(P.x),Math.round(P.y),P.face,P.moving?1:0,room,cas].join();
+  if(now-RT.sent<(pos!==RT.lastPos?90:1000))return;RT.sent=now;RT.lastPos=pos;
+  const pl={p:LB.pseudo,x:Math.round(P.x),y:Math.round(P.y),f:P.face,m:P.moving?1:0,r:room,c:cas,o:VISIT?0:1};
+  if(now-RT.lookAt>2500&&RT.myLook){RT.lookAt=now;pl.lk=RT.myLook}
+  rtSend('pos',pl)}
+function rtPos(p){if(!p||!p.p||p.p===LB.pseudo)return;let o=PRES.others[p.p];const fresh=!o;
+  if(!o)o=PRES.others[p.p]={x:p.x,y:p.y,face:p.f||1,look:{}};
+  Object.assign(o,{pseudo:p.p,tx:p.x,ty:p.y,moving:!!p.m,room:p.r||null,casino:p.c||null,owner:!!p.o,rt:performance.now()});if(p.lk)o.look=p.lk;
+  if(fresh&&!VISIT&&!p.o){toast('👀 '+p.p+' visite ta rue !');snd('event')}
+  if(fresh&&mpHost('bj')===LB.pseudo)mpPush('bj');if(fresh&&mpHost('rou')===LB.pseudo)mpPush('rou')}// un nouveau venu reçoit l'état des tables
+// ---- tables partagées : le joueur au plus petit pseudo fait le croupier, chacun mise et encaisse avec son propre argent ----
+const MP={st:{bj:null,rou:null},seq:0,mine:{},recv:{},spinK:-1,lastRender:0};
+const mpAtTable=()=>pid==='casino'&&!$('panel').hidden&&casinoOk()?casTab:null;
+const mpMates=tab=>Object.values(PRES.others).filter(o=>o.casino===tab&&performance.now()-(o.rt||0)<5000).map(o=>o.pseudo);
+const mpOn=tab=>!!(RT.ok&&LB.pseudo&&mpAtTable()===tab&&mpMates(tab).length);
+const mpHost=tab=>{const L=[...mpMates(tab)];if(mpAtTable()===tab)L.push(LB.pseudo);return L.sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1)[0]||null};
+const isHost=tab=>mpHost(tab)===LB.pseudo;
+function mpPush(tab){const s=MP.st[tab];if(!s)return;s.h=LB.pseudo;s.seq=++MP.seq;s.rem=s.end?Math.max(0,s.end-performance.now()):null;
+  const c=JSON.parse(JSON.stringify(s));delete c.end;delete c.lend;rtSend('cas',{t:'state',tab,s:c});mpMsg({t:'state',tab},true)}
+function mpMsg(m,local){if(!m)return;
+  if(m.t==='state'){let s;
+    if(local){s=MP.st[m.tab];if(!s)return;s.lend=s.end}
+    else{s=m.s;const cur=MP.st[m.tab];if(cur&&cur.h===s.h&&cur.rid===s.rid&&s.seq<cur.seq)return;s.lend=s.rem!=null?performance.now()+s.rem:null;s.end=null;MP.st[m.tab]=s}
+    if(m.tab==='rou'&&s.ph==='spin'&&MP.spinK!==s.rid)mpSpin(s);if(s.ph==='done')mpSettle(m.tab,s);if(pid==='casino'&&!spinning)renderPanel();return}
+  if(!isHost(m.tab))return;const s=MP.st[m.tab];if(!s)return;
+  if(m.t==='bet'&&s.ph==='bet'&&s.rid===m.rid&&!s.bets[m.p]&&m.amt>0){s.bets[m.p]=m.amt;if(!s.end)s.end=performance.now()+(m.tab==='rou'?9000:8000);mpPush(m.tab)}
+  if(m.t==='act'&&m.tab==='bj'&&s.ph==='play'&&s.turn===m.p&&s.rid===m.rid){if(m.a==='hit'){s.hands[m.p].push(newCard());if(hv(s.hands[m.p])>=21)mpNextTurn(s)}else mpNextTurn(s);mpPush('bj')}}
+// ce que le joueur a misé et encaissé : appliqué une seule fois par manche, sur son propre argent
+function mpBet(tab,frac){const s=MP.st[tab];if(!s||s.ph!=='bet'||s.bets[LB.pseudo]||MP.mine[tab+s.rid])return;const amt=Math.floor(S.cash*frac);if(amt<1){toast('Mise trop petite');snd('err');return}
+  S.cash-=amt;S.stats.casino++;MP.mine[tab+s.rid]={amt,paid:false};snd('buy');updHud();const pl={t:'bet',tab,rid:s.rid,p:LB.pseudo,amt};rtSend('cas',pl);mpMsg(pl,true)}
+function mpSettle(tab,s){const me=MP.mine[tab+s.rid];if(!me||me.paid)return;me.paid=true;const mul=(s.res||{})[LB.pseudo]||0,g=Math.floor(me.amt*mul);
+  if(g>0){S.cash+=g;if(g>me.amt){S.meta.casinoWon=(S.meta.casinoWon||0)+g-me.amt;snd(mul>=5?'legend':'win')}}else{S.meta.casinoLost=(S.meta.casinoLost||0)+me.amt;snd('fail')}if(tab==='rou'&&s.k===0)S.meta.jackpot++;save();updHud()}
+function mpNextTurn(s){s.i++;s.turn=s.order[s.i]||null;s.end=s.turn?performance.now()+15000:null;if(!s.turn)mpDealer(s)}
+function mpDealer(s){while(hv(s.dealer)<17)s.dealer.push(newCard());const dv=hv(s.dealer),dbj=dv===21&&s.dealer.length===2;s.res={};
+  for(const p of s.order){const h=s.hands[p],pv=hv(h),pbj=pv===21&&h.length===2;s.res[p]=pv>21?0:pbj&&!dbj?2.5:dbj&&!pbj?0:dv>21||pv>dv?2:pv===dv?1:0}
+  s.ph='done';s.end=performance.now()+6000}
+// le croupier fait avancer les manches
+function mpTick(){for(const tab of ['bj','rou']){if(!RT.ok||!LB.pseudo||!isHost(tab)||mpAtTable()!==tab)continue;let s=MP.st[tab];const now=performance.now();
+    if(!s){MP.st[tab]={ph:'bet',rid:Date.now()%1e9,bets:{},end:null};mpPush(tab);continue}
+    if(s.h!==LB.pseudo){// je reprends la table (l'ancien croupier est parti)
+      if(s.ph==='bet')s.end=s.lend||null;else if(s.ph==='spin'||s.ph==='done'){s.ph='done';s.end=now+3000}else{s.res={};for(const p in s.bets)s.res[p]=1;s.ph='done';s.end=now+3000}
+      mpPush(tab);continue}
+    if(s.end&&now>=s.end){
+      if(s.ph==='bet'){const ps=Object.keys(s.bets);if(!ps.length){s.end=null;mpPush(tab);continue}
+        if(tab==='rou'){s.ph='spin';s.k=Math.floor(Math.random()*SEG.length);s.res={};for(const p of ps){const r=SEG[s.k];s.res[p]=RPAY[r]||0}s.end=now+3600}
+        else{s.ph='play';s.order=ps.sort();s.hands={};for(const p of ps)s.hands[p]=[newCard(),newCard()];s.dealer=[newCard(),newCard()];s.i=-1;mpNextTurn(s)}
+        mpPush(tab)}
+      else if(s.ph==='spin'){s.ph='done';s.end=now+4000;mpPush(tab)}
+      else if(s.ph==='play'){mpNextTurn(s);mpPush(tab)}
+      else if(s.ph==='done'){MP.st[tab]={ph:'bet',rid:Date.now()%1e9,bets:{},end:null};mpPush(tab)}}}
+  if(pid==='casino'&&mpOn(casTab)&&performance.now()-MP.lastRender>500&&!spinning){MP.lastRender=performance.now();renderPanel()}}
+function mpSpin(s){MP.spinK=s.rid;spinning=true;const k=s.k,st=Math.PI*2/SEG.length,TAU=Math.PI*2,target=-Math.PI/2-(k+.5)*st,diff=(((target-wheelRot)%TAU)+TAU)%TAU,from=wheelRot,to=wheelRot+TAU*5+diff,t0=performance.now();let last=-1;
+  const step=now=>{const p=Math.min(1,(now-t0)/3200);wheelRot=from+(to-from)*(1-Math.pow(1-p,3));drawWheel();const sg=Math.floor(wheelRot/st);if(sg!==last){last=sg;snd('tick')}if(p<1)return requestAnimationFrame(step);wheelRot=to%TAU;spinning=false;if(pid==='casino')renderPanel()};requestAnimationFrame(step)}
+const cardTxt=c=>`<span class="mpc${c.s==='♥'||c.s==='♦'?' red':''}">${c.r===1?'A':c.r>10?['V','D','R'][c.r-11]:c.r}${c.s}</span>`;
+const mpSec=s=>s&&s.lend&&s.ph!=='done'?Math.max(0,Math.ceil((s.lend-performance.now())/1000)):null;
+function mpRouHTML(){const s=MP.st.rou,me=LB.pseudo,mates=mpMates('rou');let h=`<p class="lead">🎰 <b>Table partagée</b> (${mates.join(', ')}) : une seule bille pour tout le monde. Vert x1,5, case dorée x5, rouge perdu.</p>`;
+  h+=`<canvas id="rw" width="520" height="520" style="width:220px;height:220px;max-width:100%;align-self:center"></canvas>`;
+  if(!s)return h+'<div class="msg">Connexion à la table…</div>';const sec=mpSec(s),mine=s.bets[me];
+  const msg=s.ph==='bet'?(sec!=null?'Rien ne va plus dans '+sec+' s…':'Faites vos jeux !'):s.ph==='spin'?'Ça tourne…':(()=>{const r=SEG[s.k];return 'Bille sur '+(r==='or'?'la case dorée !':'le '+SEGL[s.k]+' '+(r==='rouge'?'🔴':'🟢'))})();
+  h+=`<div class="msg ${s.ph==='done'?(RPAY[SEG[s.k]]?'ok':'ko'):''}">${msg}</div><div class="mpseats">`+[me,...mates].map(p=>{const b=s.bets[p],r=s.ph==='done'&&b?(s.res||{})[p]:null;
+    return `<div class="mpseat${p===me?' me':''}"><b>${p===me?'Toi':p}</b><small>${b?'mise '+fmt(b):'pas encore misé'}</small>${r!=null?`<small class="${r?'up':'dn'}">${r?'+'+fmt(b*r-b):'-'+fmt(b)}</small>`:''}</div>`}).join('')+'</div>';
+  if(s.ph==='bet'&&!mine)h+='<div class="bets">'+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="mpbet:rou:${p}">${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+'</div>';
+  else if(s.ph==='bet')h+='<p class="foot" style="text-align:center">Mise placée, on attend les autres joueurs…</p>';
+  return h+'<p class="foot">Argent fictif du jeu. Chacun mise et encaisse avec son propre argent.</p>'}
+function mpBjHTML(){const s=MP.st.bj,me=LB.pseudo,mates=mpMates('bj');let h=`<p class="lead">🃏 <b>Table partagée</b> (${mates.join(', ')}) : chacun sa main contre le croupier. Blackjack x2,5, gagné x2, égalité remboursée.</p>`;
+  if(!s)return h+'<div class="msg">Connexion à la table…</div>';const sec=mpSec(s),hide=s.ph==='play';
+  if(s.dealer)h+=`<div class="mpdeal"><b>Croupier</b> ${s.dealer.map((c,i)=>hide&&i===1?'<span class="mpc back">?</span>':cardTxt(c)).join('')} ${hide?'':'<small>'+hv(s.dealer)+'</small>'}</div>`;
+  h+=`<div class="msg">${s.ph==='bet'?(sec!=null?'Distribution dans '+sec+' s…':'Faites vos mises !'):s.ph==='play'?(s.turn===me?'À toi de jouer ! ('+sec+' s)':'Au tour de '+s.turn+'…'):'Manche terminée'}</div><div class="mpseats">`+
+    [me,...mates].map(p=>{const b=s.bets[p],hd=s.hands&&s.hands[p],r=s.ph==='done'&&b?(s.res||{})[p]:null;
+      return `<div class="mpseat${p===me?' me':''}${s.turn===p?' turn':''}"><b>${p===me?'Toi':p}</b><small>${b?'mise '+fmt(b):'pas de mise'}</small>${hd?'<div>'+hd.map(cardTxt).join('')+' <small>'+hv(hd)+'</small></div>':''}${r!=null?`<small class="${r>1?'up':r===1?'':'dn'}">${r>1?'+'+fmt(b*r-b):r===1?'égalité':'-'+fmt(b)}</small>`:''}</div>`}).join('')+'</div>';
+  if(s.ph==='bet'&&!s.bets[me])h+='<div class="bets">'+[[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="mpbet:bj:${p}">${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+'</div>';
+  else if(s.ph==='play'&&s.turn===me)h+='<div class="bets"><button class="chunky" type="button" data-act="mpact:hit">Tirer</button><button class="chunky alt" type="button" data-act="mpact:stand">Rester</button></div>';
+  return h+'<p class="foot">Le croupier tire jusqu\'à 17. Chacun mise et encaisse avec son propre argent.</p>'}
+function mpAct(a){const s=MP.st.bj;if(!s||s.ph!=='play'||s.turn!==LB.pseudo)return;const pl={t:'act',tab:'bj',rid:s.rid,p:LB.pseudo,a};snd('tick');rtSend('cas',pl);mpMsg(pl,true)}
 // les autres joueurs, avec leur look, leur véhicule et leur pseudo
 function drawOther(o){const lk=o.look||{},rd=lk.rd||'',keep=S.meta.vc;S.meta.vc=lk.vc||{};
   try{drawRide(rd,o.x,o.y,o.face,false);drawGuy(o.x,o.y,Object.assign({skin:'#f1c27d',shirt:'#8338ec',pants:'#3d405b',hair:'#2b2118'},lk,{t:T,moving:o.mv,face:o.face,ride:rd||null,lift:vcLift(rd),bag:0,gun:null}));drawRide(rd,o.x,o.y,o.face,true)}finally{S.meta.vc=keep}
@@ -2238,7 +2324,7 @@ function scoreTxt(key){const o=BJ.sc&&BJ.sc[key];if(!o||!o.h.length)return '';co
   return cs.length?hv(cs)+(pend&&key==='d'&&BJ.phase==='play'?' + ?':''):'?'}
 function schedScores(){const rid=BJ.rid=(BJ.rid||0)+1;
   for(const key of ['p','d'])for(const [i,t] of ((BJ.sc||{})[key]||{evs:[]}).evs)setTimeout(()=>{if(BJ.rid!==rid)return;BJ.sc[key].vis[i]=true;const el=$(key==='p'?'bjsp':'bjsd');if(el)el.textContent=scoreTxt(key)},t*1000)}
-function bjRender(){const hide=BJ.phase==='play';BJ.k=0;if(!BJ.flip)BJ.flipped=false;
+function bjRender(){if(mpOn('bj'))return mpBjHTML();const hide=BJ.phase==='play';BJ.k=0;if(!BJ.flip)BJ.flipped=false;
   // ordre de distribution : toi puis le croupier
   const ph=handHTML(BJ.p,'p',false),dh=handHTML(BJ.d,'d',hide),md=BJ.k+.15;
   const showP=BJ.phase!=='bet'&&BJ.p.length,showD=BJ.phase!=='bet'&&BJ.d.length;
@@ -2284,7 +2370,7 @@ function spinWheel(bet){
     else{rouMc='ko';rouMsg='Bille sur '+lbl+' · -'+fmt(bet)+' perdus';S.meta.casinoLost+=bet;snd('fail')}
     rouAnim=true;save();if(pid==='casino')renderPanel();updHud()}
   requestAnimationFrame(step)}
-function rouRender(){const h="<p class=\"lead\">24 cases. Case verte (14) : ta mise x1,5. Case rouge (9) : mise perdue. Case dorée (1) : Pigeon d'Or, ta mise x5 ! Plus de 6 chances sur 10 de gagner.</p>"+
+function rouRender(){if(mpOn('rou'))return mpRouHTML();const h="<p class=\"lead\">24 cases. Case verte (14) : ta mise x1,5. Case rouge (9) : mise perdue. Case dorée (1) : Pigeon d'Or, ta mise x5 ! Plus de 6 chances sur 10 de gagner.</p>"+
   `<canvas id="rw" width="520" height="520" style="width:240px;height:240px;max-width:100%;align-self:center"></canvas><div class="msg ${rouMc}${rouAnim?' anim':''}" id="rmsg">${rouMsg}</div><div class="bets" id="rbets"${spinning?' hidden':''}>`+
   [[.1,'10 %'],[.25,'25 %'],[.5,'50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="bet:${p}" data-cost="1">${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+
   '</div><p class="foot">Argent fictif du jeu, aucune vraie mise.</p>';rouAnim=false;return h}
@@ -2629,7 +2715,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='visit'){$('panel').hidden=true;pid=null;cloudGo('En route vers '+CITIES[(S.meta.worlds[+v]||{}).i||0].n+'…',()=>startVisit(+v));return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){leaveVisit();return}
-  if(VISIT&&!['close','ptab','opt','tab','ko','info','howto','bj','bjdeal','bet','bksel','bkbet','bktab','grat'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
+  if(VISIT&&!['close','ptab','opt','tab','ko','info','howto','bj','bjdeal','bet','mpbet','mpact','bksel','bkbet','bktab','grat'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
   const pay=c=>{if(S.cash<c){snd('err');return false}S.cash-=c;snd('buy');return true};
   if(a==='close')return closePanel();
   if(a==='worldmap'){if(JOB)return;$('panel').hidden=true;pid=null;return worldSelect()}
@@ -2748,6 +2834,8 @@ $('pbody').addEventListener('click',e=>{
     if(v==='secu'&&S.emp>=2&&!S.secu){if(!pay(secuCost()))return;S.secu=true;toast('Raymond, agent de sécurité, prend son poste')}
   }
   if(a==='bjdeal')bjDeal(+v);
+  if(a==='mpbet'){mpBet(v,+w);return renderPanel()}
+  if(a==='mpact'){mpAct(v);return renderPanel()}
   if(a==='bj'){if(BJ.phase!=='play')return;if(v==='hit')bjHit();else bjStand()}
   if(a==='bet'){const bet=Math.floor(S.cash*+v);if(bet<1){rouMsg='Mise trop petite';return renderPanel()}
     S.cash-=bet;S.stats.casino++;updHud();return spinWheel(bet)}

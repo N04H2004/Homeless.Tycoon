@@ -520,7 +520,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 // ================= Données =================
 const CITIES=[
  {k:'paris',n:'Paris',cur:'€',m:1,sky:'#9fd8f0',back:'#d9c9e8',grass:'#8bd17c'},
- {k:'london',n:'Londres',cur:'£',m:1.6,sky:'#b9c6d2',back:'#cfd3da',grass:'#7fb069'},
+ {k:'london',n:'Londres',cur:'£',m:4,sky:'#b9c6d2',back:'#cfd3da',grass:'#7fb069'},
  {k:'ny',n:'New York',cur:'$',m:2.6,sky:'#ffd6a5',back:'#d8d4e8',grass:'#95d5b2'},
  {k:'tokyo',n:'Tokyo',cur:'¥',m:6,sky:'#ffc8dd',back:'#f8edeb',grass:'#80ed99'},
 ];
@@ -564,7 +564,7 @@ const SHOPDEF={
  ramen:{n:'Ramen Ichiban',s:'RAMEN',d:'Un bouillon qui mijote depuis 1987',base:4000,inc:6,col:'#bc4749',job:'kebab'},
  brico:{n:'Brico Dédé',s:'BRICO DÉDÉ',d:'Outils à vie. Proprio : tes outils à -20 %',base:8000,inc:10,col:'#f4a261',awn:['#f77f00','#ffd23f'],svc:'brico',job:'brico'},
  motors:{n:'Pigeon Motors',s:'PIGEON MOTORS',d:'Véhicules à vie. Proprio : tes véhicules à -20 %',base:10000,inc:14,col:'#118ab2',awn:['#118ab2','#ffd23f'],svc:'motors',job:'lavage'},
- laverie:{n:'Laverie Mousse & Co',s:'LAVERIE',d:"Les chaussettes tournent, l'argent aussi",base:1500,inc:2.5,col:'#4cc9f0',job:'laverie'},
+ laverie:{n:'Laverie Mousse & Co',s:'LAVERIE',d:"Les chaussettes tournent, l'argent aussi",base:1500,inc:8,col:'#4cc9f0',job:'laverie'},
  bookie:{n:'Bookmaker Lucky Pigeon',s:'BOOKMAKER',d:'Courses de chevaux et cotes douteuses',base:9000,inc:12,col:'#2d6a4f',svc:'bookie'},
  fripe:{n:'Fripe & Chic',s:'FRIPE & CHIC',d:'Tenues fun, à vie',base:12000,inc:16,col:'#ff8fab',awn:['#ff8fab','#fff'],svc:'fripe',job:'style'},
  peluche:{n:"Teddy's Toys",s:"TEDDY'S TOYS",d:'Des peluches jusqu\'au plafond',base:20000,inc:26,col:'#c77dff',awn:['#c77dff','#fff'],job:'peluche'},
@@ -4406,7 +4406,7 @@ const GUIDES={
   {t:()=>'Paris ne disparaît pas : elle passe <b>en gérance</b> et continue de rapporter <b>20 %</b> de ses revenus à ta holding. À Londres, tu repars de zéro pour l\'argent et l\'entreprise, mais tu gardes Pigeons d\'Or, bonus, tenues, véhicules et héritage.',...nxt()},
   {t:()=>'Clique sur <b>Mettre Paris en gérance et ouvrir Londres</b>.',ui:q('#pbody [data-act="prestige"]'),done:()=>inPanel('prest2')||CURI()>=1},
   {t:()=>'Confirme ton départ pour Londres !',ui:q('#pbody [data-act="prestige2"]'),done:()=>CURI()>=1},
-  {t:()=>'Bienvenue à <b>Londres</b> ! Tout rapporte <b>1,6 fois plus</b>, mais coûte bien plus cher. Ouvre le <b>Menu</b> pour découvrir ta holding.',ui:()=>$('btnMenu'),done:()=>inPanel('plus')},
+  {t:()=>'Bienvenue à <b>Londres</b> ! Tout rapporte <b>4 fois plus</b>, mais coûte bien plus cher. Ouvre le <b>Menu</b> pour découvrir ta holding.',ui:()=>$('btnMenu'),done:()=>inPanel('plus')},
   {t:()=>'Va dans l\'onglet <b>Holding</b>.',ui:q('#pbody [data-act="ptab:holding"]'),done:()=>inTab('holding')},
   {t:()=>'La <b>trésorerie</b> se remplit toute seule avec les 20 % de Paris (et des prochaines villes en gérance), même quand tu ne fais rien.',ui:q('#pbody [data-act="hold:conv"]'),...nxt()},
   {t:()=>'Le <b>PigeonCoin</b> (PGC) est la crypto du jeu. Son <b>cours</b> monte et descend toutes les 2 secondes (la courbe) : convertis ta trésorerie en PGC <b>quand le cours est bas</b>, avec ce bouton (5 % de frais).',ui:q('#pbody .stk'),...nxt()},
@@ -4527,9 +4527,9 @@ const TIPS=[
  ['bourse','La bourse',()=>CI()>=2&&S.total>=3000,['Au <b>New York Stock Exchange</b> (E), ou dans le <b>Menu</b>, onglet Bourse.','Chaque ville a sa propre bourse et ses actions. Les cours suivent des tendances cachées.','Les <b>analystes</b> te révèlent les tendances : analyse rapide, complète, et même un délit d\'initié (1 fois par ville).','Le bouton <b>i</b> à côté de chaque analyste explique comment le rentabiliser.']],
  ['prestige','Ouvrir une filiale',()=>pg()>=1&&S.meta.prestige<3,['Tu as assez gagné pour <b>ouvrir une nouvelle ville</b> (Menu, Prestige).','Ta rue actuelle n\'est pas perdue : elle tourne <b>en gérance</b>.','Tu gagnes aussi des <b>Pigeons d\'Or</b> pour des bonus permanents.']],
  ['holding','Ta holding',()=>S.meta.prestige>=1,['Tes autres villes versent leurs revenus dans la <b>trésorerie</b> (Menu, Holding).','Convertis-la en <b>PigeonCoin</b> quand le cours est bas.','Avec la crypto : Pigeons d\'Or, capital de départ, gérants motivés.','Bouton <b>Y aller</b> pour retourner améliorer une ville.','<b>Héritage</b> : frigo et manager te suivent partout. Outils, véhicules et tenues sont à vie.']],
- ['city_london','Bienvenue à Londres',()=>CK()==='london',['Ici on paie en <b>livres (£)</b>, et tout rapporte 1,6 fois plus.','Il pleut <b>souvent</b> : déchets x2, mais les passants courent.','Les voitures roulent <b>à gauche</b>, attention aux bus à impériale !']],
+ ['city_london','Bienvenue à Londres',()=>CK()==='london',['Ici on paie en <b>livres (£)</b>, et tout rapporte 4 fois plus.','Il pleut <b>souvent</b> : déchets x2, mais les passants courent.','Les voitures roulent <b>à gauche</b>, attention aux bus à impériale !']],
  ['city_ny','Bienvenue à New York',()=>CK()==='ny',['Ici on paie en <b>dollars ($)</b>, et tout rapporte 2,6 fois plus.','<b>La Bourse ouvre enfin</b> : le NYSE et ses Hot Dog Holdings (Menu › Bourse).']],
- ['city_tokyo','Bienvenue à Tokyo',()=>CK()==='tokyo',['Ici on paie en <b>yens (¥)</b>, et tout rapporte 4 fois plus.','Pas de bourse ici : l\'argent se gagne aux <b>courses clandestines</b> de Daikoku PA, la quête finale du jeu.']],
+ ['city_tokyo','Bienvenue à Tokyo',()=>CK()==='tokyo',['Ici on paie en <b>yens (¥)</b>, et tout rapporte 6 fois plus.','Pas de bourse ici : l\'argent se gagne aux <b>courses clandestines</b> de Daikoku PA, la quête finale du jeu.']],
 ];
 let tipCD=3;
 function checkTips(){if(VISIT||JOB||tutoOn()||!$('panel').hidden||tipCD>0)return;const m=S.meta;

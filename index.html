@@ -1688,6 +1688,15 @@ const SKINS_F={
 const FSK=()=>SKINS_F[CK()]||SKINS_F.paris;
 function applyFoodSkin(){const f=FSK();for(const k in f.ing)ING[k]=f.ing[k];for(const k in f.art)ART[k]=f.art[k];for(const k in f.sauce)SAUCE[k]=f.sauce[k];
   JOBS.kebab.n=f.job;JOBS.kebab.d='Prépare les '+f.dish+' exactement comme le client les demande. 40 s de service, un '+f.dish+' offert à la fin';KB_LINES.length=0;KB_LINES.push(...f.lines)}
+// commandes écrites directement en anglais (plus naturel qu'une traduction mot à mot)
+const KB_EN={paris:{solo:'just meat, no veggies',veg:{salade:'salad',tomate:'tomato',oignon:'onion'},sauce:{blanche:'white sauce',samourai:'samurai sauce',harissa:'harissa'},
+    lines:['Yo, a kebab with {k}!','Hello young man, I\'d like a kebab with {k}.','Quick, I\'m in a hurry: kebab with {k}!','I\'ll have a kebab with {k}, thanks.','A kebab with {k}. Make it snappy!']},
+  london:{solo:'just fish, no sides',veg:{salade:'fries',tomate:'peas',oignon:'pickles'},sauce:{blanche:'tartar sauce',samourai:'vinegar',harissa:'ketchup'},
+    lines:['A fish & chips with {k}, please!','Good evening, a fish & chips with {k}.','Quick, my bus is leaving: fish & chips with {k}!','I\'ll have a fish & chips with {k}, cheers.','Fish & chips with {k}. Make it snappy!']},
+  ny:{solo:'just the sausage, no toppings',veg:{salade:'fried onions',tomate:'pickles',oignon:'sauerkraut'},sauce:{blanche:'mustard',samourai:'ketchup',harissa:'relish'},
+    lines:['Yo, a hot dog with {k}!','Hey buddy, a hot dog with {k}.','Quick, my cab is waiting: hot dog with {k}!','A hot dog with {k}, thanks man.','Hot dog with {k}. Make it snappy!']},
+  tokyo:{solo:'just noodles, no toppings',veg:{salade:'chashu',tomate:'soft-boiled egg',oignon:'scallion'},sauce:{blanche:'shoyu',samourai:'miso',harissa:'chili'},
+    lines:['Sumimasen, a ramen with {k}!','Konnichiwa, a ramen with {k}, onegai.','Quick, my train is leaving: ramen with {k}!','A ramen with {k}, arigatō.','Ramen with {k}. Make it snappy!']}};
 const KB_LINES=['Wesh, un kebab {k} !','Bonjour jeune homme, je voudrais un kebab {k}.',"Vite, j'ai pas le temps : kebab {k} !",'Pour moi ce sera un kebab {k}, merci.','Un kebab {k}. Et que ça saute !'];
 try{applyFoodSkin()}catch(e){}
 const GROCERY=[['Baguette',110],['Lait',90],['Pâtes',130],['Chips',240],['Camembert',270],['Pizza surgelée',350],['Croquettes pour chat',680],['Papier toilette x12',560],['Mousse au chocolat',190],['Jus d\'orange',220],['Bananes',160],['Café moulu',420],['Œufs x6',230],['Lessive',890]];
@@ -1912,10 +1921,10 @@ function startJob(k){if(!jobOk(k)||S.cdd[k]===dayN())return;S.cdd[k]=dayN();S.st
 function newCust(){const J=JOB,name=pick(CNAMES),wt=J.served+J.fail>0?(J.k==='bar'?1:1.8):0;
   if(MG[J.k]){J.cust=mgCust(J,name,wt);return}
   if(J.k==='kebab'){const veg=['salade','tomate','oignon'].filter(()=>Math.random()<.6),sauce=pick(Object.keys(SAUCE)),miss=['salade','tomate','oignon'].filter(v=>!veg.includes(v));
-    const F=FSK(),vn=v=>F.veg[v];let d=veg.length===3?veg.map(vn).join(', '):veg.length===0?F.solo:veg.map(vn).join(', ')+', sans '+miss.map(vn).join(' ni ');
-    d+=', '+SAUCE[sauce];const pm=Math.max(9,18-J.served*.8);
+    const E=window.HT_LANG==='en'&&KB_EN[CK()],F=E||FSK(),vn=v=>F.veg[v];let d=veg.length===3?veg.map(vn).join(', '):veg.length===0?F.solo:veg.map(vn).join(', ')+(E?', no ':', sans ')+miss.map(vn).join(E?' or ':' ni ');
+    d+=', '+(E?E.sauce[sauce]:SAUCE[sauce]);const pm=Math.max(9,18-J.served*.8);
     if(J.lastKb===veg.join()+sauce)return newCust();J.lastKb=veg.join()+sauce;
-    J.cust={name,want:['pain','viande',...veg,sauce],line:pick(KB_LINES).replace('{k}',d),pat:pm,pm,build:[],wait:wt}}
+    J.cust={name,want:['pain','viande',...veg,sauce],line:pick(E?E.lines:KB_LINES).replace('{k}',d),pat:pm,pm,build:[],wait:wt}}
   else if(J.k==='bar'){const d=bagPick(J,'drink',DRINKS),pm=Math.max(10,18-J.served*.6);
     J.cust={name,line:d[0],lo:d[1]-2,hi:d[2]+2,lvl:0,pouring:false,wait:wt,spd:Math.min(80,50+J.served*3)*(.9+Math.random()*.25),pat:pm,pm}}
   else{const n=2+Math.floor(Math.random()*3),its=bagTake(J,'items'+CK(),GROCERY_C[CK()]||GROCERY,n),tot=its.reduce((a,i)=>a+i[1],0);
@@ -3544,7 +3553,7 @@ function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-
 function drawDrCar(){const c=$('drcar');if(!c)return;const keep=cx,d=window.devicePixelRatio||1,g=c.getContext('2d');c.width=150*d;c.height=70*d;g.setTransform(d,0,0,d,0,0);g.fillStyle='#22223b';g.beginPath();g.roundRect(0,0,150,70,10);g.fill();
   cx=g;try{const D=drS(),L={};for(const p of DR_PARTS)L[p[0]]=drLv(p[0]);drawDriftCar(75,58,.95,D.car?L:{})}finally{cx=keep}}
 function driftEndHTML(R){const r=R.r;let h='';
-  if(R.win&&r.k==='legend')h=`<p class="lead" style="text-align:center;font-size:20px">🏆 Tu as battu <b>le Roi du Drift</b> !</p><p class="lead" style="text-align:center">Le pactole : <b>${fmt(R.prize)}</b> et <b>5 Pigeons d'Or</b>.</p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Voir la fin</button>`;
+  if(R.win&&r.k==='legend')h=`<p class="lead" style="text-align:center;font-size:20px">🏆 Tu as battu <b>le Roi du Drift</b> !</p><p class="lead" style="text-align:center">Le pactole : <b>${fmt(R.prize)}</b> + <b>5 Pigeons d'Or</b>.</p><button class="chunky" type="button" data-act="dr:finale" style="width:100%">Voir la fin</button>`;
   else if(R.win)h=`<p class="lead" style="text-align:center;font-size:18px">🏁 Victoire sur <b>${r.n}</b> en ${R.time.toFixed(1).replace('.',',')} s !</p><p class="lead" style="text-align:center">Gain : <b>${fmt(R.prize)}</b>${R.first?'':' (revanche)'}</p>`+(drTrainWins()>=3&&!drS().done?'<p class="lead">Les 3 courses d\'entraînement sont gagnées : <b>la course légendaire</b> t\'attend !</p>':'');
   else h=`<p class="lead" style="text-align:center;font-size:18px">💨 ${R.why||r.rv+' passe la ligne avant toi.'}</p><p class="lead">Améliore ta voiture (moteur, jantes, pneus…), reste sur la route, drifte dans les virages pour enchaîner les <b>mini-turbos</b> et garde la nitro pour les lignes droites. Tu peux recourir quand tu veux.</p>`;
   if(!(R.win&&r.k==='legend'))h+='<button class="chunky" type="button" data-act="dr:back" style="width:100%">Retour à Daikoku</button>';return h}

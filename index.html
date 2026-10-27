@@ -410,8 +410,11 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 </style>
 
 <script>
+/* Version CrazyGames : build CrazyGames (window.CG_BUILD), site crazygames ou ?cg=1 pour tester. On y charge leur SDK et l'anglais est la langue par défaut */
+window.CG_MODE=!!(window.CG_BUILD||/[?&]cg=1/.test(location.search)||/crazygames/i.test(location.hostname)||/crazygames/i.test(document.referrer));
+if(window.CG_MODE)document.write('<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"><\/script>');
 /* Langue : le dictionnaire anglais n'est chargé que si le joueur a choisi English (Menu › Options) */
-(()=>{let L='fr';try{L=localStorage.getItem('ht-lang')||'fr'}catch(e){}window.HT_LANG=L==='en'?'en':'fr';
+(()=>{let L=window.CG_MODE?'en':'fr';try{L=localStorage.getItem('ht-lang')||L}catch(e){}window.HT_LANG=L==='en'?'en':'fr';
 if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<script src="lang-en.js"><\/script>')}})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -1948,7 +1951,7 @@ function endJob(early){const J=JOB;if(!J)return;JOB=null;
   if(bonus+offB>0)float(P.x,P.y-100,'+'+fmt(bonus+offB),'#1f9d5c');
   if(J.k==='kebab'&&!early){S.food=Math.min(100,S.food+35)}
   if(J.k==='bar'&&!early){S.hp=Math.min(100,S.hp+20)}
-  parg={k:J.k,early,served:J.served,fail:J.fail,earn:J.earn,bonus,off,offB,g};pid='jobend';snd(best?'win':'coin');renderPanel();updHud();save()}
+  parg={k:J.k,early,served:J.served,fail:J.fail,earn:J.earn,bonus,off,offB,g};pid='jobend';snd(best?'win':'coin');renderPanel();updHud();save();cgMidgame()}
 // CDD cuisine : chaque ingrédient a son dessin cartoon, différent selon la ville (kebab, fish & chips, hot-dog, ramen)
 const FD=(()=>{
   const sh=(g,f,lw=2.5)=>{g.fillStyle=f;g.fill();g.lineWidth=lw;g.strokeStyle=INK;g.stroke()};
@@ -2796,7 +2799,7 @@ $('pbody').addEventListener('click',e=>{
     if(ci>=3||m.gerOn[ci]){S.pgClaimed=pgAll();m.gold+=g;save();snd('legend');toast('+'+g+" Pigeon"+(g>1?'s':'')+" d'Or encaissé"+(g>1?'s':''));return renderPanel()}
     m.gerOn[ci]=1;S.pgClaimed=pgAll();m.gold+=g;m.worlds.push({i:ci,rate:Math.round(netRate()*100)/100,g:m.gk[ci]??.2,snap:snapOf(S)});
     const nx=ci+1,k=m.worlds.findIndex(w=>w.i===nx);if(k>=0){const w=m.worlds.splice(k,1)[0];m.gk[w.i]=w.g;m.cur=nx;S=loadCity(w,m)}else{m.cur=nx;S=fresh(m)}
-    m.prestige=Math.max(m.prestige,nx);resetWorld();S.done=OBJ.filter(o=>o[2]()).length;save();closePanel();snd('legend');
+    m.prestige=Math.max(m.prestige,nx);cgHappy();resetWorld();S.done=OBJ.filter(o=>o[2]()).length;save();closePanel();snd('legend');
     toast('Bienvenue à '+CITY().n+' ! '+CITIES[ci].n+' tourne maintenant en gérance');return}
   if(a==='hold'){const M=S.meta;
     if(v==='conv'&&M.treas>=1){const c=M.treas*.95/M.pc.p;M.pgc+=c;M.treas=0;snd('coin');toast('+'+fpc(c)+' dans ton portefeuille')}
@@ -3103,7 +3106,7 @@ function wsDrawEscape(){const c=$('wscv'),G=WSG;if(!c||!G)return;const d=window.
   if(!(G.inv>0&&Math.floor(performance.now()/100)%2))car(50+G.lane*100,320,'#495057','#14141a');
   g.fillStyle='#2a1f3d';g.fillRect(0,0,300,22);g.fillStyle='#fff';g.font='bold 12px sans-serif';g.textAlign='left';g.textBaseline='middle';g.fillText('💰 '+G.bags+'   💥 '+G.crash+' / 3',8,11)}
 function wsLoot(){return Math.round(Math.max(C(300000),autoRate()*3*3600)*(1+.1*(WSG?WSG.bags:0)))}
-function wsWin(){const G=WSG,W=wsS(),loot=wsLoot();WSG=null;W.done=1;S.meta.wsWins=(S.meta.wsWins||0)+1;S.dirty=(S.dirty||0)+loot;S.heat=Math.min(99,S.heat+HEATX*(40));
+function wsWin(){const G=WSG,W=wsS(),loot=wsLoot();WSG=null;cgHappy();W.done=1;S.meta.wsWins=(S.meta.wsWins||0)+1;S.dirty=(S.dirty||0)+loot;S.heat=Math.min(99,S.heat+HEATX*(40));
   pid='wsend';parg={ok:true,loot,bags:G.bags};renderPanel();snd('legend');burst(innerWidth/2,innerHeight/3,46,['💰','💵','🎉','✨'],280);save();updHud()}
 function wsFail(m){WSG=null;S.heat=Math.min(100,S.heat+HEATX*(50));pid='wsend';parg={ok:false,m};$('panel').hidden=false;renderPanel();snd('siren');save();updHud()}
 function wsPlanHTML(){const W=wsS(),row2=(done,name,desc,act,cost,lock)=>`<div class="row"${done?' style="background:#d8f3dc"':''}><div class="info"><b>${done?'✓ ':''}${name}</b><small>${desc}</small></div>`+(done?'<button class="buy gold" type="button" disabled>Prêt</button>':`<button class="buy" type="button" data-act="${act}" data-cost="${cost}" ${S.cash<cost||lock?'disabled':''}>${lock||fmt(cost)}</button>`)+'</div>';
@@ -3498,7 +3501,7 @@ function driftGameHTML(){const G=DRG;if(!G)return '';return `<div class="jbar"><
   `<div class="drpad"><button class="chunky alt" type="button" data-dk="l">◀</button><button class="chunky alt" type="button" data-dk="b">Frein</button><button class="chunky alt" type="button" data-dk="h">Drift</button><button class="chunky" type="button" id="drnit" data-act="dr:nitro">NITRO ×${G.nitro}</button><button class="chunky alt" type="button" data-dk="r">▶</button></div>`}
 function drEnd(win,why){const G=DRG;if(!G)return;DRG=null;const r=G.r,D=drS();let prize=0,first=false;
   if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.5);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize;if(first)setTimeout(()=>toast('🏁 Bonus de rue de Tokyo : x'+driftM().toFixed(2).replace('.',',')+' sur tes revenus auto'),1200)}
-  pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
+  pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win&&r.k==='legend')cgHappy();else cgMidgame();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
 // la voiture de drift, de profil (aperçu au garage et voitures garées à Daikoku)
 function drawDriftCar(x,y,s,lv){lv=lv||{};cx.save();cx.translate(x,y);cx.scale(s,s);cx.lineWidth=3;cx.strokeStyle=INK;const low=lv.amort?4:0;
   cx.fillStyle='rgba(0,0,0,.2)';cx.beginPath();cx.ellipse(0,4,64,7,0,0,7);cx.fill();cx.translate(0,low);
@@ -4616,7 +4619,8 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
 }
 function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSelect()}
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
-function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready){LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
+function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready&&(!CG_MODE||LB.user)){// sur CrazyGames on joue en invité, sans écran de connexion
+  LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
   BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
 // ===== missions du jour (3 par jour, mêmes pour tout le monde) et récompenses de connexion =====
 const dayKey=(o=0)=>new Date(Date.now()+o*864e5).toLocaleDateString('fr-CA');
@@ -4652,9 +4656,36 @@ function endStatsHTML(){const m=S.meta,cell=(k,v)=>`<div class="row" style="disp
     cell('🗑️ Déchets ramassés',sum('trash').toLocaleString('fr-FR'))+cell('📝 CDD signés',sum('cdd').toLocaleString('fr-FR'))+
     cell('🏁 Courses gagnées',m.drWins||0)+cell('💰 Casses réussis',(m.heists||0)+(m.wsWins?1:0))+
     cell('✨ Pigeons Légendaires',m.legend||0)+cell('🎰 Gains au casino',fmt(m.casinoWon||0))+'</div>'}
+// ===== CrazyGames : SDK v3 (init, chargement, gameplay, pubs midgame, moments forts, sauvegarde miroir) =====
+const CG_MODE=!!window.CG_MODE,CG={sdk:null,ok:false,play:null,mirrorAt:0};
+let ADP=false;// pause du jeu pendant une pub
+function adPause(on){if(ADP===on)return;ADP=on;try{if(AU.c)on?AU.c.suspend():AU.c.resume()}catch(e){}if(!on){last=performance.now();lastInput=Date.now()}}
+const cgCall=f=>{if(CG.ok)try{f(CG.sdk)}catch(e){}};
+const cgHappy=()=>cgCall(k=>k.game.happytime());
+// pub entre deux parties (fin de course, de CDD, de casse) : le SDK limite lui-même la fréquence
+function cgMidgame(){if(!CG.ok||adBusy)return;adBusy=true;const end=()=>{adBusy=false;adPause(false)};
+  try{CG.sdk.ad.requestAd('midgame',{adStarted:()=>adPause(true),adFinished:end,adError:end})}catch(e){end()}}
+// sauvegarde recopiée dans le module Data de CrazyGames (partie + session du compte), relue au démarrage si elle est plus récente
+const CG_AUTH='poubelle-tycoon-auth';
+function cgMirror(force){if(!CG.ok||!CG.sdk.data)return;const now=Date.now();if(!force&&now-CG.mirrorAt<30000)return;CG.mirrorAt=now;
+  try{const g=lsGet(KEY),a=lsGet(CG_AUTH);if(g)CG.sdk.data.setItem(KEY,g);if(a)CG.sdk.data.setItem(CG_AUTH,a)}catch(e){}}
+function cgRestore(){if(!CG.sdk||!CG.sdk.data)return false;let changed=false;
+  try{const cg=CG.sdk.data.getItem(KEY),loc=lsGet(KEY);if(cg){let a=0,b=0;try{a=JSON.parse(cg).last||0}catch(e){}try{b=loc?JSON.parse(loc).last||0:0}catch(e){}if(!loc||a>b+1000){lsSet(KEY,cg);changed=true}}
+    const au=CG.sdk.data.getItem(CG_AUTH);if(au&&!lsGet(CG_AUTH)){lsSet(CG_AUTH,au);changed=true}}catch(e){}return changed}
+async function cgInit(){if(!CG_MODE)return;const sdk=window.CrazyGames&&window.CrazyGames.SDK;if(!sdk)return;
+  try{await sdk.init();CG.sdk=sdk;CG.ok=true}catch(e){return}
+  if(cgRestore()){NOSAVE=true;location.reload();return}
+  cgCall(k=>k.game.loadingStart());const wait=setInterval(()=>{if($('boot').classList.contains('map')||!BOOT){clearInterval(wait);cgCall(k=>k.game.loadingStop())}},200);
+  // gameplayStart quand on joue, gameplayStop sur l'écran d'accueil, la pause anti-AFK ou une pub
+  setInterval(()=>{const p=!BOOT&&!AFK&&!ADP&&!document.hidden;if(p!==CG.play){CG.play=p;cgCall(k=>p?k.game.gameplayStart():k.game.gameplayStop())}cgMirror(false)},500);
+  addEventListener('visibilitychange',()=>{if(document.hidden)cgMirror(true)})}
 // ===== Vidéos récompensées (30 s) : Google H5 Games Ads (adBreak) si la régie est branchée, sinon un espace pub de 30 s =====
 const AD_SEC=30;let adBusy=false;
-function watchAd(why){return new Promise(res=>{if(adBusy)return res(false);adBusy=true;const done=ok=>{adBusy=false;$('adov').hidden=true;res(ok)};
+function watchAd(why){return new Promise(res=>{if(adBusy)return res(false);adBusy=true;const done=ok=>{adBusy=false;adPause(false);$('adov').hidden=true;res(ok)};
+  if(CG_MODE){// CrazyGames : seulement leurs pubs, jeu en pause et son coupé pendant la vidéo, récompense sur adFinished
+    if(!CG.ok){toast('Vidéo indisponible pour l\'instant, réessaie plus tard');return done(false)}
+    try{CG.sdk.ad.requestAd('rewarded',{adStarted:()=>adPause(true),adFinished:()=>done(true),adError:e=>{toast(e&&e.code==='unfilled'?'Pas de vidéo disponible pour l\'instant, réessaie plus tard':'La vidéo n\'a pas pu se lancer');done(false)}})}catch(e){done(false)}return}
+  adPause(true);
   if(typeof window.adBreak==='function'){let got=false;try{window.adBreak({type:'reward',name:why,beforeReward:show=>show(),adViewed:()=>{got=true},adDismissed:()=>{},adBreakDone:()=>done(got)});return}catch(e){}}
   const o=$('adov'),t0=Date.now();o.hidden=false;$('adwhy').textContent='Récompense : '+why;$('adx').textContent='Fermer sans récompense';
   const tick=()=>{if(o.hidden)return;const left=Math.max(0,AD_SEC-(Date.now()-t0)/1000);$('adbar').style.width=Math.round((1-left/AD_SEC)*100)+'%';
@@ -4733,7 +4764,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){hidT=Date.
 for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
   if(!AFK&&!BOOT&&!document.hidden&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;afkT=Date.now();$('afk').hidden=false;save()}
-  if(!BOOT&&!AFK)update(dt);draw();requestAnimationFrame(loop)}
+  if(!BOOT&&!AFK&&!ADP)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
 let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
@@ -4753,6 +4784,7 @@ function lbErr(e){const m=String(e&&e.message||e||'');
   return m||'Erreur inconnue'}
 function lbRedraw(){if(pid==='lb'&&!$('panel').hidden)renderPanel();const w=$('lbw');if(w)w.innerHTML=lbMini();const a=$('pacc');if(a)a.innerHTML=paccHTML()}
 function paccHTML(){if(!SB)return '<b>Hors ligne</b>';
+  if(CG_MODE&&!LB.user)return '<b>'+(LB.anon==='busy'?'Connexion…':'Invité')+'</b>';
   return LB.user?`<b>${lbEsc(LB.pseudo)}</b><button class="chunky alt" type="button" data-lbo>Mon compte</button>`:'<b>Invité</b><button class="chunky" type="button" data-lbo>Se connecter</button>'}
 // ---- Visite de la rue d'un autre joueur (lecture seule) et pourboire en partant
 async function visitOther(ps){if(!SB||!ps)return;if(VISIT||JOB||INSIDE){toast('Termine d\'abord ce que tu fais');snd('err');return}
@@ -4896,12 +4928,23 @@ function ausHTML(){const m=S.meta;return `<button type="button" data-au="snd" cl
   `<button type="button" data-au="mus" class="${m.mus?'':'off'}" aria-pressed="${!m.mus}" aria-label="${m.mus?'Couper la musique':'Remettre la musique'}" title="${m.mus?'Couper la musique':'Remettre la musique'}">🎵</button>`+
   `<button type="button" data-fbo aria-label="Laisser une remarque" title="Laisser une remarque (bug, idée...)">💬</button>`+
   `<button type="button" data-lang style="font:700 15px var(--display,sans-serif)" aria-label="Langue · Language" title="${window.HT_LANG==='en'?'Français':'English'}">${window.HT_LANG==='en'?'FR':'EN'}</button>`}
+// pseudos visibles par tous : quelques mots interdits (fr / en), vérifiés sans tenir compte des chiffres et séparateurs
+const BADW=['merde','pute','putain','salope','connard','connasse','encule','nique','batard','pd','nazi','hitler','fuck','shit','bitch','cunt','dick','pussy','nigg','fag','whore','slut','rape','porn','sex'];
+const pseudoBad=p=>{const t=String(p).toLowerCase().replace(/[0-9_-]/g,'');return BADW.some(w=>t.includes(w))};
+// CrazyGames : un compte anonyme est créé tout seul (pseudo PigeonNNNN), sans écran de connexion
+async function lbAnon(){if(!SB||LB.user||LB.anon==='busy')return;LB.anon='busy';lbRedraw();
+  for(let k=0;k<5;k++){const ps='Pigeon'+(1000+Math.floor(Math.random()*90000));let r;
+    try{r=await SB.auth.signInAnonymously({options:{data:{pseudo:ps}}})}catch(e){r={error:e}}
+    if(!r.error&&r.data&&r.data.session){LB.anon='ok';lbSetUser(r.data.session.user);await cloudSync();lbLoad();return}
+    if(r.error&&!/duplicate|unique|database/i.test(r.error.message||''))break}
+  LB.anon='off';lbRedraw()}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
 async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.ready||(typeof AFK!=='undefined'&&AFK))return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
 async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
   if(!/^[A-Za-z0-9_-]{3,16}$/.test(p))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
+  if(up&&pseudoBad(p))return bad('Ce pseudo n\'est pas autorisé');
   if(m.length<6)return bad('Mot de passe : 6 caractères minimum');
   LB.busy=true;LB.msg='';lbRedraw();let r;
   try{r=up?await SB.auth.signUp({email:lbMail(p),password:m,options:{data:{pseudo:p}}}):await SB.auth.signInWithPassword({email:lbMail(p),password:m})}catch(e){r={error:e}}
@@ -4927,6 +4970,7 @@ async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim()
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
   if(n===LB.pseudo){LB.edit=false;return lbRedraw()}
   if(!/^[A-Za-z0-9_-]{3,16}$/.test(n))return bad('Pseudo : 3 à 16 caractères, lettres, chiffres, - ou _');
+  if(pseudoBad(n))return bad('Ce pseudo n\'est pas autorisé');
   LB.busy=true;lbRedraw();let r;try{r=await SB.rpc('set_pseudo',{p_pseudo:n})}catch(e){r={error:e}}
   if(!r.error&&r.data==='ok'){try{const u=await SB.auth.updateUser({data:{pseudo:n}});if(u.data&&u.data.user)lbSetUser(u.data.user)}catch(e){}LB.pseudo=n;S.meta.name=n;save()}
   LB.busy=false;
@@ -4935,9 +4979,10 @@ async function lbRename(){if(!SB||!LB.user||LB.busy)return;const n=LB.f.n.trim()
   LB.edit=false;LB.f.n='';LB.msg='Tu t\'appelles maintenant '+n+' !';LB.err=false;snd('coin');lbLoad()}
 function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répond pas. Vérifie ta connexion internet puis recharge la page.</p>';
   let h='';
-  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b>${LB.edit?'':` <button class="buy sm" type="button" data-act="lb:edit:1">Changer de pseudo</button>`}<small>${lbLogin()&&lbLogin()!==LB.pseudo.toLowerCase()?`Pour te connecter, utilise toujours ton identifiant : <b>${lbEsc(lbLogin())}</b>. `:''}${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div><button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button></div>`+
+  if(LB.user)h+=`<div class="row"><div class="info"><b>Connecté : ${lbEsc(LB.pseudo)}</b>${LB.edit?'':` <button class="buy sm" type="button" data-act="lb:edit:1">Changer de pseudo</button>`}<small>${lbLogin()&&lbLogin()!==LB.pseudo.toLowerCase()?`Pour te connecter, utilise toujours ton identifiant : <b>${lbEsc(lbLogin())}</b>. `:''}${LB.ready?`Ta partie est sauvegardée dans ton compte et ton total gagné à vie (${lbf(lbLife())}) est envoyé chaque minute.`:'Synchronisation de ta sauvegarde...'}</small></div>${CG_MODE?'':`<button class="buy sm red" type="button" data-act="lb:out" ${LB.busy?'disabled':''}>Déconnexion</button>`}</div>`+
     (()=>{const me=(LB.rows||[]).find(r=>r.is_me),pv=!!(me&&me.private);return `<div class="row"><div class="info"><b>${pv?'🔒 Rue privée':'🏠 Rue ouverte aux visites'}</b><small>${pv?'Personne ne peut visiter ta rue ni te laisser de pourboire.':'Les autres joueurs peuvent visiter ta rue depuis le classement et te laisser un pourboire.'}</small></div><button class="buy sm" type="button" data-act="lb:priv">${pv?'Ouvrir':'Rendre privée'}</button></div>`})()+
     (LB.edit?`<div class="row lbf"><label>Nouveau pseudo<input class="lbin" data-f="n" maxlength="16" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.n)}"></label><small>C'est le nom affiché dans le classement. Pour te connecter, ton identifiant reste ${lbEsc(lbLogin())}.</small><div class="bets"><button class="chunky alt" type="button" data-act="lb:edit:0">Annuler</button><button class="chunky" type="button" data-act="lb:ren" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':'Valider'}</button></div></div>`:'');
+  else if(CG_MODE)h+=`<div class="row"><div class="info"><b>${LB.anon==='busy'?'Connexion au serveur…':'Mode invité'}</b><small>${LB.anon==='busy'?'Ton compte de joueur est en cours de création.':'Le serveur ne répond pas : ta partie est sauvegardée sur cet appareil. Le classement et les visites reviendront à la prochaine connexion.'}</small></div></div>`;
   else{const up=LB.mode==='signup';
     h+=tabs(LB.mode,[['login','Connexion'],['signup','Créer un compte']],'lb:mode')+
     `<div class="row lbf"><label>Pseudo<input class="lbin" data-f="p" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.p)}"></label>`+
@@ -4983,10 +5028,11 @@ $('btnFb').addEventListener('click',()=>{FB.res='';openPanel('fb')});
 function updLvl(){const e=$('hlvl');if(e)e.textContent='Niv. '+plLevel().l}
 $('hlvl').addEventListener('click',()=>{if(VISIT||JOB)return;ptab='succes';openPanel('plus')});
 setInterval(updLvl,1000);updLvl();
-if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else lbRedraw()}).catch(()=>{});
+if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else if(CG_MODE)lbAnon();else lbRedraw()}).catch(()=>{if(CG_MODE)lbAnon()});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
 setInterval(()=>{lbSend();cloudPush()},60000);setInterval(()=>{claimTips(false);claimHeists(false)},20000);
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
+cgInit();
 bootLoading();
 updHud();
 if(!S.total&&!tutoOn())setTimeout(()=>toast('Bienvenue dans la rue ! Ramasse les déchets et vide ton sac dans les poubelles vertes.'),400);

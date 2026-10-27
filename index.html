@@ -522,7 +522,7 @@ const CITIES=[
  {k:'paris',n:'Paris',cur:'€',m:1,sky:'#9fd8f0',back:'#d9c9e8',grass:'#8bd17c'},
  {k:'london',n:'Londres',cur:'£',m:1.6,sky:'#b9c6d2',back:'#cfd3da',grass:'#7fb069'},
  {k:'ny',n:'New York',cur:'$',m:2.6,sky:'#ffd6a5',back:'#d8d4e8',grass:'#95d5b2'},
- {k:'tokyo',n:'Tokyo',cur:'¥',m:4,sky:'#ffc8dd',back:'#f8edeb',grass:'#80ed99'},
+ {k:'tokyo',n:'Tokyo',cur:'¥',m:6,sky:'#ffc8dd',back:'#f8edeb',grass:'#80ed99'},
 ];
 const UP=[
  {k:'pince',n:'Pince télescopique',d:'Attrape les déchets de plus loin',base:15,max:10},
@@ -936,7 +936,7 @@ const pickR=()=>34+14*S.up.pince, cap=()=>4+2*S.up.sac, speed=()=>170*(1+(S.ride
       shiftCount=sh=>{normStaff();return S.staff.filter(st=>st.sh===sh).length},
       canHire=sh=>S.local&&shiftCount(sh)<SHIFT[sh].cap,
       passive=()=>(distInc()+shopInc())*lynx()+rentInc()+towerInc(),
-      autoRate=()=>(passive()+empRate()*lynx())*gm()*towerM()*liftM(),
+      autoRate=()=>(passive()+empRate()*lynx())*gm()*towerM()*driftM()*liftM(),
       wageOf=i=>Math.round(12*(1+.25*S.emUp.form+.2*S.emUp.chariot)*(trOf(i)==='flemmard'?.5:1)*(1-.08*S.meta.perk.emp)*cm()),
       wages=()=>{let w=S.manager?C(40):0;for(let i=0;i<S.emp;i++)w+=wageOf(i);return w},
       strikeLim=()=>S.staff.some(s=>s.tr==='syndicaliste')?12:25;
@@ -959,7 +959,7 @@ const tierOf=l=>l>=10?4:l>=7?3:l>=4?2:1;
 const qgTier=()=>S.secu&&shopLv()>=20?4:S.secu?3:(S.manager||S.emp>=3)?2:1;
 // argent à gagner dans la ville pour passer à la suivante (1er Pigeon d'Or) : 200 k€ à Paris, 2 M£ à Londres
 const PGB=()=>[200000,2e6,2e7,2e8][Math.min(CURI(),3)],pgAll=()=>Math.floor(Math.sqrt(S.total/PGB())),pg=()=>Math.max(0,pgAll()-(S.pgClaimed||0));
-const netRate=()=>Math.max(0,(passive()+empRate(true)*lynx())*CITY().m*(1+.1*S.meta.perk.cash)-wages()/60);
+const netRate=()=>Math.max(0,(passive()+empRate(true)*lynx())*CITY().m*(1+.1*S.meta.perk.cash)*towerM()*driftM()-wages()/60);
 const fx=i=>CMS[i],fmtIn=(n,i)=>n.toFixed(2).replace('.',',')+' '+CITIES[i].cur,gerRate=()=>S.meta.worlds.reduce((a,w)=>a+w.rate/fx(w.i)*w.g,0);
 const poCost=()=>Math.round(25*Math.pow(1.5,S.meta.poBought));
 const capCost=()=>Math.round(10*Math.pow(1.6,S.capBought)),capAmt=()=>C(1500);
@@ -1182,7 +1182,7 @@ const closestCop=(x,y)=>{let b=null,bd=1e9;for(const c of cops)if(c.active){cons
 // hors ligne
 const AFK_MAX=600;// anti-AFK : 10 minutes maximum de gains hors jeu, et pause du jeu après 10 minutes sans toucher à rien
 function catchUp(el,away){
-  const base=CITY().m*(1+.1*S.meta.perk.cash);
+  const base=CITY().m*(1+.1*S.meta.perk.cash)*towerM()*driftM();
   let g=el*passive()*base;
   if(S.manager&&!S.pay.strike)g+=el*(empRate(true)*lynx()*base-wages()/60);
   g=Math.max(0,g);
@@ -3304,6 +3304,9 @@ const DR_PARTS=[['jantes','Jantes forgées','Plus légères : meilleure accélé
   ['amort','Amortisseurs coilovers','Plus stable : tu ralentis moins hors de la route',60000],['moteur','Moteur gonflé','Vitesse de pointe plus haute',120000],
   ['turbo','Turbo + nitro','+1 nitro par course, à chaque niveau',90000],['frein','Frein à main hydraulique','Mini-turbo plus fort à la sortie des drifts',40000]];
 const DR_LV=3,DR_CAR=400000;
+// bonus permanent de la rue de Tokyo (l'équivalent de la Pigeon Tower) : +8 % par course d'entraînement gagnée, +16 % pour la légendaire, jusqu'à +10 % selon la préparation de la voiture : x1,5 au maximum
+function driftM(){if(CK()!=='tokyo'||!S.drift)return 1;const D=S.drift,w=D.wins||{};// fonction (et pas const) : appelée dès le chargement par les gains hors-jeu
+  return 1+.08*['r1','r2','r3'].filter(k=>w[k]).length+(D.done?.16:0)+.1*Math.min(1,Object.values(D.up||{}).reduce((a,l)=>a+(+l||0),0)/18)}// 6 pièces x 3 niveaux
 const DR_RACES=[
   {k:'r1',n:'Sprint de Daikoku',rv:'Kenji · Silvia S15',col:'#f8f9fa',sp:88,len:2600,corners:8,fee:10000,prize:30000,ps:180,bg:'daikoku'},
   {k:'r2',n:'Touge d\'Hakone',rv:'Ryō · RX-7',col:'#ffd23f',sp:100,len:3000,corners:11,fee:30000,prize:90000,ps:420,bg:'touge'},
@@ -3465,7 +3468,7 @@ function driftGameHTML(){const G=DRG;if(!G)return '';return `<div class="jbar"><
   `<div style="display:flex;justify-content:center"><canvas id="drcv" style="width:100%;max-width:480px;aspect-ratio:3/2;border:3px solid var(--ink);border-radius:12px;touch-action:none"></canvas></div>`+
   `<div class="drpad"><button class="chunky alt" type="button" data-dk="l">◀</button><button class="chunky alt" type="button" data-dk="b">Frein</button><button class="chunky alt" type="button" data-dk="h">Drift</button><button class="chunky" type="button" id="drnit" data-act="dr:nitro">NITRO ×${G.nitro}</button><button class="chunky alt" type="button" data-dk="r">▶</button></div>`}
 function drEnd(win,why){const G=DRG;if(!G)return;DRG=null;const r=G.r,D=drS();let prize=0,first=false;
-  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.5);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize}
+  if(win){first=!D.wins[r.k];D.wins[r.k]=1;S.meta.drWins=(S.meta.drWins||0)+1;prize=drPrize(r)*(first?1:.5);if(r.k==='legend'){D.done=1;S.meta.legendWin=1;S.meta.gold+=5}S.cash+=prize;S.total+=prize;S.meta.life+=prize;if(first)setTimeout(()=>toast('🏁 Bonus de rue de Tokyo : x'+driftM().toFixed(2).replace('.',',')+' sur tes revenus auto'),1200)}
   pid='driftend';parg={win,why,r,prize,first,time:G.t};$('panel').hidden=false;renderPanel();if(win){snd('legend');burst(innerWidth/2,innerHeight/3,r.k==='legend'?60:30,r.k==='legend'?['💴','🏆','🎉','✨','🏁']:['🏁','💴','✨'],280)}else snd('fail');save();updHud()}
 // la voiture de drift, de profil (aperçu au garage et voitures garées à Daikoku)
 function drawDriftCar(x,y,s,lv){lv=lv||{};cx.save();cx.translate(x,y);cx.scale(s,s);cx.lineWidth=3;cx.strokeStyle=INK;const low=lv.amort?4:0;
@@ -3490,6 +3493,7 @@ function drawDaikoku(lit){const {x,w}=DAIKOKU,dk=darkness();cx.save();cx.lineWid
   cx.restore()}
 // panneaux
 function driftHTML(){const D=drS();let h='<p class="lead">Daikoku PA, le rendez-vous des pilotes clandestins de Tokyo. Pas de bourse ici : l\'argent se gagne sur le bitume. Achète ta voiture, prépare-la, gagne les 3 courses d\'entraînement, puis défie <b>le Roi du Drift</b> sur la course légendaire du Mont Fuji.</p>';
+  {const m=driftM();h+=`<div class="row" style="display:block;background:#fff3b0"><b>Bonus de rue : x${m.toFixed(2).replace('.',',')} sur tes revenus auto</b><small style="display:block">Chaque course d'entraînement gagnée : +8 %. La course légendaire : +16 %. Préparation de la voiture : jusqu'à +10 %. Maximum x1,5.</small></div>`}
   h+='<div class="sec">Ta voiture de drift'+ib('drift')+'</div>';
   if(!D.car)return h+`<div class="row"><canvas id="drcar" style="width:150px;height:70px;flex:0 0 auto"></canvas><div class="info"><b>Pigeon 86 « Tofu »</b><small>Une vieille propulsion légère, parfaite pour drifter. Il te faut une voiture pour courir.</small></div><button class="buy" type="button" data-act="dr:car" data-cost="${C(DR_CAR)}" ${S.cash<C(DR_CAR)?'disabled':''}>${fmt(C(DR_CAR))}</button></div>`;
   const st=drStats(),bar=(n,v,mx)=>`<div class="drst"><span>${n}</span><i><b style="width:${Math.round(v/mx*100)}%"></b></i></div>`;

@@ -4600,11 +4600,18 @@ function loginClaim(){const L=S.meta.login||{};if(L.last===dayKey())return;const
   if(n===7){S.meta.gold++;toast('Jour 7 : +1 Pigeon d\'Or ! Le calendrier recommence demain.')}else{const a=loginAmt(n);S.cash+=a;S.total+=a;S.meta.life+=a;toast('Récompense de connexion, jour '+n+' : +'+fmt(a))}snd('legend');updHud();save()}
 let dailyShown=false;
 setInterval(dailyTick,1000);
-let lastInput=Date.now(),AFK=false;
-function afkWake(){lastInput=Date.now();if(AFK){AFK=false;$('afk').hidden=true;last=performance.now()}}
+let lastInput=Date.now(),AFK=false,afkT=0,hidT=0;
+// gains pendant la pause : jeu en pause (inactif) ou onglet caché, avec le bonus « Sommeil rentable » (+10 min par niveau)
+const afkCap=()=>AFK_MAX*(1+S.meta.perk.dodo);
+function afkWake(){lastInput=Date.now();if(AFK){AFK=false;$('afk').hidden=true;last=performance.now();
+  // les 10 premières minutes ont déjà été jouées en direct avant la pause : le reste du plafond est versé au réveil
+  if(afkT&&!VISIT&&!BOOT)catchUp(Math.min(afkCap()-AFK_MAX,(Date.now()-afkT)/1000),false);afkT=0;updHud();save()}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){hidT=Date.now();return}
+  if(hidT&&!BOOT&&!VISIT){const paused=AFK&&afkT,el=(Date.now()-(paused?afkT:hidT))/1000;if(el>5){if(AFK){AFK=false;$('afk').hidden=true}afkT=0;catchUp(Math.min(paused?afkCap()-AFK_MAX:afkCap(),el),false);updHud();save()}}
+  hidT=0;lastInput=Date.now();last=performance.now()});
 for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);
 function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(!AFK&&!BOOT&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;$('afk').hidden=false;save()}
+  if(!AFK&&!BOOT&&!document.hidden&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;afkT=Date.now();$('afk').hidden=false;save()}
   if(!BOOT&&!AFK)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';

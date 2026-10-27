@@ -1351,15 +1351,15 @@ const STEPS=[
  {k:'drcar',only:3,h:"Daikoku PA (E), au bout de la rue.",cost:()=>C(DR_CAR),n:'Acheter la voiture de drift',ok:()=>!!drS().car,tip:'drift',w:'Va à Daikoku PA, le parking des pilotes au bout de la rue, appuie sur E et achète la Pigeon 86.',acts:['dr:car']},
  {k:'drtrain',only:3,h:"Daikoku PA › Courses d'entraînement.",n:'Gagner les 3 courses d\'entraînement',ok:()=>drTrainWins()>=3,w:'Gagne le sprint de Daikoku, le touge d\'Hakone puis le Wangan de nuit. Conduis avec ← → (ou Q D) et drifte dans les virages pour gagner un mini-turbo.',acts:['dr:race:r1','dr:race:r2','dr:race:r3']},
  {k:'drup',only:3,h:"Daikoku PA › Préparer la voiture.",cost:()=>Math.min(...DR_PARTS.map(p=>drPartCost(p,drLv(p[0])))),n:'Améliorer une pièce de la voiture de drift',ok:()=>drUpTot()>=1,w:'À Daikoku PA (E) : jantes, pneus, amortisseurs, moteur… chaque pièce rend la Pigeon 86 plus rapide ou plus facile à faire drifter.'},
- {k:'garage',only:3,h:"Business › Commerces › Garage Tuning.",cost:()=>shopCost(SHOPS.find(x=>x.k==='garage')||SHOPS[0]),n:'Racheter le Garage Tuning',ok:()=>(S.shops.garage||0)>0,w:'Menu Business › Commerces : rachète le Garage Tuning Pneu-Pneu. Il te verse un revenu et débloque la customisation de tes véhicules.'},
- {k:'vcmod',only:3,h:"Garage Tuning (E) › Customisation.",n:'Customiser un de tes véhicules',ok:()=>Object.keys(S.meta.vc||{}).length>0,w:'Entre au Garage Tuning (E) : change la peinture, les jantes, les stickers ou le néon d\'un véhicule, ou achète un nouveau modèle.'},
+ {k:'garage',only:3,opt:1,h:"Business › Commerces › Garage Tuning.",cost:()=>shopCost(SHOPS.find(x=>x.k==='garage')||SHOPS[0]),n:'Racheter le Garage Tuning',ok:()=>(S.shops.garage||0)>0,w:'Menu Business › Commerces : rachète le Garage Tuning Pneu-Pneu. Il te verse un revenu et débloque la customisation de tes véhicules.'},
+ {k:'vcmod',only:3,opt:1,h:"Garage Tuning (E) › Customisation.",n:'Customiser un de tes véhicules',ok:()=>Object.keys(S.meta.vc||{}).length>0,w:'Entre au Garage Tuning (E) : change la peinture, les jantes, les stickers ou le néon d\'un véhicule, ou achète un nouveau modèle.'},
  {k:'legend',only:3,h:"Daikoku PA › La course légendaire.",n:'Gagner la course légendaire du Mont Fuji',ok:()=>!!drS().done,tip:'drift',w:'Défie le Roi du Drift sur les pentes du Fuji. Le vainqueur repart avec le pactole : c\'est la fin du jeu !',acts:['dr:race:legend']},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
   return L.length>1?L.slice(0,-1).join(', ')+' ou '+L[L.length-1]:L[0]};
 const bourseOpen=()=>CI()===2;// la Bourse n'existe qu'à New York (à Tokyo, ce sont les courses clandestines)
-const stepsFor=ci=>STEPS.filter(x=>(x.c||0)<=ci&&(x.only==null||x.only===ci)&&!(x.skip&&x.skip.includes(ci))&&(!x.need||(CITY_SHOPS[CITIES[ci].k]||[]).includes(x.need)));// pas d'étape pour une boutique absente de la ville
+const stepsFor=(ci,opt)=>STEPS.filter(x=>!x.opt===!opt&&(x.c||0)<=ci&&(x.only==null||x.only===ci)&&!(x.skip&&x.skip.includes(ci))&&(!x.need||(CITY_SHOPS[CITIES[ci].k]||[]).includes(x.need)));// pas d'étape pour une boutique absente de la ville ; opt : les étapes facultatives (elles ne bloquent rien et ne comptent pas)
 const stepW=x=>typeof x.w==='function'?x.w():x.w;
 const stepDone=x=>{try{return !!x.ok()}catch(e){return false}};
 // une étape est ouverte si elle est déjà faite ou si toutes les précédentes le sont
@@ -1370,7 +1370,10 @@ const lockByKey=k=>{const e=stepState().find(e=>e.x.k===k);return e&&!e.o?e:null
 const lockText=e=>{const c=stepCur();return `🔒 Étape ${e.i+1} : d'abord « ${c?c.x.n:''} »`};
 const featList=ci=>stepsFor(ci).map(x=>[x.n,stepDone(x)]);
 const featMiss=ci=>featList(ci).filter(f=>!f[1]);
-function stepHTML(i){const L=stepsFor(CI());
+// étapes facultatives de la ville, affichées à part
+const optHTML=()=>{const O=stepsFor(CI(),1);return O.length?'<div class="sec">Facultatif</div>'+O.map(x=>`<div class="obj${stepDone(x)?' ok':''}"><span class="ck">${stepDone(x)?'✓':''}</span><span>${x.n} <small style="opacity:.7">· ${x.h}</small></span></div>`).join(''):''};
+function stepHTML(i){return stepHTML0(i)+optHTML()}
+function stepHTML0(i){const L=stepsFor(CI());
   if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné ${fmt(PGB())} ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
   const x=L[i],need=x.cost?x.cost():0;return `<div class="tip"><h3>Étape ${i+1} / ${L.length} : ${x.n}</h3></div><p class="lead">${stepW(x)}</p>`+
     (need>S.cash?`<div class="row" style="display:block;background:#fff3b0"><b>Il te faut ${fmt(need)} (tu as ${fmt(S.cash)})</b><small style="display:block">Dans Business, tu peux ${passiveTip()} : ça rapporte de l'argent tout seul, même quand tu ne fais rien. Tu peux aussi ramasser des déchets, réparer des objets et refaire tes CDD.</small></div>`:'')+(x.tip?tipHTML(x.tip):'')+`<button class="chunky" type="button" data-act="close">C'est parti !</button>`}

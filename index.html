@@ -673,7 +673,7 @@ function anaInfoHTML(l){const c=anaCost(l),st=l===1?[
 function bourseHTML(mode){let h='';
       {const X=EXCH[CK()]||EXCH.paris,L=STOCKS_NOW(),iv=L.reduce((a,s)=>{const mk=S.mkt[s.k];return a+(mk?mk.p/(s.p0*cm()):1)},0)/L.length*1000,ich=L.reduce((a,s)=>{const mk=S.mkt[s.k],h0=mk&&mk.h[0]||mk&&mk.p;return a+(mk?(mk.p/h0-1):0)},0)/L.length*100;
         h+=`<div class="stk" style="background:#22223b;color:#fff6df"><div><b>${X.n}</b><small style="display:block;font-size:12px;opacity:.8">${X.d}</small></div><div class="pr">${X.idx}<small style="display:block;font-size:13px" class="${ich>=0?'up':'dn'}">${Math.round(iv).toLocaleString('fr-FR')} pts · ${ich>=0?'+':''}${ich.toFixed(1).replace('.',',')} %</small></div></div>`+
-          '<p class="lead">Les cours bougent toutes les 2 secondes et suivent des tendances cachées de 30 à 80 s. La rue les influence aussi : la pluie dope les valeurs "pluie", une manif fait grimper la nourriture, la nuit affole les cryptos. Paie un analyste pour savoir où ça va.</p>'+(mode==='trade'?'':anaHTML())+'<div class="sec">Actions'+ib('bourse')+'</div>'}
+          '<p class="lead">Les cours bougent toutes les 2 secondes et suivent des tendances cachées de 30 à 80 s. La rue les influence aussi : la pluie dope les valeurs "pluie", une manif fait grimper la nourriture, la nuit affole les cryptos. Paie un analyste pour savoir où ça va.</p>'+(mode==='trade'?'':anaHTML())+'<div class="sec">Actions'+ib('bourse')+'</div>'+(S.lastSale?(()=>{const L=S.lastSale,R=S.realized||0;return `<div class="stk" style="background:${L.pl>=0?'#e3f9e5':'#fde2e4'}"><div><b>Dernière vente : ${L.n}</b><small style="display:block;font-size:12px;opacity:.75">${L.q} actions · plus-values réalisées au total : <span class="${R>=0?'up':'dn'}">${R>=0?'+':''}${fmt(R)}</span></small></div><div class="pr"><span class="${L.pl>=0?'up':'dn'}">${L.pl>=0?'+':''}${fmt(L.pl)}</span><small style="display:block;font-size:12px" class="${L.pl>=0?'up':'dn'}">${L.pct>=0?'+':''}${L.pct.toFixed(1).replace('.',',')} %</small></div></div>`})():'')}
       for(const s of STOCKS_NOW()){const mk=S.mkt[s.k],st=S.stk[s.k],h0=mk.h[0]||mk.p,ch=(mk.p/h0-1)*100,val=st.q*mk.p,pl=val-st.cost,mxq=Math.floor(S.cash/mk.p);
         h+=`<div class="stk"><div><b>${s.n}</b><small style="display:block;font-size:12px;opacity:.75">${s.d} · ${st.q?`${st.q} actions · ${fmt(val)} · <span class="${pl>=0?'up':'dn'}">${pl>=0?'+':''}${fmt(pl)}</span>`:'Aucune action'}</small></div>`+
           `<div class="pr">${fmt2(mk.p)}<small style="display:block;font-size:12px" class="${ch>=0?'up':'dn'}">${ch>=0?'+':''}${ch.toFixed(1).replace('.',',')} %</small></div>`+
@@ -1350,7 +1350,10 @@ const STEPS=[
    w:'Prépare le casse sur l\'ordinateur du bar (équipe, matériel), fais le repérage auprès du vigile du NYSE, puis lance le casse : piratage, coffre et fuite. Réussis-le pour débloquer Tokyo.',acts:['ws:']},
  {k:'drcar',only:3,h:"Daikoku PA (E), au bout de la rue.",cost:()=>C(DR_CAR),n:'Acheter la voiture de drift',ok:()=>!!drS().car,tip:'drift',w:'Va à Daikoku PA, le parking des pilotes au bout de la rue, appuie sur E et achète la Pigeon 86.',acts:['dr:car']},
  {k:'drtrain',only:3,h:"Daikoku PA › Courses d'entraînement.",n:'Gagner les 3 courses d\'entraînement',ok:()=>drTrainWins()>=3,w:'Gagne le sprint de Daikoku, le touge d\'Hakone puis le Wangan de nuit. Conduis avec ← → (ou Q D) et drifte dans les virages pour gagner un mini-turbo.',acts:['dr:race:r1','dr:race:r2','dr:race:r3']},
+ {k:'drup',only:3,h:"Daikoku PA › Préparer la voiture.",cost:()=>Math.min(...DR_PARTS.map(p=>drPartCost(p,drLv(p[0])))),n:'Améliorer une pièce de la voiture de drift',ok:()=>drUpTot()>=1,w:'À Daikoku PA (E) : jantes, pneus, amortisseurs, moteur… chaque pièce rend la Pigeon 86 plus rapide ou plus facile à faire drifter.'},
  {k:'legend',only:3,h:"Daikoku PA › La course légendaire.",n:'Gagner la course légendaire du Mont Fuji',ok:()=>!!drS().done,tip:'drift',w:'Défie le Roi du Drift sur les pentes du Fuji. Le vainqueur repart avec le pactole : c\'est la fin du jeu !',acts:['dr:race:legend']},
+ {k:'garage',only:3,h:"Business › Commerces › Garage Tuning.",cost:()=>shopCost(SHOPS.find(x=>x.k==='garage')||SHOPS[0]),n:'Racheter le Garage Tuning',ok:()=>(S.shops.garage||0)>0,w:'Menu Business › Commerces : rachète le Garage Tuning Pneu-Pneu. Il te verse un revenu et débloque la customisation de tes véhicules.'},
+ {k:'vcmod',only:3,h:"Garage Tuning (E) › Customisation.",n:'Customiser un de tes véhicules',ok:()=>Object.keys(S.meta.vc||{}).length>0,w:'Entre au Garage Tuning (E) : change la peinture, les jantes, les stickers ou le néon d\'un véhicule, ou achète un nouveau modèle.'},
 ];
 // ce qui peut rapporter de l'argent tout seul, selon ce que le joueur a déjà débloqué
 const passiveTip=()=>{const L=['acheter d\'autres distributeurs'];if(S.emp>=1)L.push('embaucher d\'autres employés');if(Object.values(S.shops).some(v=>v>0))L.push('améliorer tes boutiques');
@@ -1664,6 +1667,10 @@ function applyFoodSkin(){const f=FSK();for(const k in f.ing)ING[k]=f.ing[k];for(
 const KB_LINES=['Wesh, un kebab {k} !','Bonjour jeune homme, je voudrais un kebab {k}.',"Vite, j'ai pas le temps : kebab {k} !",'Pour moi ce sera un kebab {k}, merci.','Un kebab {k}. Et que ça saute !'];
 try{applyFoodSkin()}catch(e){}
 const GROCERY=[['Baguette',110],['Lait',90],['Pâtes',130],['Chips',240],['Camembert',270],['Pizza surgelée',350],['Croquettes pour chat',680],['Papier toilette x12',560],['Mousse au chocolat',190],['Jus d\'orange',220],['Bananes',160],['Café moulu',420],['Œufs x6',230],['Lessive',890]];
+const GROCERY_C={paris:GROCERY,
+  london:[['Sachets de thé',250],['Haricots à la sauce tomate',95],['Crumpets',120],['Marmite',340],['Cheddar',290],['Bâtonnets de poisson',310],['Shortbread',180],['Scones',150],['Marmelade d\'orange',210],['Lait',90],['Chips au vinaigre',130],['Pâtée pour chat',600],['Papier toilette x9',520],['Ginger beer',140]],
+  ny:[['Beurre de cacahuète',320],['Bagels x4',260],['Céréales',380],['Hot-dogs x8',450],['Ketchup',190],['Préparation à pancakes',280],['Sirop d\'érable',690],['Mac & cheese',150],['Soda XXL',210],['Donuts x6',540],['Bacon',470],['Pizza surgelée',520],['Croquettes pour chien',890],['Papier toilette x24',1190]],
+  tokyo:[['Onigiri',130],['Ramen instantanés',180],['Riz japonais 5 kg',2190],['Sauce soja',260],['Thé matcha',640],['Mochi',320],['Pocky',150],['Tofu',90],['Natto x3',110],['Bento',540],['Pâte de miso',380],['Algues nori',290],['Saké',1280],['Melon pan',160]]};// le supermarché vend les produits de la ville
 const CA_LINES=['Bonjour ! Voilà.','Vous prenez la carte ? Non ? Tant pis, voilà du liquide.',"Attendez, j'ai la monnaie... ah non.",'C\'est tout pour moi, merci.','Faites vite, mon parcmètre expire !'];
 const COINS=[1000,500,200,100,50,20,10];
 const fc=c=>(c/100).toFixed(2).replace('.',',')+' '+CUR();
@@ -1887,7 +1894,7 @@ function newCust(){const J=JOB,name=pick(CNAMES),wt=J.served+J.fail>0?(J.k==='ba
     J.cust={name,want:['pain','viande',...veg,sauce],line:pick(KB_LINES).replace('{k}',d),pat:pm,pm,build:[],wait:wt}}
   else if(J.k==='bar'){const d=bagPick(J,'drink',DRINKS),pm=Math.max(10,18-J.served*.6);
     J.cust={name,line:d[0],lo:d[1]-2,hi:d[2]+2,lvl:0,pouring:false,wait:wt,spd:Math.min(80,50+J.served*3)*(.9+Math.random()*.25),pat:pm,pm}}
-  else{const n=2+Math.floor(Math.random()*3),its=bagTake(J,'items',GROCERY,n),tot=its.reduce((a,i)=>a+i[1],0);
+  else{const n=2+Math.floor(Math.random()*3),its=bagTake(J,'items'+CK(),GROCERY_C[CK()]||GROCERY,n),tot=its.reduce((a,i)=>a+i[1],0);
     let paid;const bills=[500,1000,2000,5000,10000];
     if(tot%100&&Math.random()<.35){const base=tot-tot%100,b=bills.find(b=>b>base);paid=b+tot%100}else paid=bills.find(b=>b>tot);
     const pm=Math.max(14,28-J.served);
@@ -2837,8 +2844,8 @@ $('pbody').addEventListener('click',e=>{
   if(a==='anainfo'){if(v==='3'){pid='insider';return renderPanel()}pid='anainfo';parg=+v;return renderPanel()}
   if(a==='sell'){const mk=S.mkt[v],st=S.stk[v];if(!st.q)return;S.meta.sells=(S.meta.sells||0)+1;const val=st.q*mk.p,pl=val-st.cost;S.cash+=val;S.meta.bestTrade=Math.max(S.meta.bestTrade,pl);
     if(mk.insT&&pl<=0)mk.insT=0;
-    if(pl>0&&mk.insT&&Math.random()<.2){const f=Math.round(pl*.7);S.cash-=f;mk.insT=0;st.q=0;st.cost=0;S.heat=Math.min(100,S.heat+HEATX*(15));snd('siren');toast('Le gendarme de la Bourse a flairé le délit d\'initié : '+fmt(f)+' de bénéfice confisqué !');return renderPanel()}
-    mk.insT=0;toast((pl>=0?'Vendu avec '+fmt(pl)+' de bénéfice':'Vendu à perte : '+fmt(pl)));snd(pl>=0?'coin':'fail');st.q=0;st.cost=0}
+    if(pl>0&&mk.insT&&Math.random()<.2){const f=Math.round(pl*.7);S.cash-=f;S.lastSale={n:(STOCKS_NOW().find(x=>x.k===v)||{n:v}).n,pl:pl-f,pct:st.cost>0?(pl-f)/st.cost*100:0,q:st.q};S.realized=(S.realized||0)+pl-f;mk.insT=0;st.q=0;st.cost=0;S.heat=Math.min(100,S.heat+HEATX*(15));snd('siren');toast('Le gendarme de la Bourse a flairé le délit d\'initié : '+fmt(f)+' de bénéfice confisqué !');return renderPanel()}
+    mk.insT=0;const pct=st.cost>0?pl/st.cost*100:0;S.lastSale={n:(STOCKS_NOW().find(x=>x.k===v)||{n:v}).n,pl,pct,q:st.q};S.realized=(S.realized||0)+pl;toast((pl>=0?'Vendu avec '+fmt(pl)+' de plus-value':'Vendu à perte : '+fmt(pl))+' ('+(pct>=0?'+':'')+pct.toFixed(1).replace('.',',')+' %)');snd(pl>=0?'coin':'fail');st.q=0;st.cost=0}
   if(a==='biz'){
     if(v==='distup'&&S.distrib>0){if(S.distUp>=10||!pay(distUpCost()))return;S.distUp++;toast('Distributeurs améliorés, niveau '+S.distUp+(S.distUp===3?' : passage en gamme BIO':S.distUp===6?' : passage en gamme LUXE':''))}
     if(v==='distrib'){if(S.distrib>=8||!pay(distCost()))return;S.distrib++;toast('Distributeur installé sur le terrain vague')}
@@ -3048,7 +3055,8 @@ function wsPhase(ph){const G=WSG;G.ph=ph;snd('event');
   if(ph==='vault')Object.assign(G,{t:35,pins:0,miss:0,ph2:0,spd:.8,zone:rnd(10,76),zw:14,msg:'Arrête la molette dans la zone verte : 4 crans pour ouvrir la chambre forte.'});
   if(ph==='escape')Object.assign(G,{t:30,lane:1,obs:[],sp:0,crash:0,inv:0,msg:'Fuis ! ← → pour changer de voie. Esquive les taxis et la police, ramasse les sacs de billets.'});
   renderPanel()}
-function wsDrill(){const G=WSG;if(!G||G.ph!=='vault')return;const p=kPos({ph:G.ph2});if(p>=G.zone&&p<=G.zone+G.zw){G.pins++;snd('coin');if(G.pins>=4)return wsPhase('escape');G.zone=rnd(5,86-G.zw);G.spd+=.22;G.zw=Math.max(9,G.zw-1.5);G.msg='Cran '+G.pins+' / 4 !'}
+// Espace + bouton qui a le focus : un seul coup de perceuse
+function wsDrill(){const G=WSG;if(!G||G.ph!=='vault')return;const nw=performance.now();if(nw-(G.lastDrill||0)<150)return;G.lastDrill=nw;const p=kPos({ph:G.ph2});if(p>=G.zone&&p<=G.zone+G.zw){G.pins++;snd('coin');if(G.pins>=4)return wsPhase('escape');G.zone=rnd(5,86-G.zw);G.spd+=.22;G.zw=Math.max(9,G.zw-1.5);G.msg='Cran '+G.pins+' / 4 !'}
   else{G.miss++;snd('err');if(G.miss>=3)return wsFail('La perceuse a surchauffé : le coffre se verrouille !');G.msg='Raté ! Encore '+(3-G.miss)+' essai'+(3-G.miss>1?'s':'')+'.'}renderPanel()}
 function wsLane(d){const G=WSG;if(!G||G.ph!=='escape')return;G.lane=clamp(G.lane+d,0,2);snd('tick')}
 function wsLoop(){let last=performance.now();const tick=()=>{const G=WSG;if(!G)return;if(pid!=='wsgame'){wsFail('Tu as abandonné le casse en pleine action !');return}const now=performance.now(),dt=Math.min(.1,(now-last)/1000);last=now;G.t-=dt;
@@ -3205,7 +3213,8 @@ const TKMON={
     if(dk>.2){cx.fillStyle='rgba(255,209,102,.8)';for(let k=0;k<5;k++)cx.fillRect(x-6,b-36-k*30,12,8)}cx.restore()}};
 // lanternes en papier suspendues d'une façade à l'autre
 function drawLanterns(){const dk=darkness(),x0=camX-60,x1=camX+viewW+60,step=260;
-  for(let a=Math.floor(x0/step)*step;a<x1;a+=step){const b=a+step,sag=16;if((b>1300&&a<1840)||b>4250)continue;// pas devant le torii, Shibuya ni le pachinkocx.strokeStyle=INK;cx.lineWidth=2;cx.beginPath();cx.moveTo(a,40);cx.quadraticCurveTo(a+step/2,40+sag*2,b,40);cx.stroke();
+  for(let a=Math.floor(x0/step)*step;a<x1;a+=step){const b=a+step,sag=16;if((b>1300&&a<1840)||b>4250)continue;// pas devant le torii, Shibuya ni le pachinko
+    cx.strokeStyle=INK;cx.lineWidth=2;cx.beginPath();cx.moveTo(a,40);cx.quadraticCurveTo(a+step/2,40+sag*2,b,40);cx.stroke();
     for(let k=1;k<6;k++){const t=k/6,x=a+step*t,y=40+sag*2*2*t*(1-t)+2,sw=Math.sin(T*1.6+x*.01)*.08;cx.save();cx.translate(x,y);cx.rotate(sw);
       const col=(Math.floor(x/step)+k)%3===2?'#fff6df':'#e63946';
       if(dk>.2){cx.save();cx.globalCompositeOperation='lighter';cx.globalAlpha=.35*dk;cx.fillStyle='#ff9f1c';circ(0,16,22);cx.fill();cx.restore()}
@@ -4730,12 +4739,17 @@ async function bqAct(v,w){if(bqBlock())return;
   if(v==='back'){BQ.st='pick';return renderPanel()}
   if(v==='start')bqStart()}
 function bqStart(){BQ.st='play';BQ.hits=0;BQ.miss=0;BQ.n=0;renderPanel();const A=$('bqa');snd('siren');
-  A.addEventListener('pointerdown',e=>{if(e.target.classList.contains('bqt')){e.target.remove();BQ.hits++;snd('shot')}else{BQ.miss++;snd('err')}bqUpd()});
+  // zone de tir généreuse : un clic au bord de la cible, ou juste après qu'elle a disparu, compte comme touché
+  BQ.gone=[];A.addEventListener('pointerdown',e=>{const R=A.getBoundingClientRect(),x=e.clientX-R.left,y=e.clientY-R.top,now=performance.now();
+    let t=e.target.classList.contains('bqt')?e.target:[...A.querySelectorAll('.bqt')].find(b=>{const r=b.getBoundingClientRect();return Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2))<r.width/2+14});
+    if(t){t.remove();BQ.hits++;snd('shot')}
+    else{const g=BQ.gone.find(o=>!o.used&&now-o.at<350&&Math.hypot(x-o.x,y-o.y)<o.r+14);if(g){g.used=true;BQ.hits++;snd('shot')}else{BQ.miss++;snd('err')}}bqUpd()});
   const spawn=()=>{if(pid!=='braq'||BQ.st!=='play'||$('panel').hidden){clearInterval(BQ.timer);if(BQ.st==='play')BQ.st='pick';return}
-    if(BQ.n>=BQ_N){clearInterval(BQ.timer);setTimeout(bqEnd,900);return}BQ.n++;const t=document.createElement('button');t.type='button';t.className='bqt';t.textContent='🎯';t.setAttribute('aria-label','Cible');
+    if(BQ.n>=BQ_N){clearInterval(BQ.timer);setTimeout(bqEnd,1300);return}BQ.n++;const t=document.createElement('button');t.type='button';t.className='bqt';t.textContent='🎯';t.setAttribute('aria-label','Cible');
     const df=bqDiff(),sz=Math.round(52*(1-.3*df));t.style.width=t.style.height=sz+'px';t.style.fontSize=Math.round(sz*.55)+'px';
     t.style.left=Math.round(6+Math.random()*80)+'%';t.style.top=Math.round(6+Math.random()*74)+'%';A.appendChild(t);
-    const life=Math.max(650,1100-BQ.n*30)*(1-.5*df);setTimeout(()=>{if(t.isConnected){t.remove();BQ.miss++;bqUpd()}},life);bqUpd()};
+    const life=Math.max(800,1200-BQ.n*30)*(1-.3*df);setTimeout(()=>{if(!t.isConnected)return;const R=A.getBoundingClientRect(),r=t.getBoundingClientRect(),o={x:r.left+r.width/2-R.left,y:r.top+r.height/2-R.top,r:r.width/2,at:performance.now()};
+      t.remove();BQ.gone.push(o);setTimeout(()=>{if(!o.used){BQ.miss++;bqUpd()}},360)},life);bqUpd()};
   BQ.timer=setInterval(spawn,Math.round(800*(1-.35*bqDiff())));spawn()}
 function bqUpd(){const p=$('bqp'),s2=$('bqs');if(p)p.style.width=Math.round(BQ.n/BQ_N*100)+'%';if(s2)s2.textContent=BQ.hits+' touchées · '+BQ.miss+' ratées'+(bqForgive()>0?' (dont '+String(Math.min(BQ.miss,bqForgive())).replace('.',',')+' pardonnées)':'')}
 async function bqEnd(){if(pid!=='braq'||BQ.st!=='play')return;BQ.rate=Math.max(0,Math.min(1,1-Math.max(0,BQ.miss-bqForgive())/BQ_N));BQ.st='send';renderPanel();

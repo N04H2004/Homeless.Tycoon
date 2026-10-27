@@ -1172,6 +1172,7 @@ resetWorld();
 
 function float(x,y,txt,col){floats.push({x,y,txt,col:col||'#1f9d5c',t:0})}
 function say(t){P.say=t;P.sayT=3}
+const LEG_SEC=60;// le Pigeon Légendaire rapporte 60 s de revenus auto (300 tout rond sans revenu auto)
 const autoSec=sec=>autoRate()*sec/Math.max(1e-9,gm());// travail à la main indexé sur la rue : n secondes de revenus auto
 const TRASH_SEC=1.5,CDD_SEC=6,CDD_BEST_SEC=20,REPAIR_SEC=8,PICK_SEC=3,ROB_SEC=8;
 function earn(n,x,y,col){const g=gain(n);if(x!=null)float(x,y,'+'+fmt(g),col);return g}
@@ -1426,7 +1427,7 @@ function update(dt){
   if(LP){LP.t+=dt;LP.life-=dt;const d=dist(P.x,P.y,LP.x,LP.y);
     if(d<160){LP.vx=(LP.x-P.x)/Math.max(1,d)*145;LP.vy=(LP.y-P.y)/Math.max(1,d)*145}else if(Math.random()<dt*1.5){LP.vx=rnd(-70,70);LP.vy=rnd(-30,30)}
     LP.x=clamp(LP.x+LP.vx*dt,30,W-30);LP.y=clamp(LP.y+LP.vy*dt,225,625);
-    if(d<32&&!INSIDE){frenzy=30*(1+S.meta.perk.lucky);S.meta.legend++;earn(C(100),LP.x,LP.y-60,'#ffd23f');toast('PIGEON LÉGENDAIRE ! Tous tes gains x3 pendant '+frenzy+' s');snd('legend');LP=null}
+    if(d<32&&!INSIDE){S.meta.legend++;earn(autoRate()>0?autoSec(LEG_SEC):300/gm(),LP.x,LP.y-60,'#ffd23f');frenzy=30*(1+S.meta.perk.lucky);toast('PIGEON LÉGENDAIRE ! Tous tes gains x3 pendant '+frenzy+' s');snd('legend');LP=null}
     else if(LP.life<=0){toast("Le Pigeon Légendaire s'est envolé...");LP=null}}
 
   // nuit : un deuxième flic patrouille

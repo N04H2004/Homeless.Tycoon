@@ -3310,7 +3310,7 @@ function drAct(v,w){const D=drS(),pay=c=>{if(S.cash<c){snd('err');toast('Il te f
   if(v==='race'){const r=DR_RACES.find(x=>x.k===w);if(!r||!D.car||!drOpen(r)||(r.k==='legend'&&D.done))return;if(!pay(C(r.fee)))return;drStart(r)}
   updHud();save()}
 // ===== course en pseudo-3D façon arcade : on dirige (← → / Q D), la voiture drifte dans les virages, un drift tenu donne un mini-turbo =====
-const R3={SEG:200,ROADW:2000,CAMH:1300,CAMD:.84,DRAW:240,MS:12000,HZ:.4};// HZ : hauteur de l'horizon (on voit les virages arriver de plus loin)// MS = vitesse de pointe de base (unités / s)
+const R3={SEG:200,ROADW:2000,CAMH:2450,CAMD:.84,DRAW:240,MS:12000,HZ:.4};// HZ : hauteur de l'horizon (on voit les virages arriver de plus loin)// MS = vitesse de pointe de base (unités / s)
 let DRK={l:0,r:0,b:0,h:0};// touches tenues : gauche, droite, frein, frein à main
 function drTrack(r){const segs=[],hilly=r.bg==='touge'||r.bg==='fuji',sharp=r.k==='legend'?1.25:1;let y=0;
   const add=(n,curve,dy)=>{for(let i=0;i<n;i++){y+=dy;segs.push({curve,y,spr:null})}};
@@ -3323,13 +3323,13 @@ function drTrack(r){const segs=[],hilly=r.bg==='touge'||r.bg==='fuji',sharp=r.k=
   const T2={daikoku:['lamp','sign','lamp','lantern'],touge:['pine','pine','rock','pine'],wangan:['lamp','sign','lamp','sign'],fuji:['pine','sakura','lantern','pine']}[r.bg]||['lamp'];
   segs.forEach((s,i)=>{if(s.chev)s.spr=[[s.chev>0?'chevR':'chevL',-s.chev*1.3]];else if(i%6===0)s.spr=[[T2[(i/6)%T2.length|0],-1.35],[T2[((i/6)+2)%T2.length|0],1.35]]});
   return segs}
-const DR_PACK=[{n:'Taka',col:'#7b2cbf',lane:-.5,f:.9},{n:'Shun',col:'#06d6a0',lane:.55,f:.94},{n:'Yuki',col:'#ff9f1c',lane:-.2,f:.86}];// les autres pilotes de la course
+const DR_PACK=[];// pas d'autres pilotes : juste toi contre le rival, au milieu de la circulation
 function drStart(r){const st=drStats(),segs=drTrack(r),len=(segs.length-R3.DRAW-20)*R3.SEG;
   drS().tries++;DRK={l:0,r:0,b:0,h:0};
   const SG=R3.SEG,cars=[{boss:1,z:SG,x:.35,v:0,sp:r.sp,col:r.col,lane:.35}];
   DR_PACK.forEach((o,i)=>cars.push({z:SG*(3+i*2.5),x:o.lane,v:0,sp:r.sp*o.f,col:o.col,lane:o.lane,name:o.n}));
   // la circulation : des voitures normales, plus lentes, qu'il faut doubler
-  const nt=Math.round(r.len/(r.k==='legend'?95:120));for(let i=0;i<nt;i++){const z=SG*(90+i*(len/SG-140)/nt+rnd(-8,8));cars.push({civ:pick(['van','kei','truck','kei']),z,x:pick([-.55,-.15,.2,.55]),v:R3.MS*rnd(.28,.42),col:pick(['#e9ecef','#adb5bd','#ffd6a5','#a8dadc','#ffadad','#caffbf'])})}
+  const nt=Math.round(r.len/(r.k==='legend'?95:120));for(let i=0;i<nt;i++){const z=SG*(90+i*(len/SG-140)/nt+rnd(-8,8));cars.push({civ:1,z,x:pick([-.55,-.15,.2,.55]),v:R3.MS*rnd(.28,.42),col:pick(['#e9ecef','#adb5bd','#ffd6a5','#a8dadc','#ffadad','#caffbf'])})}
   DRG={r,st,segs,len,cars,hit:0,rank:1,z:0,v:0,x:0,rz:0,rv:0,rx:.35,t:0,nitro:st.nitro,nt:0,boost:0,drift:0,dang:0,dpts:0,smoke:[],msg:'3… 2… 1… GO !',cd:2.4,fin:null,flash:'',ft:0,shake:0};
   pid='driftgame';$('panel').hidden=false;renderPanel();drLoop()}
 function drNitro(){const G=DRG;if(!G||G.cd>0||G.fin||G.nitro<=0||G.nt>0)return;G.nitro--;G.nt=2;snd('event');G.flash='NITRO !';G.ft=.8}
@@ -3380,16 +3380,6 @@ function drRear(g,x,y,w,body,low,drift,ang,lit){const h=w*.55;g.save();g.transla
   g.fillStyle='#f8f9fa';g.beginPath();g.roundRect(-w*.12,-h*.36,w*.24,h*.1,w*.02);g.fill();g.stroke();g.fillStyle=INK;g.font=`bold ${Math.max(5,w*.07)}px sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('86',0,-h*.31);
   if(drift){g.fillStyle='#ffd23f';for(const sx of [-1,1]){g.beginPath();g.arc(sx*w*.5,-h*.08,w*.04,0,7);g.fill()}}
   g.restore()}
-// voitures de la circulation, vues de derrière
-function drCiv(g,x,y,w,col,kind,night){const W2=kind==='truck'?w*1.15:kind==='kei'?w*.85:w,h=kind==='truck'?W2*1.05:kind==='van'?W2*.85:W2*.72;g.save();g.translate(x,y);g.lineWidth=Math.max(1.2,w/40);g.strokeStyle=INK;g.lineJoin='round';
-  g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(0,0,W2*.56,h*.1,0,0,7);g.fill();
-  for(const sx of [-1,1]){g.fillStyle='#1b1b22';g.beginPath();g.roundRect(sx*W2*.36-W2*.09,-h*.16,W2*.18,h*.18,W2*.03);g.fill();g.stroke()}
-  g.fillStyle=kind==='truck'?'#dee2e6':col;g.beginPath();g.roundRect(-W2*.5,-h,W2,h*.9,W2*.08);g.fill();g.stroke();
-  if(kind==='truck'){g.beginPath();g.moveTo(0,-h);g.lineTo(0,-h*.12);g.stroke();g.fillStyle=col;g.fillRect(-W2*.5,-h*.3,W2,h*.08)}
-  else{g.fillStyle='#2b3a55';g.beginPath();g.roundRect(-W2*.38,-h*.9,W2*.76,h*.34,W2*.04);g.fill();g.stroke()}
-  for(const sx of [-1,1]){g.fillStyle=night?'#ff4d6d':'#c1121f';g.fillRect(sx*W2*.42-W2*.05,-h*.42,W2*.1,h*.14);
-    if(night){g.save();g.globalCompositeOperation='lighter';g.globalAlpha=.45;g.fillStyle='#ff4d6d';g.beginPath();g.ellipse(sx*W2*.42,-h*.35,W2*.12,h*.1,0,0,7);g.fill();g.restore()}}
-  g.fillStyle='#f8f9fa';g.fillRect(-W2*.1,-h*.26,W2*.2,h*.08);g.restore()}
 // décor des bas-côtés
 function drSprite(g,k,x,y,s,night){if(s<.02)return;g.save();g.translate(x,y);g.scale(s,s);g.lineWidth=3;g.strokeStyle=INK;
   if(k==='lamp'){g.fillStyle='#495057';g.fillRect(-3,-130,6,130);g.beginPath();g.moveTo(0,-128);g.quadraticCurveTo(0,-140,16,-140);g.lineWidth=6;g.strokeStyle='#495057';g.stroke();g.fillStyle=night?'#fff3b0':'#dee2e6';g.beginPath();g.ellipse(18,-138,9,5,0,0,7);g.fill();
@@ -3425,11 +3415,12 @@ function drDraw(){const c=$('drcv'),G=DRG;if(!c||!G)return;const d=window.device
     if(i===Math.floor(G.len/S0)){for(let k=0;k<8;k++){g.fillStyle=k%2?'#fff':'#14141f';g.fillRect(a.x-a.w+k*a.w/4,b.y,a.w/4,Math.max(2,a.y-b.y))}}
     maxy=b.y}
   // décor, pilotes et circulation, du fond vers l'avant
-  const bySeg={};for(const c of G.cars){const n=Math.floor(c.z/S0)-base;if(n>=1&&n<R3.DRAW&&!G.fin)(bySeg[n]=bySeg[n]||[]).push(c)}
+  // les autres voitures sont placées par rapport à la tienne (dessinée ~1 850 unités devant la caméra) : même taille quand elles sont à ta hauteur
+  const PZ=1850,bySeg={};for(const c of G.cars){const d=c.z-G.z+PZ+pp*S0,n=Math.floor(d/S0);if(d>PZ*.55&&n>=1&&n<R3.DRAW&&!G.fin){c.f=(d%S0)/S0;(bySeg[n]=bySeg[n]||[]).push(c)}}
   for(let k=P.length-1;k>=0;k--){const {s,a,b,n}=P[k];if(n<1)continue;
     if(s.spr)for(const [t,ox] of s.spr){drSprite(g,t,a.x+ox*a.w,a.y,a.sc*W*1.9,night)}
-    for(const c of (bySeg[n]||[]).sort((u,v)=>v.z-u.z)){const f=(c.z%S0)/S0,X=a.x+(b.x-a.x)*f,Y=a.y+(b.y-a.y)*f,w=a.w+(b.w-a.w)*f;
-      if(c.civ)drCiv(g,X+c.x*w,Y,w*.55,c.col,c.civ,night);else drRear(g,X+c.x*w,Y,w*.55,c.col,'#14141f',0,0,night)}}
+    for(const c of (bySeg[n]||[]).sort((u,v)=>v.z-u.z)){const f=c.f,X=a.x+(b.x-a.x)*f,Y=a.y+(b.y-a.y)*f,w=a.w+(b.w-a.w)*f;
+      drRear(g,X+c.x*w,Y,w*.55,c.col,'#14141f',0,0,night)}}
   // fumée et voiture du joueur
   const px=W/2,py=H-14;for(const sm of G.smoke){g.fillStyle=`rgba(230,230,240,${sm.a})`;g.beginPath();g.arc(px+sm.x,py-6+sm.y,sm.r,0,7);g.fill()}
   if(G.nt>0||G.boost>0){g.fillStyle=G.nt>0?'rgba(76,201,240,.8)':'rgba(255,159,28,.8)';for(const sx of [-1,1]){g.beginPath();g.moveTo(px+sx*30-6,py-14);g.lineTo(px+sx*30,py+8+Math.random()*10);g.lineTo(px+sx*30+6,py-14);g.fill()}}

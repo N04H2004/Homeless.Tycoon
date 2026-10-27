@@ -975,6 +975,7 @@ function normalizeS(){const m=S.meta,ci=CI();if(VISIT)return;
   const vs=[S.veh||{},...(m.worlds||[]).map(w=>w.snap&&w.snap.veh||{})];for(const v of vs)for(const k in v)if(v[k])m.veh[k]=1;
   if(m.ride===undefined)m.ride=S.ride||'';S.up=m.up;S.veh=m.veh;S.ride=m.ride;
   if(S.shops&&S.shops.garage&&CK()==='ny'){S.shops.peluche=Math.max(S.shops.peluche||0,S.shops.garage);delete S.shops.garage}
+  if(m.vc&&!m.vcm){m.vcm={};for(const k in m.vc)if(m.vc[k]&&m.vc[k].s)m.vcm[m.vc[k].s]=1}// modèles déjà choisis avant qu'ils deviennent payants : on les garde
   if(S.shops&&S.shops.coiffeur&&CK()==='tokyo'){S.shops.garage=Math.max(S.shops.garage||0,S.shops.coiffeur);delete S.shops.coiffeur;m.vcust=1}// Tokyo : le salon de coiffure est devenu le garage
   if(!S.v2){S.v2=1;let ref=0;const keep=CITY_SHOPS[CK()]||CITY_SHOPS.paris,old=S.shops||{},nw={};S.owned=S.owned||{};
     const sumLv=(base,l)=>{let t=0;for(let i=0;i<l;i++)t+=C(base*Math.pow(1.5,i));return t};
@@ -1671,9 +1672,9 @@ const DRINKS=[['Une pinte !',76,89],["Un demi, s'il vous plaît.",42,55],['Juste
 let JOB=null;
 const ARMS=[
  {k:'lance',n:'Lance-pierre',d:'Tire des cailloux. Suffit pour lancer un casse',p:1500,b:.06,m:1},
- {k:'revolver',n:'Revolver rouillé',d:'Braquage de passants : butin x1,5',p:6000,b:.14,m:1.5},
+ {k:'revolver',n:'Glock',d:'Braquage de passants : butin x1,5',p:6000,b:.14,m:1.5},
  {k:'pompe',n:'Fusil à pompe',d:'Braquage de passants : butin x2',p:18000,b:.22,m:2},
- {k:'confetti',n:'Bazooka à confettis',d:'Braquage de passants : butin x3. Personne ne comprend ce qui se passe',p:60000,b:.3,m:3},
+ {k:'confetti',n:'M16',d:'Braquage de passants : butin x3. Tir rapide',p:60000,b:.3,m:3},
 ];
 const bestArm=()=>[...ARMS].reverse().find(a=>S.arms[a.k]);
 const freeBands=()=>bands.filter(b=>b.jail<=0).length;
@@ -2066,20 +2067,20 @@ function holdup(p){
     setTimeout(()=>{p.v=(Math.random()<.5?-1:1)*60},3500);return}
   const g=(rnd(40,90)+autoSec(ROB_SEC))*mult()*a.m*richM(p);earn(g,p.x,p.y-85,'#ffd23f');
   p.flee=5;p.say=pick(['Prenez tout !','Pitié, pas le visage !','AU SECOUUURS !','Mon portefeuille !']);p.sayT=2.5;
-  say(a.k==='confetti'?'Haut les mains... et les confettis !':'Haut les mains !');snd('coin');
+  say('Haut les mains !');snd('coin');
   S.heat=Math.min(100,S.heat+HEATX*(20));
   callSquad('Braquage à main armée !',.3);
   for(const c of cops)if(c.active){c.chase=8;c.chaseB=null;c.fine=Math.max(30,Math.round(S.cash*.25*fineM()));c.say='Il est armé !';c.sayT=2}
   toast('Braquage réussi : +'+fmt(g)+'. Toute la police de la ville est à tes trousses, cours !')}
-const GUN={lance:{cd:.5,v:620,dz:24,n:'caillou'},revolver:{cd:.45,v:950,dz:24},pompe:{cd:.85,v:850,dz:44},confetti:{cd:1.2,v:520,dz:30,boom:95}};
+const GUN={lance:{cd:.5,v:620,dz:24,n:'caillou'},revolver:{cd:.45,v:950,dz:24},pompe:{cd:.85,v:850,dz:44},confetti:{cd:.16,v:1150,dz:26}};// (les clés restent celles des anciennes sauvegardes : revolver = Glock, confetti = M16)
 const ammo=()=>S.ammo==null?10:S.ammo;
 function shoot(){
   if(VISIT||INSIDE||JOB||!$('panel').hidden)return;const a=armed();if(!a||shootCD>0)return;
   if(ammo()<=0){say('Plus de munitions ! Marché noir du bar');snd('err');return}
   const g=GUN[a.k];S.ammo=ammo()-1;shootCD=g.cd;const f=P.face;
   shots.push({x:P.x+f*34,y:P.y-34,base:P.y,vx:f*g.v,life:.75,k:a.k,dz:g.dz,boom:g.boom||0});
-  snd(a.k==='confetti'?'confetti':'shot');P.say=a.k==='confetti'?'Surpriiise !':'';P.sayT=a.k==='confetti'?1.2:0;
-  S.heat=Math.min(100,S.heat+HEATX*(8));
+  snd('shot');
+  S.heat=Math.min(100,S.heat+HEATX*8*Math.min(1,g.cd/.45));// tir rapide : moins de chaleur par balle
   for(const p of ppl)if(!p.stun&&dist(p.x,p.y,P.x,P.y)<380){p.flee=3.5;if(p.v)p.v=Math.sign(p.x-P.x||1)*Math.abs(p.v);if(Math.random()<.4){p.say=pick(['Aaaah !','Il est fou !','Au secours !','Planquez-vous !']);p.sayT=1.6}}
   const fp=.4*fineM();
   if(squad.filter(q=>q.mode==='chase').length>=4)sqFine=Math.max(sqFine,Math.round(S.cash*fp));else callSquad('Coups de feu dans la rue !',.4);
@@ -2501,7 +2502,7 @@ function renderPanel(){
         darkRows(!S.local)+
         '<div class="sec">Marché noir'+ib('noir')+'</div>'+
         ARMS.map(a=>S.arms[a.k]?row(a.n,'à toi',a.d):row(a.n,'',a.d,'arm:'+a.k,C(a.p))).join('')+
-        row('Boîte de munitions',ammo()+' en stock','+12 balles (ou cailloux, ou confettis). Chaque tir en consomme une','ammo',C(250))+
+        row('Boîte de munitions',ammo()+' en stock','+12 balles (ou cailloux). Chaque tir en consomme une','ammo',C(250))+
         (CK()==='ny'?wsPlanHTML():'')+
         '<div class="sec">Braquer un joueur</div>'+(()=>{const pb=bqBlock();return `<div class="row"><div class="info"><b>Le casse</b><small>${pb||'Choisis une cible dans le classement : mini-jeu de tir, tu repars avec 5 à 30 % de son argent selon ta précision.'}</small></div><button class="buy red" type="button" data-act="heist" ${pb?'disabled':''}>Choisir</button></div>`})()+
         '<p class="foot">Le casse a lieu la nuit : tes bandits libres entrent chez Déchets Corp, sous tes yeux. Réussi : le butin est blanchi et versé le lendemain matin, chaleur +35. Raté : alarme, bandits au trou 2 min, amende et chaleur +50. Un braquage par jour, 65 % de réussite au maximum.</p>'}}
@@ -3791,11 +3792,36 @@ function drawGuy(x,y,o){
     cx.strokeStyle='#495057';cx.lineWidth=1.5;for(const k of [-15,0,15]){cx.beginPath();cx.moveTo(f*14,-124);cx.lineTo(f*14+k,-96);cx.stroke()}cx.strokeStyle=INK;cx.lineWidth=3}
   if(o.gun)drawGun(o.gun,f*16,-34,f,o.t||0);
   cx.restore()}
-function drawGun(k,x,y,f,t){cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=2;cx.strokeStyle=INK;
-  if(k==='lance'){cx.lineWidth=4;cx.strokeStyle='#8d5a3b';cx.beginPath();cx.moveTo(0,10);cx.lineTo(0,-2);cx.lineTo(-6,-12);cx.moveTo(0,-2);cx.lineTo(6,-12);cx.stroke();cx.lineWidth=1.5;cx.strokeStyle='#ef476f';cx.beginPath();cx.moveTo(-6,-12);cx.quadraticCurveTo(0,-4,6,-12);cx.stroke()}
-  else if(k==='revolver'){rr(-2,-6,22,7,2);fs('#6c757d');rr(-4,-2,8,12,2);fs('#8d5a3b');cx.beginPath();cx.arc(6,-2,4,0,7);fs('#adb5bd')}
-  else if(k==='pompe'){rr(-12,-6,44,6,2);fs('#343a40');rr(-14,-4,14,10,3);fs('#8d5a3b');rr(10,-1,12,5,2);fs('#6c757d')}
-  else{rr(-20,-12,52,14,6);fs('#ff70a6');rr(28,-14,8,18,3);fs('#ffd23f');for(let i=0;i<3;i++){const a=t*6+i*2.1;cx.fillStyle=['#06d6a0','#ffd23f','#4cc9f0'][i];cx.fillRect(40+Math.cos(a)*6,-6+Math.sin(a)*6,3,3)}}
+function drawGun(k,x,y,f,t){cx.save();cx.translate(x,y);cx.scale(f,1);cx.lineWidth=1.6;cx.strokeStyle=INK;cx.lineJoin='round';
+  const P=(pts,col)=>{cx.beginPath();pts.forEach(([a,b],i)=>i?cx.lineTo(a,b):cx.moveTo(a,b));cx.closePath();cx.fillStyle=col;cx.fill();cx.stroke()};
+  if(k==='lance'){// lance-pierre : fourche en bois, élastique tendu et caillou dans la poche
+    P([[-2,12],[2,12],[2,0],[9,-12],[6,-13],[0,-3],[-6,-13],[-9,-12],[-2,0]],'#9c6b3c');cx.fillStyle='#c08552';cx.fillRect(-2,2,4,7);
+    cx.strokeStyle='#495057';cx.lineWidth=1.2;for(let k2=0;k2<3;k2++){cx.beginPath();cx.moveTo(-2,3+k2*3);cx.lineTo(2,4+k2*3);cx.stroke()}
+    cx.strokeStyle='#ef476f';cx.lineWidth=1.8;cx.beginPath();cx.moveTo(-7.5,-12);cx.lineTo(-12,-6);cx.moveTo(7.5,-12);cx.lineTo(-10,-5);cx.stroke();
+    cx.beginPath();cx.ellipse(-12,-6,3.2,2.4,0,0,7);cx.fillStyle='#6b4226';cx.fill();cx.beginPath();cx.arc(-12,-6,1.8,0,7);cx.fillStyle='#adb5bd';cx.fill()}
+  else if(k==='revolver'){// Glock : culasse noire crantée, carcasse polymère, pontet
+    P([[-4,-1],[5,-1],[3,11],[-6,10]],'#2b2d31');cx.strokeStyle='rgba(255,255,255,.18)';cx.lineWidth=1;for(let k2=0;k2<3;k2++){cx.beginPath();cx.moveTo(-4+k2*.6,2+k2*3);cx.lineTo(3-k2*.6,2+k2*3);cx.stroke()}cx.strokeStyle=INK;cx.lineWidth=1.6;
+    cx.beginPath();cx.moveTo(5,-1);cx.quadraticCurveTo(6,6,11,5);cx.lineTo(13,-1);cx.stroke();
+    P([[-6,-3],[20,-3],[20,0],[-4,0]],'#1b1b1e');
+    rr(-7,-9,28,6.5,1.2);cx.fillStyle='#3a3d42';cx.fill();cx.stroke();
+    cx.strokeStyle='#6c757d';cx.lineWidth=1;for(let k2=0;k2<4;k2++){cx.beginPath();cx.moveTo(-5+k2*2,-8);cx.lineTo(-5+k2*2,-4);cx.stroke()}
+    cx.fillStyle='#dee2e6';cx.fillRect(9,-7,4,1.5);cx.fillStyle=INK;cx.fillRect(19,-11,2,2);cx.fillRect(-6,-11,3,2)}
+  else if(k==='pompe'){// fusil à pompe : crosse en bois, boîte de culasse, double tube et pompe striée
+    P([[-30,-6],[-10,-8],[-8,-2],[-12,2],[-29,4],[-31,-1]],'#8d5a3b');cx.fillStyle='#14141f';cx.fillRect(-31,-6,3,10);
+    rr(-10,-9,18,9,1.5);cx.fillStyle='#343a40';cx.fill();cx.stroke();cx.fillStyle='#6c757d';cx.fillRect(-4,-7,7,2.5);
+    P([[-6,0],[0,0],[-2,7],[-7,7]],'#8d5a3b');cx.beginPath();cx.arc(1,2,3.4,0,Math.PI);cx.stroke();
+    rr(8,-9,40,3.6,1);cx.fillStyle='#495057';cx.fill();cx.stroke();rr(8,-5,32,3.2,1);cx.fillStyle='#2b2d31';cx.fill();cx.stroke();
+    const pm=(Math.sin(t*2)>.97?-3:0);rr(16+pm,-6.5,15,6.5,2);cx.fillStyle='#a0663a';cx.fill();cx.stroke();cx.strokeStyle='#6b4226';cx.lineWidth=1;for(let k2=0;k2<4;k2++){cx.beginPath();cx.moveTo(19+pm+k2*3,-5.5);cx.lineTo(19+pm+k2*3,-1);cx.stroke()}
+    cx.fillStyle='#ffd23f';cx.beginPath();cx.arc(47,-9.5,1.3,0,7);cx.fill()}
+  else{// M16 : crosse, poignée de transport, garde-main ventilé, chargeur courbé, guidon
+    P([[-32,-8],[-18,-6],[-18,-1],[-32,1]],'#1b1b1e');cx.fillStyle='#343a40';cx.fillRect(-33,-8,2,9);rr(-18,-6,8,3,1);cx.fillStyle='#2b2d31';cx.fill();
+    rr(-10,-9,24,8,1.5);cx.fillStyle='#2b2d31';cx.fill();cx.stroke();
+    P([[-8,-9],[-6,-15],[10,-15],[12,-9],[9,-9],[8,-12],[-4,-12],[-5,-9]],'#1b1b1e');
+    P([[-6,-1],[-1,-1],[-4,8],[-9,7]],'#1b1b1e');cx.beginPath();cx.arc(1,0,3,0,Math.PI);cx.stroke();
+    P([[4,-1],[10,-1],[13,12],[7,13]],'#343a40');cx.strokeStyle='#6c757d';cx.lineWidth=1;cx.beginPath();cx.moveTo(6,3);cx.lineTo(11,3);cx.moveTo(7,7);cx.lineTo(12,7);cx.stroke();cx.strokeStyle=INK;cx.lineWidth=1.6;
+    rr(14,-8.5,20,7.5,3);cx.fillStyle='#212529';cx.fill();cx.stroke();cx.fillStyle='#495057';for(let k2=0;k2<4;k2++)cx.fillRect(17+k2*4.5,-6.5,2.4,3.5);
+    rr(34,-6.5,12,2.6,1);cx.fillStyle='#343a40';cx.fill();cx.stroke();rr(45,-7.2,4,4,1);cx.fillStyle='#14141f';cx.fill();
+    P([[30,-8.5],[32,-14],[34,-14],[34,-8.5]],'#1b1b1e')}
   cx.restore()}
 function drawRoom(){if(INSIDE&&INSIDE.k==='nyse')return drawNyseRoom();
   viewW=cssW/scale;roomCam=RW<=viewW?(RW-viewW)/2:clamp(RP.x-viewW/2,0,RW-viewW);
@@ -4037,7 +4063,12 @@ const VC_OPT={
   d:[['','Aucune'],['flames','Flammes'],['stripes','Bandes de course'],['stars','Étoiles'],['sakura','Sakura'],['checker','Damier'],['bolt','Éclair'],['dots','Pois'],['tribal','Tribal'],['pigeon','Pigeon'],['num','Numéro 86']],
   n:[['','Aucun'],['#f72585','Rose'],['#4cc9f0','Bleu'],['#38f07a','Vert'],['#c77dff','Violet']]};
 const vcOf=k=>{const c=(S.meta.vc||{})[k]||{};return {c:c.c||VC_BASE[k],w:c.w||'#adb5bd',d:c.d||'',n:c.n||'',s:c.s||VC_STY[k][0][0]}};
-function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]||(S.meta.vc[k]={});o[p]=v;snd('buy')}
+// les modèles (longboard, chopper, motocross…) s'achètent une fois, au prix de Tokyo ; le premier modèle de chaque véhicule est offert
+const VC_PRICE={long:8000,elec:20000,chopper:60000,cross:80000,sport:120000},vcPrice=st=>Math.round((VC_PRICE[st]||0)*CMS[3]);
+const vcHas=st=>!VC_PRICE[st]||!!(S.meta.vcm||{})[st];
+function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;
+  if(p==='s'&&!vcHas(v)){const c=vcPrice(v);if(S.cash<c){toast('Il te faut '+fmt(c)+' pour ce modèle');snd('err');return}S.cash-=c;(S.meta.vcm=S.meta.vcm||{})[v]=1;toast('🏍️ Nouveau modèle : '+(VC_STY[k].find(x=>x[0]===v)||['',''])[1]+' !');updHud()}
+  S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]||(S.meta.vc[k]={});o[p]=v;snd('buy');save()}
 // déco dessinée sur une surface (x,y,w,h) du véhicule
 function vcDecal(d,x,y,w,h){if(!d)return;cx.save();cx.beginPath();cx.roundRect(x,y,w,h,Math.min(h/2,9));cx.clip();
   if(d==='flames'){cx.fillStyle='#ff6b35';cx.fillRect(x,y+h*.72,w*.5,h*.28);for(let i=0;i<3;i++){const fx=x+i*w*.16,L=w*(.42-i*.08);cx.fillStyle=i===1?'#ffd23f':'#ff6b35';cx.beginPath();cx.moveTo(fx,y+h);cx.quadraticCurveTo(fx+L*.5,y+h*(.45+i*.1),fx+L,y+h*(.3+i*.12));cx.quadraticCurveTo(fx+L*.55,y+h*.8,fx+L*.3,y+h);cx.closePath();cx.fill()}}
@@ -4055,8 +4086,8 @@ function vcGlow(col,w){if(!col)return;cx.save();cx.globalCompositeOperation='lig
   for(const [e,al] of [[1.6,.25],[1.15,.45]]){cx.globalAlpha=a*al;cx.fillStyle=col;cx.beginPath();cx.ellipse(0,3,w*e,7*e,0,0,7);cx.fill()}cx.restore()}
 // panneau de customisation (garage de Tokyo et Compétences)
 function vcHTML(){const own=VEH.filter(v=>S.veh[v.k]);if(!own.length)return '<p class="lead">Achète d\'abord un véhicule (Compétences ou Pigeon Motors) pour le customiser.</p>';
-  return '<p class="lead">Modèle, peinture, jantes, stickers et néon : ça se voit dans la rue, dans toutes les villes, et c\'est gratuit.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
-    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
+  return '<p class="lead">Les modèles s\'achètent une fois (le premier est offert). Peinture, jantes, stickers et néon sont gratuits. Tout se voit dans la rue, dans toutes les villes.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
+    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='s'&&!vcHas(val)?n+' · '+fmt(vcPrice(val)):p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
     return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:150px;height:96px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
       sw('s',VC_STY[v.k],o.s,'Modèle')+sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Stickers')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
 // cadre de chaque modèle (x min, x max, y min) pour l'aperçu : le véhicule tient en entier
@@ -4259,11 +4290,10 @@ function draw(){
   if(feedTarget)txt('♥',feedTarget.x,feedTarget.y-34+Math.sin(T*8)*3,16,'#ff8fa3',true);
   for(const s of sparks){const k=s.t/.5;txt(s.star?'✦':'✧',s.x,s.y-k*20,14,s.star?'#ffd23f':'#fff',true)}
   if(P.sayT>0)drawBubble(P.x,P.y-(S.up.tri>=5||S.meta.outfit==='hotdog'?112:88)-(S.ride==='voiture'?10:0),P.say);
-  for(const b of shots){if(b.k==='confetti'){for(let k=0;k<5;k++){cx.fillStyle=['#ff70a6','#ffd23f','#06d6a0','#4cc9f0','#fff'][k];cx.fillRect(b.x-Math.sign(b.vx)*k*7+Math.sin(T*30+k)*3,b.y+Math.cos(T*25+k*2)*6,5,5)}}
-    else if(b.k==='lance'){cx.beginPath();cx.arc(b.x,b.y,4,0,7);cx.fillStyle='#868e96';cx.fill()}
+  for(const b of shots){if(b.k==='lance'){cx.beginPath();cx.arc(b.x,b.y,4,0,7);cx.fillStyle='#868e96';cx.fill()}
     else{cx.strokeStyle='rgba(255,210,63,.6)';cx.lineWidth=3;cx.beginPath();cx.moveTo(b.x-Math.sign(b.vx)*26,b.y);cx.lineTo(b.x,b.y);cx.stroke();cx.beginPath();cx.ellipse(b.x,b.y,5,3,0,0,7);cx.fillStyle='#ffd23f';cx.fill();
       if(b.k==='pompe'){for(const o of [-9,9]){cx.beginPath();cx.arc(b.x-Math.sign(b.vx)*6,b.y+o*(1-b.life),3,0,7);cx.fill()}}}}
-  if(shootCD>(armed()?GUN[armed().k].cd-.08:0)){const a=armed();if(a){cx.save();cx.globalAlpha=.9;cx.beginPath();cx.arc(P.x+P.face*36,P.y-34,10,0,7);cx.fillStyle=a.k==='confetti'?'#ff70a6':'#fff3b0';cx.fill();cx.restore()}}
+  if(shootCD>(armed()?GUN[armed().k].cd-.08:0)){const a=armed();if(a){cx.save();cx.globalAlpha=.9;cx.beginPath();cx.arc(P.x+P.face*36,P.y-34,10,0,7);cx.fillStyle='#fff3b0';cx.fill();cx.restore()}}
   const stars=(x,y)=>{for(let k=0;k<3;k++){const a=T*5+k*2.1;txt('★',x+Math.cos(a)*16,y+Math.sin(a)*5,13,'#ffd23f',true)}};
   for(const c of cops)if(c.active&&c.stun>0)stars(c.x,c.y-76);for(const q of squad)if(q.stun>0&&q.delay<=0)stars(q.x,q.y-76);for(const p of ppl)if(p.stun>0)stars(p.x,p.y-72);
   for(const f of floats){cx.globalAlpha=1-Math.max(0,f.t-.8)/.5;txt(f.txt,f.x,f.y-f.t*40,22,f.col,true);cx.globalAlpha=1}

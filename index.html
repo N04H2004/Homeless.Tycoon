@@ -1376,7 +1376,7 @@ function stepHTML(i){return stepHTML0(i)+optHTML()}
 function stepHTML0(i){const L=stepsFor(CI());
   if(i>=L.length&&CK()==='tokyo'){if(!S.meta.endFw){S.meta.endFw=1;save();setTimeout(fireworks,250)}// fin du jeu : feu d'artifice la première fois
     return `<div class="tip" style="text-align:center"><h3>🎆 Tu as fini Homeless Tycoon ! 🎆</h3></div><p class="lead" style="text-align:center">Parti d'une poubelle à Paris, te voilà <b>Roi du Drift</b> de Tokyo, à la tête d'une holding qui tourne à Paris, Londres, New York et Tokyo.</p>`+
-      `<div class="row" style="display:block;text-align:center;background:#fff3b0"><b>Argent gagné dans toute ta vie : ${fmt(S.meta.life||S.total)}</b><small style="display:block">Pigeons d'Or : ${S.meta.gold} · Pigeons Légendaires attrapés : ${S.meta.legend||0}</small></div>`+
+      endStatsHTML()+
       `<p class="lead" style="text-align:center">Merci d'avoir joué ! Tu peux continuer à faire grimper ta fortune, améliorer ta rue et grimper au classement. De nouvelles villes arriveront bientôt.</p>`+
       `<div class="bets"><button class="chunky alt" type="button" data-act="fw">🎆 Encore un feu d'artifice</button><button class="chunky" type="button" data-act="close">Continuer à jouer</button></div>`}
   if(i>=L.length)return `<div class="tip"><h3>Toutes les étapes de ${CITY().n} sont faites !</h3></div><p class="lead">Quand tu auras gagné ${fmt(PGB())} ici, ouvre <b>Menu › Prestige</b> pour mettre ${CITY().n} en gérance et partir à la ville suivante.</p><button class="chunky" type="button" data-act="close">Super !</button>`;
@@ -4617,6 +4617,17 @@ function dailyTick(){if(BOOT||VISIT)return;if(S.meta.refund){toast('Bonus de pre
   if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login');return}
   if(!hid&&!dailyShown&&!D.chest&&$('panel').hidden&&!JOB&&!INSIDE){dailyShown=true;openPanel('daily')}}
 // animations : bannière + confettis à la réussite, pièces qui filent vers l'argent quand on récupère
+// stats de fin du jeu : temps de jeu, argent gagné dans chacune des 4 villes (dans sa monnaie) et quelques records
+function cityState(i){if(i===CURI())return S;const w=(S.meta.worlds||[]).find(w=>w.i===i);return w&&w.snap?w.snap:null}
+function endStatsHTML(){const m=S.meta,cell=(k,v)=>`<div class="row" style="display:block;text-align:center;padding:6px"><small style="display:block;opacity:.75">${k}</small><b>${v}</b></div>`;
+  const per=CITIES.map((c,i)=>{const st=cityState(i),t=st?st.total||0:0;return [c,i,t,st]}),sum=k=>per.reduce((a,[,,,st])=>a+(st&&st.stats?st.stats[k]||0:0),0);
+  const money=n=>{const f=fmt(n),c=CUR();return f.endsWith(c)?f.slice(0,-c.length):f};
+  return `<div class="sec">Ta partie en chiffres</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">`+
+    cell('⏱️ Temps de jeu',playTime())+cell('🐦 Pigeons d\'Or',m.gold)+
+    per.map(([c,i,t])=>cell((['🥖','☂️','🗽','🗾'][i])+' Gagné à '+c.n,t?money(t)+' '+c.cur:'—')).join('')+
+    cell('🗑️ Déchets ramassés',sum('trash').toLocaleString('fr-FR'))+cell('📝 CDD signés',sum('cdd').toLocaleString('fr-FR'))+
+    cell('🏁 Courses gagnées',m.drWins||0)+cell('💰 Casses réussis',(m.heists||0)+(m.wsWins?1:0))+
+    cell('✨ Pigeons Légendaires',m.legend||0)+cell('🎰 Gains au casino',fmt(m.casinoWon||0))+'</div>'}
 // feu d'artifice plein écran (fin du jeu) : fusées qui montent puis explosent en étincelles
 function fireworks(){const c=document.createElement('canvas'),d=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;c.width=W*d;c.height=H*d;
   c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';document.body.appendChild(c);const g=c.getContext('2d');g.scale(d,d);

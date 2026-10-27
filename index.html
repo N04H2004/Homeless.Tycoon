@@ -2333,6 +2333,8 @@ function updHud(){
     if(p){const r=Math.max(0,JOB.cust.pat/JOB.cust.pm);p.style.width=r*100+'%';p.style.background=r<.3?'#ef476f':r<.6?'#ffd23f':'#7ee08a'}}
   updAct();checkObj();
   if(!$('panel').hidden){for(const b of $('pbody').querySelectorAll('.buy[data-cost]'))b.disabled=S.cash<+b.dataset.cost||b.dataset.lock==='1';
+    // boutons « Remplacer » : se débloquent dès que l'argent arrive, sans rouvrir la fenêtre
+    for(const b of $('pbody').querySelectorAll('[data-live-cost]')){const ko=S.cash<+b.dataset.liveCost;b.disabled=ko;if(b.dataset.ok){const t=ko?b.dataset.ko:b.dataset.ok;if(b.textContent!==t)b.textContent=t}}
     for(const b of $('pbody').querySelectorAll('[data-shift]'))b.disabled=!canHire(b.dataset.shift)||S.cash<empCost()}
 }
 let toastT;
@@ -2511,12 +2513,12 @@ function renderPanel(){
   else if(pid==='reveal'){const R0=REV,st=R0.st,tt=TRAITS[st.tr],rr=RAR[tt.r];t='Recrutement · '+SHIFT[st.sh].n.toLowerCase();hd='#ffd23f';
     h=R0.done?`<div class="rv"><div id="rvx"></div><div class="rvc pop${tt.r?' r'+tt.r:''}" id="rvc" style="background:${rr[1]}"><div class="rvr" id="rvr">${rr[0]}</div><div class="rvn" id="rvn">${st.n}</div><div class="rvt" id="rvt"><b>${tt.n}</b></div>${pcHTML(tt)}<div class="rvt">${SHIFT[st.sh].n} · salaire ${fmt(wageOf(S.staff.indexOf(st)))} / jour</div></div>`+
       `<div class="bets" style="width:100%"><button class="chunky alt" type="button" data-act="tobiz">Retour au business</button>${hireBtn(st.sh,true)}`+
-      (()=>{const i=S.staff.indexOf(st);if(i<0||i>=S.emp)return '';const c=replCost(i);return `<button class="chunky" type="button" data-act="repl2:${i}" style="grid-column:1/-1" ${S.cash<c?'disabled':''}>🔁 Pas convaincu ? Remplacer ${st.n} · ${fmt(c)}</button>`})()+'</div></div>'
+      (()=>{const i=S.staff.indexOf(st);if(i<0||i>=S.emp)return '';const c=replCost(i);return `<button class="chunky" type="button" data-act="repl2:${i}" data-live-cost="${c}" style="grid-column:1/-1" ${S.cash<c?'disabled':''}>🔁 Pas convaincu ? Remplacer ${st.n} · ${fmt(c)}</button>`})()+'</div></div>'
       :`<div class="rv"><div id="rvx"></div><div class="rvc spin" id="rvc"><div class="rvr" id="rvr">Tirage...</div><div class="rvn" id="rvn">?</div><div class="rvt" id="rvt"></div></div></div>`}
   else if(pid==='replconf'){const i=parg,st=S.staff[i];if(!st){pid='biz';return renderPanel()}const tt=TRAITS[st.tr],a1=sev(i),a2=empCost(S.emp-1),c=a1+a2;t='Remplacer '+st.n+' ?';hd='#ffd23f';
     h=`<p class="lead">${st.n} (${tt.n.toLowerCase()}) part avec son indemnité, et une nouvelle recrue tirée au sort prend sa place dans l'${SHIFT[st.sh].n.toLowerCase()}.</p>`+
       `<div class="till"><span>Indemnité de licenciement</span><span>${fmt(a1)}</span><span>Nouvelle recrue</span><span>${fmt(a2)}</span><span>Total</span><span>${fmt(c)}</span></div>`+
-      `<div class="bets"><button class="chunky alt" type="button" data-act="tobiz">Annuler</button><button class="chunky" type="button" data-act="repl2:${i}" ${S.cash<c?'disabled':''}>${S.cash<c?'Pas assez de cash':'Remplacer · '+fmt(c)}</button></div>`}
+      `<div class="bets"><button class="chunky alt" type="button" data-act="tobiz">Annuler</button><button class="chunky" type="button" data-act="repl2:${i}" data-live-cost="${c}" data-ok="${'Remplacer · '+fmt(c)}" data-ko="Pas assez de cash" ${S.cash<c?'disabled':''}>${S.cash<c?'Pas assez de cash':'Remplacer · '+fmt(c)}</button></div>`}
   else if(pid==='fireconf'){const i=parg,st=S.staff[i];if(!st){pid='biz';return renderPanel()}const tt=TRAITS[st.tr],c=sev(i);t='Licencier '+st.n+' ?';hd='#ef476f';
     h=`<p class="lead">${st.n} (${tt.n.toLowerCase()}, ${SHIFT[st.sh].n.toLowerCase()}) va partir avec son indemnité.</p><div class="row"><div class="info"><b>Indemnité de licenciement</b><small>3 jours de salaire</small></div><div class="big" style="font-size:24px">${fmt(c)}</div></div>`+
       `<div class="bets"><button class="chunky alt" type="button" data-act="tobiz">Annuler</button><button class="chunky" type="button" data-act="fire2:${i}" ${S.cash<c?'disabled':''}>${S.cash<c?'Pas assez de cash':'Licencier · '+fmt(c)}</button></div>`}
@@ -2809,7 +2811,8 @@ $('pbody').addEventListener('click',e=>{
   if(a==='up'){const u=UP.find(x=>x.k===v);if(S.up[v]>=u.max||!pay(upCost(u)))return;S.up[v]++;toast(u.n+' niveau '+S.up[v]+' · regarde ton perso !')}
   if(a==='shop'){const s=SHOPS.find(x=>x.k===v);const l=S.shops[v]||0;if(!S.local||l>=10||!pay(shopCost(s)))return;S.shops[v]=l+1;
     if(v==='garage'&&!S.meta.vcust){S.meta.vcust=1;toast('🔧 Customisation des véhicules débloquée ! Peins tes véhicules ici ou dans Compétences.')}else toast(l?s.n+' passe niveau '+(l+1):s.n+' est à toi ! Le loyer tombe chaque seconde')}
-  if(a==='vc'){vcSet(v,w,b.dataset.act.split(':')[3]==='-'?'':b.dataset.act.split(':')[3]);return renderPanel()}
+  if(a==='vcno'){VCBUY=null;return renderPanel()}
+  if(a==='vc'){if(w!=='s')VCBUY=null;vcSet(v,w,b.dataset.act.split(':')[3]==='-'?'':b.dataset.act.split(':')[3]);return renderPanel()}
   if(a==='estate'){const es=ESTATE.find(x=>x.k===v);if(!S.local||S.owned[v]||!pay(estP(es)))return;S.owned[v]=true;toast(es.n+' est à toi. Les loyers tombent !')}
   if(a==='outfit'){const o=OUTFITS.find(x=>x.k===v);if(S.meta.wardrobe.includes(v)||!pay(o.p))return;S.meta.wardrobe.push(v);S.meta.outfit=v;toast(v==='costume'?'Costume trois-pièces : le casino t\'ouvre ses portes !':'Nouvelle tenue : '+o.n)}
   if(a==='wear'){S.meta.outfit=v;snd('buy')}
@@ -4106,8 +4109,12 @@ const vcOf=k=>{const c=(S.meta.vc||{})[k]||{};return {c:c.c||VC_BASE[k],w:c.w||'
 // les modèles (longboard, chopper, motocross…) s'achètent une fois, au prix de Tokyo ; le premier modèle de chaque véhicule est offert
 const VC_PRICE={long:8000,elec:20000,chopper:60000,cross:80000,sport:120000},vcPrice=st=>Math.round((VC_PRICE[st]||0)*CMS[3]);
 const vcHas=st=>!VC_PRICE[st]||!!(S.meta.vcm||{})[st];
+let VCBUY=null;
+const vcBuyHTML=k=>{if(!VCBUY||VCBUY.k!==k||vcHas(VCBUY.v))return '';const v=VCBUY.v,n=(VC_STY[k].find(x=>x[0]===v)||['',''])[1],c=vcPrice(v);
+  return `<div class="row" style="display:block;background:#fff3b0;margin:4px 0"><b>Acheter le modèle ${n} pour ${fmt(c)} ?</b><small style="display:block">Acheté une fois, à vie, dans toutes les villes.</small><div class="bets" style="margin-top:6px"><button class="chunky alt" type="button" data-act="vcno">Annuler</button><button class="chunky" type="button" data-act="vc:${k}:s:${v}" data-live-cost="${c}" ${S.cash<c?'disabled':''}>Acheter · ${fmt(c)}</button></div></div>`};// modèle payant cliqué : on demande confirmation avant d'acheter
 function vcSet(k,p,v){if(!S.meta.vcust||!S.veh[k])return;
-  if(p==='s'&&!vcHas(v)){const c=vcPrice(v);if(S.cash<c){toast('Il te faut '+fmt(c)+' pour ce modèle');snd('err');return}S.cash-=c;(S.meta.vcm=S.meta.vcm||{})[v]=1;toast('🏍️ Nouveau modèle : '+(VC_STY[k].find(x=>x[0]===v)||['',''])[1]+' !');updHud()}
+  if(p==='s'&&!vcHas(v)&&!(VCBUY&&VCBUY.k===k&&VCBUY.v===v)){VCBUY={k,v};snd('tick');return}
+  if(p==='s'&&!vcHas(v)){VCBUY=null;const c=vcPrice(v);if(S.cash<c){toast('Il te faut '+fmt(c)+' pour ce modèle');snd('err');return}S.cash-=c;(S.meta.vcm=S.meta.vcm||{})[v]=1;toast('🏍️ Nouveau modèle : '+(VC_STY[k].find(x=>x[0]===v)||['',''])[1]+' !');updHud()}
   S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]||(S.meta.vc[k]={});o[p]=v;snd('buy');save()}
 // déco dessinée sur une surface (x,y,w,h) du véhicule
 function vcDecal(d,x,y,w,h){if(!d)return;cx.save();cx.beginPath();cx.roundRect(x,y,w,h,Math.min(h/2,9));cx.clip();
@@ -4127,9 +4134,9 @@ function vcGlow(col,w){if(!col)return;cx.save();cx.globalCompositeOperation='lig
 // panneau de customisation (garage de Tokyo et Compétences)
 function vcHTML(){const own=VEH.filter(v=>S.veh[v.k]);if(!own.length)return '<p class="lead">Achète d\'abord un véhicule (Compétences ou Pigeon Motors) pour le customiser.</p>';
   return '<p class="lead">Les modèles s\'achètent une fois (le premier est offert). Peinture, jantes, stickers et néon sont gratuits. Tout se voit dans la rue, dans toutes les villes.</p>'+own.map(v=>{const o=vcOf(v.k),on=S.ride===v.k;
-    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='s'&&!vcHas(val)?n+' · '+fmt(vcPrice(val)):p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
+    const sw=(p,list,cur,lab)=>`<div class="vcl"><span>${lab}</span><div class="vcs">${list.map(([val,n])=>`<button type="button" class="vcb${cur===val?' on':''}" data-act="vc:${v.k}:${p}:${val||'-'}" title="${n}">${p==='s'&&!vcHas(val)?'🔒 '+n+' · '+fmt(vcPrice(val)):p==='d'||p==='s'?n:`<i style="background:${val||'#fff'}${!val?';background-image:linear-gradient(135deg,transparent 45%,#ef476f 45% 55%,transparent 55%)':''}"></i>`}</button>`).join('')}</div></div>`;
     return `<div class="row vcrow"><canvas data-vc="${v.k}" style="width:150px;height:96px;flex:0 0 auto"></canvas><div class="info" style="min-width:0"><b>${v.n}</b>${on?'<span class="lvl">en selle</span>':''}`+
-      sw('s',VC_STY[v.k],o.s,'Modèle')+sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Stickers')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
+      sw('s',VC_STY[v.k],o.s,'Modèle')+vcBuyHTML(v.k)+sw('c',VC_COL.map(c=>[c,'']),o.c,'Peinture')+sw('w',VC_OPT.w,o.w,'Jantes')+sw('d',VC_OPT.d,o.d,'Stickers')+sw('n',VC_OPT.n,o.n,'Néon')+'</div></div>'}).join('')}
 // cadre de chaque modèle (x min, x max, y min) pour l'aperçu : le véhicule tient en entier
 const VC_BOX={skate:[-26,26,-16],long:[-32,32,-14],classic:[-24,31,-60],elec:[-24,31,-60],vespa:[-37,29,-70],chopper:[-41,48,-67],cross:[-41,37,-57],sport:[-39,35,-52]};
 function drawVcThumbs(){const keep=cx,d=window.devicePixelRatio||1,W=150,H=96;for(const c of document.querySelectorAll('#pbody canvas[data-vc]')){const g=c.getContext('2d');c.width=W*d;c.height=H*d;g.setTransform(d,0,0,d,0,0);

@@ -1214,7 +1214,7 @@ addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!$('panel').hidden){closePanel();return}
   if(!$('panel').hidden){if(DRG&&pid==='driftgame'){const k=e.key.toLowerCase(),m={arrowleft:'l',q:'l',a:'l',arrowright:'r',d:'r',arrowdown:'b',s:'b',' ':'h'}[k];if(m){e.preventDefault();DRK[m]=1;return}if(k==='n'){drNitro();return}}
     if(WSG&&pid==='wsgame'){const G=WSG;if(G.ph==='hack'&&/^[0-9]$/.test(e.key)){wsKey(e.key);return}if(G.ph==='hack'&&e.key==='Backspace'){e.preventDefault();wsKey('del');return}
-      if(G.ph==='vault'&&(e.key===' '||e.key==='Enter')){e.preventDefault();wsDrill();return}if(G.ph==='escape'&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='q'||e.key==='d')){e.preventDefault();wsLane(e.key==='ArrowLeft'||e.key==='q'?-1:1);return}}
+      if(G.ph==='vault'&&(e.key===' '||e.key==='Enter')){e.preventDefault();wsDrill();return}if(G.ph==='escape'&&(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='q'||e.key==='a'||e.key==='d')){e.preventDefault();wsLane(e.key==='ArrowLeft'||e.key==='q'||e.key==='a'?-1:1);return}}
     if(LIFT&&pid==='lift'&&['ArrowUp','ArrowDown',' ','e','E'].includes(e.key)){e.preventDefault();if(e.key==='ArrowUp')liftMove(1);else if(e.key==='ArrowDown')liftMove(-1);else liftOpen();return}
     if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&JOB&&JOB.k==='peluche'&&pid==='job'&&!(JOB.cust.wait>0)){e.preventDefault();mgAct('mgsw',e.key==='ArrowLeft'?'0':'1');if(JOB)renderPanel();return}
     if(e.key===' '&&JOB&&JOB.k==='karaoke'&&pid==='job'){e.preventDefault();if(!(JOB.cust.wait>0)){mgAct('ksing');if(JOB)renderPanel()}}return}

@@ -358,6 +358,7 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 .lbw .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--display);font-size:18px}
 .lbw .chunky{font-size:14px;padding:5px 10px}
 .lbw .lbr{padding:4px 10px}
+.lbbtn{font-size:18px;padding:10px 26px;position:relative;z-index:1}
 .lbw small{font-size:12px;opacity:.75}
 #boot .aus{display:flex;gap:8px}
 .fbin{width:100%;box-sizing:border-box;font-family:var(--body);font-size:16px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;color:var(--ink);resize:vertical;-webkit-user-select:text;user-select:text}
@@ -428,7 +429,7 @@ if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<sc
       <span>Faim</span><div class="bar"><i id="fdb"></i></div><span class="num" id="fdn">80</span>
       <span id="hl" hidden class="hudi" role="button" tabindex="0" data-info="bandits" title="Comment ça marche ?">Chaleur <b>i</b></span><div class="bar" id="hbar" hidden><i id="htb"></i></div><span class="num" id="htn" hidden>0</span>
       <span id="dl" hidden class="hudi" role="button" tabindex="0" data-info="dirty" title="Comment ça marche ?">Sale <b>i</b></span><span id="dn" hidden style="grid-column:span 2;color:#9d4edd;font-weight:700">0</span>
-      <span>Sac</span><span id="bagn" style="grid-column:span 2">0 / 4</span>
+      <span>Sac</span><span id="bagn" style="grid-column:span 2;display:block">0 / 4</span>
     </div>
     <div class="btns">
       <button class="chunky danger" id="pay" type="button" hidden>Payer</button>
@@ -4434,7 +4435,8 @@ function tutoUI(){const a=$('tarrow'),ok=!(typeof BOOT!=='undefined'&&BOOT)&&!JO
   if(el&&!$('panel').hidden&&!$('panel').contains(el)&&!tutoOn()&&GD.k){const x=$('pclose');if(tutoTgt&&tutoTgt!==x)tutoTgt.classList.remove('tglow');tutoTgt=x;x.classList.add('tglow');const rx=x.getBoundingClientRect();a.hidden=false;a.classList.add('up');a.style.left=(rx.left+rx.width/2)+'px';a.style.top=(rx.bottom+6)+'px';return}// une autre fenêtre est ouverte : on montre la croix
   if(!el||!r.width||(!$('panel').hidden&&!$('panel').contains(el))){a.hidden=true;return}
   el.classList.add('tglow');a.hidden=false;const up=r.top<90;a.classList.toggle('up',up);
-  a.style.left=(r.left+r.width/2)+'px';a.style.top=(up?r.bottom+6:r.top-6)+'px'}
+  // la cible bouge de quelques pixels quand la carte se recalcule (chiffres qui changent) : la flèche ne suit que les vrais déplacements
+  const nx=r.left+r.width/2,ny=up?r.bottom+6:r.top-6,P0=a._p;if(!P0||P0.el!==el||Math.abs(P0.x-nx)>28||Math.abs(P0.y-ny)>28){a._p={el,x:nx,y:ny};a.style.left=nx+'px';a.style.top=ny+'px'}}
 function drawTutoArrow(){tutoUI();const st=tutoOn()?TUTO[S.meta.tuto||0]:gStep();if(!st||!st.tg||INSIDE)return;const g=st.tg();if(!g)return;let [x,y]=g;const b=Math.sin(T*6)*6;
   if(x<camX+30||x>camX+viewW-30){const left=x<camX+30,ax=left?camX+40:camX+viewW-40,ay=330;cx.save();cx.translate(ax,ay);if(left)cx.scale(-1,1);cx.lineWidth=4;cx.beginPath();cx.moveTo(-26+b,-16);cx.lineTo(4+b,-16);cx.lineTo(4+b,-30);cx.lineTo(30+b,0);cx.lineTo(4+b,30);cx.lineTo(4+b,16);cx.lineTo(-26+b,16);cx.closePath();fs('#ffd23f');cx.restore();return}
   cx.save();cx.translate(x,y+22);const k=(T*1.4)%1;cx.globalAlpha=1-k;cx.lineWidth=4;cx.strokeStyle='#ffd23f';cx.beginPath();cx.ellipse(0,0,18+k*26,7+k*10,0,0,7);cx.stroke();cx.globalAlpha=1;cx.restore();
@@ -4622,7 +4624,7 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
     `<div class="wc${open&&exists?'':' lock'}" style="background:${c.sky}"><span class="tag">${isCur?'Ici':!open?'Verrouillée':c.cur}</span><span class="em">${WEM[c.k]}</span><b>${c.n}</b><small>${WTAG[c.k]} · gains x${String(c.m).replace('.',',')}</small><small>${st}</small>`+
     `<button class="chunky" type="button" data-wgo="${i}" ${open&&exists?'':'disabled'}>${!open?'🔒 Verrouillée':!exists?'Pas encore ouverte':isCur?'Reprendre ›':'Y aller ›'}</button></div>`+
     `<button class="arr" type="button" data-wm="1" aria-label="Ville suivante">›</button></div><div class="dots">${CITIES.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</div>`;
-  el.classList.add('map');el.innerHTML=wmapSVG(i)+prof+card+'<div class="lbw" id="lbw">'+lbMini()+'</div>';
+  el.classList.add('map');el.innerHTML=wmapSVG(i)+prof+card+'<button class="chunky lbbtn" type="button" data-lbo>🏆 Classement</button>';// le classement complet s'ouvre depuis ce bouton
   for(const b of el.querySelectorAll('[data-wm]'))b.addEventListener('click',()=>wsMove(+b.dataset.wm));
   for(const b of el.querySelectorAll('[data-wgo]'))b.addEventListener('click',()=>enterWorld(+b.dataset.wgo));
   if(Date.now()-LB.at>30000)lbLoad();

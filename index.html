@@ -782,6 +782,26 @@ function save(){if(NOSAVE)return;const R0=VISIT?VISIT.saved:S;if(R0.meta)R0.meta
 
 // ================= Économie =================
 let frenzy=0,ev=null,RIDEFX=[];
+// ===== présence en ligne : on voit les joueurs connectés dans la même rue (propriétaire et visiteurs) =====
+const PRES={hb:0,poll:0,look:'',others:{},off:false,busy:false};
+function presLook(){const L=playerLook(),o={};for(const k in L)if(!['t','moving','face','bag','sad','gun','lift','ride'].includes(k))o[k]=L[k];o.vc=S.meta.vc||{};o.rd=S.ride||'';return o}
+function presTick(dt){const now=performance.now();
+  for(const o of Object.values(PRES.others)){const d=dist(o.x,o.y,o.tx,o.ty);if(d>1){const st=Math.min(d,Math.max(260,d*1.5)*dt);o.x+=(o.tx-o.x)/d*st;o.y+=(o.ty-o.y)/d*st;o.mv=true;if(Math.abs(o.tx-o.x)>2)o.face=o.tx>o.x?1:-1}else o.mv=o.moving}
+  if(PRES.off||!SB||!LB.ready||BOOT||(typeof AFK!=='undefined'&&AFK)||document.hidden||PRES.busy||now-PRES.hb<3000)return;PRES.hb=now;PRES.busy=true;
+  const street=VISIT&&VISIT.other?VISIT.other.pseudo:null,ci=VISIT?VISIT.i:CURI();let look=null;
+  if(!VISIT){const j=JSON.stringify(presLook());if(j!==PRES.look||now-PRES.lookAt>60000){PRES.look=j;PRES.lookAt=now;look=JSON.parse(j)}}
+  (async()=>{try{const r=await SB.rpc('heartbeat',{p_street:street,p_ci:ci,p_x:Math.round(P.x),p_y:Math.round(P.y),p_face:P.face,p_moving:!!P.moving,p_room:INSIDE?INSIDE.k:null,p_look:look});
+      if(r.error){if(/heartbeat|function/i.test(r.error.message||''))PRES.off=true;return}
+      const q=await SB.rpc('street_people',{p_street:street,p_ci:ci});if(q.error)return;const seen={};
+      for(const p of q.data||[]){seen[p.pseudo]=1;let o=PRES.others[p.pseudo];
+        if(!o){o=PRES.others[p.pseudo]={x:p.x,y:p.y,face:p.face};if(!VISIT&&!p.owner){toast('👀 '+p.pseudo+' visite ta rue !');snd('event')}}
+        Object.assign(o,{pseudo:p.pseudo,tx:p.x,ty:p.y,moving:p.moving,room:p.room,owner:p.owner,look:p.look||o.look||{}});if(p.room)o.face=p.face}
+      for(const k in PRES.others)if(!seen[k])delete PRES.others[k]}catch(e){}finally{PRES.busy=false}})()}
+// les autres joueurs, avec leur look, leur véhicule et leur pseudo
+function drawOther(o){const lk=o.look||{},rd=lk.rd||'',keep=S.meta.vc;S.meta.vc=lk.vc||{};
+  try{drawRide(rd,o.x,o.y,o.face,false);drawGuy(o.x,o.y,Object.assign({skin:'#f1c27d',shirt:'#8338ec',pants:'#3d405b',hair:'#2b2118'},lk,{t:T,moving:o.mv,face:o.face,ride:rd||null,lift:vcLift(rd),bag:0,gun:null}));drawRide(rd,o.x,o.y,o.face,true)}finally{S.meta.vc=keep}
+  const lab=(o.owner?'🏠 ':'')+o.pseudo;cx.font='600 12px "Fredoka","Trebuchet MS",sans-serif';const w=cx.measureText(lab).width+18,y=o.y-100-vcLift(rd);
+  cx.lineWidth=2;rr(o.x-w/2,y-10,w,20,10);fs(o.owner?'#ffd23f':'#fff6df');cx.fillStyle='#38f07a';circ(o.x-w/2+8,y,3.5);cx.fill();txt(lab,o.x+4,y,12,INK)}
 const CURI=()=>S.meta.cur??Math.min(S.meta.prestige,3),CK=()=>CITIES[VISIT?VISIT.i:CURI()].k,FOODS_NOW=()=>FOODS_C[CK()]||FOODS,
       CI=()=>VISIT?VISIT.i:CURI(),HOME=()=>CITIES[CURI()],CITY=()=>CITIES[CI()],CUR=()=>CITY().cur,cm=()=>CMS[CI()],C=n=>Math.round(n*cm());
 // ===== Pigeon Tower (New York) : 50 étages à construire, chacun rapporte, paliers bonus =====
@@ -863,7 +883,8 @@ function normalizeS(){const m=S.meta,ci=CI();if(VISIT)return;
     if(ci<1&&(S.band>0||S.dirty>0||av()>0)){ref+=(S.dirty||0)+S.band*C(800)+(av()?C(6000):0);S.band=0;S.dirty=0;S.avocat=0;S.heist=null;S.bandUp={nez:0,pigeon:0}}
     if(ref>0){S.cash+=ref;setTimeout(()=>toast('La rue a été réorganisée : '+fmt(ref)+' remboursés pour ce qui a disparu ou déménagé'),1500)}}}
 const compCost=()=>C(Math.round(5000*Math.pow(2.5,S.compta||0)));
-function gain(n){n*=gm();S.cash+=n;S.total+=n;S.meta.life+=n;return n}
+function gain(n){if(VISIT)return 0;// en visite, la rue visitée ne te rapporte rien (seuls le casino et le PMU jouent avec ton argent)
+  n*=gm();S.cash+=n;S.total+=n;S.meta.life+=n;return n}
 
 // ================= Son =================
 const AU={c:null,next:0,step:0};
@@ -1263,7 +1284,7 @@ function evGuideHTML(){const d=e=>e==='controle'?['Contrôle fiscal','le fisc pr
 function startEvent(){
   let k=pick(['pluie','manif','marche','controle','pluie']);if(CK()==='london'&&Math.random()<.45)k='pluie';
   if(CK()==='ny'&&Math.random()<.6)k=pick(['rush','neige','parade',isNight()?'blackout':'rush']);
-  if(k==='controle'&&S.cash<C(3000))k='marche';
+  if(k==='controle'&&(VISIT||S.cash<C(3000)))k='marche';
   if(k==='controle'){const t=Math.round(S.cash*.1*fineM());S.cash-=t;float(P.x,P.y-100,'IMPÔTS -'+fmt(t),'#ef476f');
     toast('Contrôle fiscal surprise ! Le fisc prend '+fmt(t)+(S.avocat?' (Maître Lafouine a limité la casse)':''));snd('fail');return}
   ev={k,t:EVENTS[k].dur};snd('event');toast(EVENTS[k].n+' : '+EVENTS[k].d);
@@ -1284,7 +1305,7 @@ function update(dt){
   {const st=S.ride==='voiture'?vcOf('voiture').s:'';if(m>0&&!P.moving&&(P.idle||0)>.25&&!INSIDE){if(st==='cross'||st==='sport')P.wheelie=1.3;if(st==='chopper')P.puff=.9}
     P.idle=m>0?0:(P.idle||0)+dt;P.wheelie=Math.max(0,(P.wheelie||0)-dt);P.puff=Math.max(0,(P.puff||0)-dt);
     if(st==='chopper'&&m>0&&(P.puff>0?Math.random()<.7:Math.random()<dt*2.5))RIDEFX.push({x:P.x-P.face*38,y:P.y-6,vx:-P.face*rnd(20,50),vy:-rnd(10,30),r:rnd(4,7),a:.75});
-    for(const q of RIDEFX){q.x+=q.vx*dt;q.y+=q.vy*dt;q.r+=14*dt;q.a-=dt*.9}RIDEFX=RIDEFX.filter(q=>q.a>0)}
+    presTick(dt);for(const q of RIDEFX){q.x+=q.vx*dt;q.y+=q.vy*dt;q.r+=14*dt;q.a-=dt*.9}RIDEFX=RIDEFX.filter(q=>q.a>0)}
   P.moving=m>0;
   if(m){P.x+=dx/m*speed()*dt;P.y+=dy/m*speed()*dt;if(Math.abs(dx)>.1)P.face=dx>0?1:-1}
   P.x=clamp(P.x,20,W-20);P.y=clamp(P.y,215,630);
@@ -1372,7 +1393,7 @@ function update(dt){
 
   squadUpdate(dt);shotsUpdate(dt);
   // salaires
-  if(S.emp>0){S.pay.timer-=dt;
+  if(S.emp>0&&!VISIT){S.pay.timer-=dt;
     if(S.pay.timer<=0){S.pay.timer=60;S.pay.due+=wages();if(!S.manager)toast('Jour de paie : '+fmt(S.pay.due)+' à verser à tes employés')}
     if(S.pay.due>0){
       if(S.manager&&S.cash>=S.pay.due){S.cash-=S.pay.due;float(BID.local.door,120,'Paie versée -'+fmt(S.pay.due),'#ef476f');S.pay.due=0;S.pay.late=0;
@@ -1459,7 +1480,7 @@ function update(dt){
   if(S.food<25){hungerT-=dt;if(hungerT<=0){hungerT=1.2;snd('hunger')}}else hungerT=0;
   if(S.hp<25){hpT-=dt;if(hpT<=0){hpT=1;snd('lowhp')}}else hpT=0;
   if(S.food<=0)S.hp-=dt*3;
-  if(S.frigo&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
+  if(S.frigo&&!VISIT&&!FA&&S.food<35&&S.cash>=foodP(8)){S.cash-=foodP(8);S.stats.ate++;FA={t:0,x:P.x+P.face*44,y:P.y,face:P.face}}
   if(FA){FA.t+=dt;if(FA.t>=.95&&!FA.ate){FA.ate=1;S.food=Math.min(100,S.food+45);float(P.x,P.y-95,'MIAM !','#ff9f1c');snd('eat')}if(FA.t>1.6)FA=null}
   if(S.hp<=0)knockout();
   gain(passive()*dt);
@@ -2065,7 +2086,9 @@ function updAct(){
   if(lbl!==lastAct){lastAct=lbl;$('act').hidden=!lbl;$('act').innerHTML=lbl?lbl+'<kbd>E</kbd>':'';}
   const hh=!!lbl||sh;if($('hint').hidden!==hh)$('hint').hidden=hh;
 }
-const visitMsg=()=>{toast('Visite seulement : retourne à '+HOME().n+' pour faire des affaires');snd('err')};
+const visitMsg=()=>{toast('Visite seulement : le casino et le PMU sont ouverts aux visiteurs, pour le reste retourne à '+HOME().n);snd('err')};
+// en visite, ton argent reste le tien : le casino et le PMU jouent avec, et rien de la rue visitée ne te revient
+function visitWallet(vs){PRES.others={};PRES.hb=0;Object.defineProperty(vs,'cash',{get(){return VISIT?VISIT.saved.cash:0},set(v){if(VISIT)VISIT.saved.cash=Math.max(0,v)},configurable:true,enumerable:true})}
 function genSnap(w){const r=w.rate||5,st=[];const n=Math.min(6,2+Math.floor(r/8));for(let k=0;k<n;k++)st.push({n:NAMES[(k*7+w.i*3)%NAMES.length],tr:Object.keys(TRAITS)[(k+w.i)%7],sh:k%3===2?'nuit':'jour'});
   return {recon:true,local:true,frigo:true,manager:true,distrib:Math.min(8,2+Math.floor(r/3)),distUp:Math.min(6,Math.floor(r/5)),v2:1,shops:{[CITY_SHOPS[CITIES[w.i].k][1]]:Math.min(10,1+Math.floor(r/2)),super:Math.min(10,Math.floor(r/6))},emp:n,staff:st,secu:r>15}}
 function snapOf(S0){return JSON.parse(JSON.stringify(Object.assign({},S0,{meta:null})))}
@@ -2082,12 +2105,12 @@ function travelTo(k){if(VISIT||JOB)return;INSIDE=null;const m=S.meta,w=m.worlds[
 function startVisit(k){if(VISIT)return;const w=S.meta.worlds[k];if(!w)return;
   const snap=w.snap?JSON.parse(JSON.stringify(w.snap)):genSnap(w),vs=Object.assign(fresh0(S.meta),snap);
   vs.meta=S.meta;if(!Array.isArray(vs.staff))vs.staff=[];vs.emp=Math.min(vs.emp||0,vs.staff.length);vs.pay={timer:60,due:0,late:0,strike:false};vs.heat=0;vs.mkt=null;vs.stk={};vs.hist=[];vs.heist=null;vs.hp=100;vs.food=100;vs.bag=0;vs.bagVal=0;vs.ride=S.ride;vs.veh=Object.assign({},S.veh);vs.clock=S.clock;
-  VISIT={k,i:w.i,saved:S,t0:Date.now()};S=vs;resetWorld();$('panel').hidden=true;pid=null;refocus();snd('event');
+  VISIT={k,i:w.i,saved:S,t0:Date.now()};visitWallet(vs);S=vs;resetWorld();$('panel').hidden=true;pid=null;refocus();snd('event');
   toast('Bienvenue à '+CITY().n+' ! Ta filiale tourne sans toi'+(w.snap?'':' (rue reconstituée)'));updHud()}
-function endVisit(){if(!VISIT)return;const el=Math.min(7200,(Date.now()-VISIT.t0)/1000);const clock=S.clock;S=VISIT.saved;VISIT=null;S.clock=clock;resetWorld();if(S.heist&&(S.heist.st==='go'||S.heist.st==='inside'))S.heist.st='plan';catchUp(el,true);
+function endVisit(){if(!VISIT)return;PRES.others={};PRES.hb=0;const el=Math.min(7200,(Date.now()-VISIT.t0)/1000);const clock=S.clock;S=VISIT.saved;VISIT=null;S.clock=clock;resetWorld();if(S.heist&&(S.heist.st==='go'||S.heist.st==='inside'))S.heist.st='plan';catchUp(el,true);
   $('panel').hidden=true;pid=null;refocus();snd('event');setTimeout(()=>toast('De retour à '+CITY().n),50);updHud();save();renderTuto()}
 function doAct(){
-  if(VISIT){if(spot())visitMsg();return}
+  if(VISIT){const sp=spot();if(sp==='casino'||sp==='bookie')return openPanel(sp);if(sp)visitMsg();return}
   if(INSIDE){const r=roomSpot();if(!r)return;if(r==='exit')return exitBar();
     if(r==='counter'){const c=C(8);if(S.cash<c){say('Le patron ne fait pas crédit');snd('err');return}S.cash-=c;S.food=Math.min(100,S.food+10);S.hp=Math.min(100,S.hp+3);S.stats.ate++;
       say(pick(['Santé !','Elle est tiède mais elle est bonne','Une pour la route !']));snd('eat');return}
@@ -2148,7 +2171,7 @@ function payNow(){
 // ================= HUD =================
 function updHud(){
   {const bk=$('back');if(bk.hidden===!!VISIT)bk.hidden=!VISIT;if(VISIT){const t='Retour à '+HOME().n;if(bk.textContent!==t)bk.textContent=t}const bz=$('btnBiz');if(bz.hidden!==!!VISIT)bz.hidden=!!VISIT;const sk=$('btnSk'),skh=!!VISIT||CURI()<1;if(sk.hidden!==skh)sk.hidden=skh}
-  if(VISIT){const w=S.meta.worlds[VISIT.k];$('cash').textContent='En visite';$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo:'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
+  if(VISIT){const w=S.meta.worlds[VISIT.k],own=Object.values(PRES.others).find(o=>o.owner);$('cash').textContent=fmt(VISIT.saved.cash);$('rate').textContent=VISIT.other?'Chez '+VISIT.other.pseudo+(own?' · 🟢 en ligne'+(own.room?' (au bar)':''):' · hors ligne'):'Filiale : +'+fmt2(w.rate*w.g)+'/s vers ta holding';$('payline').textContent='';
     if(VISIT.other){$('goalh').textContent='Visite · rue de '+VISIT.other.pseudo+' · '+CITY().n;$('goalt').textContent='Balade-toi chez '+VISIT.other.pseudo+'. Visite seulement : clique sur "Retour à '+HOME().n+'" pour rentrer (et laisser un pourboire si tu veux).'}
     else{$('goalh').textContent='Visite · '+CITY().n+' · filiale en gérance';$('goalt').textContent='Balade-toi dans ton ancienne rue. Rien à acheter ici : clique sur "Retour à '+HOME().n+'" pour reprendre tes affaires.'}
     $('hpb').style.width=S.hp+'%';$('fdb').style.width=S.food+'%';critHud();$('hpn').textContent=Math.ceil(S.hp);$('fdn').textContent=Math.ceil(S.food);$('bagn').textContent='—';updAct();return}
@@ -2606,7 +2629,7 @@ $('pbody').addEventListener('click',e=>{
   if(a==='visit'){$('panel').hidden=true;pid=null;cloudGo('En route vers '+CITIES[(S.meta.worlds[+v]||{}).i||0].n+'…',()=>startVisit(+v));return}
   if(a==='travel'){travelTo(+v);return}
   if(a==='back'){leaveVisit();return}
-  if(VISIT&&!['close','ptab','opt','tab','ko'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
+  if(VISIT&&!['close','ptab','opt','tab','ko','info','howto','bj','bjdeal','bet','bksel','bkbet','bktab','grat'].includes(a)&&!(a==='hold'&&v!=='cap'))return visitMsg();
   const pay=c=>{if(S.cash<c){snd('err');return false}S.cash-=c;snd('buy');return true};
   if(a==='close')return closePanel();
   if(a==='worldmap'){if(JOB)return;$('panel').hidden=true;pid=null;return worldSelect()}
@@ -3701,7 +3724,7 @@ function drawRoom(){if(INSIDE&&INSIDE.k==='nyse')return drawNyseRoom();
   const rs=roomSpot();if(rs){const x=RSPOTS[rs][0],y=rs==='exit'?110:rs==='pc'?172:rs==='armory'?50:225;txt('▼',x,y+Math.sin(T*6)*4,22,'#ffd23f',true)}
   drawGuideRoom();
 }
-const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'||CK()==='ny'?(!!S.local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
+const hasCostume=()=>S.meta.outfit==='costume',casinoOk=()=>CK()==='london'||CK()==='ny'?(!!(VISIT?VISIT.saved:S).local||S.meta.outfit==='peaky'||hasCostume()):hasCostume();// à Londres : le local, la tenue Peaky Blinders ou le costume
 let casWarn=0;
 // ===== salle du New York Stock Exchange : écran géant des cours, postes de trading, bureau vitré des analystes =====
 function drawNyseRoom(){
@@ -4094,6 +4117,7 @@ function draw(){
     const w=P.wheelie||0,ang=w>0?Math.sin(Math.min(1,(1.3-w)/.25)*Math.PI/2)*Math.min(1,w/.4)*.42:0;// monte vite, redescend en douceur
     cx.save();if(ang){const px=P.x-P.face*22;cx.translate(px,P.y);cx.rotate(-P.face*ang);cx.translate(-px,-P.y)}
     drawRide(S.ride,P.x,P.y,P.face,false);drawGuy(P.x,P.y,playerLook());drawRide(S.ride,P.x,P.y,P.face,true);cx.restore();drawBarsUnder()}]);
+  if(!INSIDE)for(const o of Object.values(PRES.others))if(!o.room&&inV(o.x))L.push([o.y,()=>drawOther(o)]);
   L.sort((a,b)=>a[0]-b[0]);for(const [,f] of L)f();
   drawWeatherAndNight();
   cx.strokeStyle='rgba(255,255,255,.35)';cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.ellipse(P.x,P.y-4,pickR(),pickR()*.45,0,0,7);cx.stroke();cx.setLineDash([]);
@@ -4479,7 +4503,7 @@ async function visitOther(ps){if(!SB||!ps)return;if(VISIT||JOB||INSIDE){toast('T
   const snap={};for(const k in d.snap||{})if(d.snap[k]!=null)snap[k]=d.snap[k];
   const vs=Object.assign(fresh0(S.meta),snap);vs.meta=S.meta;if(!Array.isArray(vs.staff))vs.staff=[];vs.emp=Math.min(vs.emp||0,vs.staff.length);
   vs.pay={timer:60,due:0,late:0,strike:false};vs.heat=0;vs.mkt=null;vs.stk={};vs.hist=[];vs.heist=null;vs.hp=100;vs.food=100;vs.bag=0;vs.bagVal=0;vs.ride=S.ride;vs.veh=Object.assign({},S.veh);vs.clock=S.clock;
-  VISIT={k:-1,i:Math.max(0,Math.min(3,d.ci|0)),saved:S,t0:Date.now(),other:{pseudo:d.pseudo,cash:+d.cash||0}};S=vs;resetWorld();$('panel').hidden=true;$('tuto').hidden=true;pid=null;refocus();snd('event');
+  VISIT={k:-1,i:Math.max(0,Math.min(3,d.ci|0)),saved:S,t0:Date.now(),other:{pseudo:d.pseudo,cash:+d.cash||0}};visitWallet(vs);S=vs;resetWorld();$('panel').hidden=true;$('tuto').hidden=true;pid=null;refocus();snd('event');
   toast('Bienvenue dans la rue de '+d.pseudo+' à '+CITY().n+' ! Visite seulement');updHud()})}
 function leaveVisit(){if(VISIT&&VISIT.other){openPanel('tipv');return}goHome()}
 const goHome=()=>{$('panel').hidden=true;pid=null;cloudGo('Retour à '+HOME().n+'…',endVisit)};

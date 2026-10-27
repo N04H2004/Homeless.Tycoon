@@ -403,3 +403,57 @@ begin
 end $$;
 revoke all on function public.claim_heists() from public, anon;
 grant execute on function public.claim_heists() to authenticated;
+
+-- ============ Présence dans les rues (voir les joueurs connectés pendant une visite) ============
+-- Chaque joueur connecté envoie toutes les 3 s où il est (sa rue ou celle qu'il visite), sa position et son look.
+create table if not exists public.presence (
+  user_id uuid primary key references public.profiles (id) on delete cascade,
+  street uuid,
+  ci int not null default 0,
+  x real not null default 0,
+  y real not null default 0,
+  face smallint not null default 1,
+  moving boolean not null default false,
+  room text,
+  look jsonb check (look is null or pg_column_size(look) < 8000),
+  seen_at timestamptz not null default now()
+);
+create index if not exists presence_street on public.presence (street, seen_at);
+alter table public.presence enable row level security;-- aucun accès direct : tout passe par les fonctions
+
+create or replace function public.heartbeat(p_street text, p_ci int, p_x real, p_y real, p_face int, p_moving boolean, p_room text, p_look jsonb)
+returns text language plpgsql security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); sid uuid;
+begin
+  if uid is null then raise exception 'non connecté'; end if;
+  if p_street is null then sid := uid;
+  else select id into sid from public.profiles where lower(pseudo) = lower(p_street); if sid is null then sid := uid; end if; end if;
+  if p_look is not null and pg_column_size(p_look) >= 8000 then p_look := null; end if;
+  insert into public.presence as pr (user_id, street, ci, x, y, face, moving, room, look, seen_at)
+    values (uid, sid, least(greatest(coalesce(p_ci, 0), 0), 3), least(greatest(coalesce(p_x, 0), 0), 5200), least(greatest(coalesce(p_y, 0), 0), 700),
+            case when p_face < 0 then -1 else 1 end, coalesce(p_moving, false), left(p_room, 16), p_look, now())
+  on conflict (user_id) do update set street = excluded.street, ci = excluded.ci, x = excluded.x, y = excluded.y, face = excluded.face,
+    moving = excluded.moving, room = excluded.room, look = coalesce(excluded.look, pr.look), seen_at = now();
+  return 'ok';
+end $$;
+revoke all on function public.heartbeat(text, int, real, real, int, boolean, text, jsonb) from public, anon;
+grant execute on function public.heartbeat(text, int, real, real, int, boolean, text, jsonb) to authenticated;
+
+-- les joueurs présents dans une rue (p_street = pseudo du propriétaire, null = ma rue), dans la même ville, vus il y a moins de 15 s
+create or replace function public.street_people(p_street text, p_ci int)
+returns table (pseudo text, x real, y real, face smallint, moving boolean, room text, look jsonb, owner boolean)
+language plpgsql stable security definer set search_path = '' as $$
+declare uid uuid := auth.uid(); sid uuid; priv boolean;
+begin
+  if uid is null then return; end if;
+  if p_street is null then sid := uid;
+  else select pf.id, pf.private into sid, priv from public.profiles pf where lower(pf.pseudo) = lower(p_street);
+    if sid is null or (coalesce(priv, false) and sid <> uid) then return; end if; end if;
+  return query
+    select p.pseudo, pr.x, pr.y, pr.face, pr.moving, pr.room, pr.look, pr.user_id = sid
+    from public.presence pr join public.profiles p on p.id = pr.user_id
+    where pr.street = sid and pr.ci = coalesce(p_ci, 0) and pr.user_id <> uid and pr.seen_at > now() - interval '15 seconds'
+    limit 12;
+end $$;
+revoke all on function public.street_people(text, int) from public, anon;
+grant execute on function public.street_people(text, int) to authenticated;

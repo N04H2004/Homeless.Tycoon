@@ -33,15 +33,59 @@ Marcher sur les déchets pour les ramasser, puis vider son sac dans une poubelle
 * L'argent : 12 € à Paris vs plusieurs milliards de yens à Tokyo.
 * Le scooter de base (Vespa vert) vs le même véhicule après le garage tuning.
 
-## Commandes de démo (si le jeu en a)
+## Lancer le jeu
 
-Le jeu n'en a pas pour l'instant : il n'y a ni `?demo=1`, ni `window.__adCtl`.
+Le jeu doit être servi en http, pas ouvert en double-clic (`file://` bloque le chargement des sauvegardes) :
 
-Les vidéos existantes ont été tournées avec un outil interne qui pilote une copie de test du jeu. Je peux ajouter de vraies commandes de démo sur ce modèle : argent, niveau des boutiques, ville, tenue, véhicule, arme, et liste des choix. En mode démo, le score et la sauvegarde en ligne seraient coupés, pour ne pas fausser le classement.
+* en ligne : `https://homelesstycoon.vercel.app/?save=saves/tokyo.json`
+* en local, depuis le dossier dézippé : `python3 -m http.server 8000`, puis `http://localhost:8000/?save=saves/tokyo.json`
 
-## Sauvegardes de démo (optionnel)
+Paramètres d'URL :
 
-Aucune pour l'instant. La partie est enregistrée dans le navigateur (clé `poubelle-tycoon-v1`). Des sauvegardes « début », « milieu » et « fin » peuvent être créées en même temps que les commandes de démo.
+* `?demo=1` : mode démo, partie vierge.
+* `?save=saves/xxx.json` : mode démo, chargé avec cette sauvegarde (voir plus bas).
+* `?lang=en` ou `?lang=fr` : langue de l'interface. À combiner : `?save=saves/tokyo.json&lang=en`.
+
+En mode démo, la vraie partie du navigateur n'est jamais touchée (clé séparée `poubelle-tycoon-demo`). Le classement, la présence en ligne, la sauvegarde cloud, la récompense quotidienne et les gains hors ligne sont coupés. Rien n'est envoyé au classement.
+
+Après avoir chargé la page, cliquer sur « Reprendre » / « Resume » pour entrer dans la rue.
+
+## Commandes de démo
+
+Dans la console du navigateur (F12), toutes disponibles en mode démo seulement :
+
+| Commande | Effet |
+|---|---|
+| `__adCtl.argent(5e9)` | Fixe l'argent de la ville en cours |
+| `__adCtl.niveauVille(0…10)` | 0 = rue vide « À VENDRE », 10 = tout racheté (boutiques, distributeurs, employés, manager, frigo) |
+| `__adCtl.tour(0…50)` | Hauteur de la Pigeon Tower (New York) |
+| `__adCtl.tenue('costume')` | `classic`, `hotdog`, `costume`, `pigeon`, `armure`, `peignoir`, `astro`, `peaky` |
+| `__adCtl.vehicule('voiture','sport')` | `trott` (skate / long), `scooter` (classic / elec), `voiture` (vespa / chopper / cross / sport), `aucun` |
+| `__adCtl.peinture('#ef476f','flames','#4cc9f0','#ffd23f')` | Couleur, stickers, néon, jantes du véhicule monté |
+| `__adCtl.arme('pompe')` | `lance` (lance-pierre), `revolver` (Glock), `pompe` (fusil à pompe), `confetti` (M16), `aucune` |
+| `__adCtl.heure('nuit')` | `jour` ou `nuit` |
+| `__adCtl.interface(false)` | Cache tout le HUD pour un plan propre ; `interface(true)` le remet |
+| `__adCtl.listes()` | Liste tous les choix possibles |
+
+* Couleurs : `#ef476f` `#ff9f1c` `#ffd23f` `#06d6a0` `#118ab2` `#7b2cbf` `#f72585` `#22223b` `#f8f9fa` `#8d99ae`
+* Stickers : `flames` `stripes` `stars` `sakura` `checker` `bolt` `dots` `tribal` `pigeon` `num` (`''` pour aucun)
+* Néons : `#f72585` `#4cc9f0` `#38f07a` `#c77dff` (`''` pour aucun)
+* Jantes : `#adb5bd` `#333` `#ced4da` `#ffd23f` (or) `#ff70a6`
+
+Exemple de plan « héros à Tokyo » : `?save=saves/tokyo.json&lang=en`, puis `__adCtl.heure('nuit'); __adCtl.interface(false)`.
+
+## Sauvegardes de démo
+
+Dans `saves/`, tutoriel et tutos déjà passés :
+
+| Fichier | Contenu |
+|---|---|
+| `debut.json` | Paris, niveau 1 : 12 €, façades « À VENDRE », aucun revenu, tenue de départ, à pied |
+| `paris-fin.json` | La même rue rachetée : distributeurs partout, boutiques au max, 8 employés, manager, Vespa verte |
+| `londres.json` | Londres, rue bien avancée, ~3,4 M£, tenue Peaky, chopper violet |
+| `newyork-tour.json` | New York, Pigeon Tower à 45 / 50 étages, ~420 M$, costume, motocross jaune |
+| `tokyo.json` | Tokyo, costume trois-pièces, sportive rose à flammes et néon bleu, ~4 milliards de ¥ |
+| `garage.json` | Tokyo, ~2,1 milliards de ¥, les 3 véhicules et tous les modèles débloqués, chacun peint (longboard sakura, trottinette électrique, chopper tribal), les 8 tenues |
 
 ## À ne jamais montrer
 

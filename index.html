@@ -441,6 +441,12 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
 /* Version CrazyGames : build CrazyGames (window.CG_BUILD), site crazygames ou ?cg=1 pour tester. On y charge leur SDK et l'anglais est la langue par défaut */
 window.CG_MODE=!!(window.CG_BUILD||/[?&]cg=1/.test(location.search)||/crazygames/i.test(location.hostname)||/crazygames/i.test(document.referrer));
 if(window.CG_MODE)document.write('<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"><\/script>');
+/* Mode démo (tournage des pubs) : ?demo=1 ou ?save=saves/xxx.json. Partie séparée de la vraie, sans compte ni classement.
+   ?save= charge la sauvegarde à chaque ouverture (il faut servir le dossier en http, pas en file://). ?lang=en|fr force la langue. */
+window.DEMO=/[?&](demo=1|save=)/.test(location.search);
+(()=>{const q=new URLSearchParams(location.search),f=q.get('save'),l=q.get('lang');
+  if(l==='en'||l==='fr')try{localStorage.setItem('ht-lang',l)}catch(e){}
+  if(f)try{const x=new XMLHttpRequest();x.open('GET',f,false);x.send();if(x.status<400&&x.responseText){JSON.parse(x.responseText);localStorage.setItem('poubelle-tycoon-demo',x.responseText)}else console.warn('Sauvegarde introuvable',f)}catch(e){console.warn('Sauvegarde illisible',f,e)}})();
 /* Langue : le dictionnaire anglais n'est chargé que si le joueur a choisi English (Menu › Options) */
 (()=>{let L=window.CG_MODE?'en':'fr';try{L=localStorage.getItem('ht-lang')||L}catch(e){}window.HT_LANG=L==='en'?'en':'fr';
 if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<script src="lang-en.js"><\/script>')}})();
@@ -799,7 +805,7 @@ const EVENTS={
 };
 
 // ================= Sauvegarde =================
-const KEY='poubelle-tycoon-v1';
+const KEY=window.DEMO?'poubelle-tycoon-demo':'poubelle-tycoon-v1';// en démo, la vraie partie du joueur n'est jamais touchée
 const freshMeta=()=>({gold:0,prestige:0,perk:{cash:0,dodo:0,lucky:0,emp:0},wardrobe:['classic'],outfit:'classic',ach:{},life:0,snd:true,mus:true,legend:0,fed:0,escapes:0,casinoLost:0,jackpot:0,bestTrade:0,kebabs:0,changes:0,beers:0,heists:0,her:{},worlds:[],pgc:0,pc:{p:50,h:[]},poBought:0,treas:0,tips:{}});
 const CMS=[1,5,10,18];// prix par ville : bien plus que les gains (x1,6 / x2,6 / x4) pour rester longtemps dans chaque ville
 function fresh(m){const o=fresh0(m);const h=(m||o.meta).her||{};if(h.frigo)o.frigo=true;if(h.manager)o.manager=true;if(h.trott){o.veh.trott=1;o.ride='trott'}return o}
@@ -1234,7 +1240,7 @@ function catchUp(el,away){
     if(away)setTimeout(()=>toast('Pendant ta visite, ta rue de '+CITY().n+' a rapporté '+fmt(g)),600);
     else{const A=AFKG&&!AFKG.shown?AFKG:null;AFKG={g:(A?A.g:0)+g,tg:(A?A.tg:0)+tg,el:(A?A.el:0)+el,ci:CURI()}}}}// au retour : fenêtre « pendant ton absence », gains doublables avec une vidéo
 let AFKG=null;
-catchUp(Math.min(AFK_MAX*(1+S.meta.perk.dodo),(Date.now()-(S.last||Date.now()))/1000),false);
+if(!window.DEMO)catchUp(Math.min(AFK_MAX*(1+S.meta.perk.dodo),(Date.now()-(S.last||Date.now()))/1000),false);
 
 // ================= Entrées =================
 const keys={};
@@ -3704,7 +3710,7 @@ const TSQ_ADS=[['POUBELLE CORP','le recyclage, c\'est nous','#ef476f','#ffd23f']
 function drawTimesSq(){const x=4680,w=430,dk=darkness();cx.save();cx.lineWidth=4;cx.lineJoin='round';cx.strokeStyle=INK;rr(x,10,w,200,4);fs('#2b2d42');
   const glow=(c,b)=>{if(dk>.2){cx.shadowColor=c;cx.shadowBlur=b}else cx.shadowBlur=0};
   // grand écran qui change de pub (sous la barre du haut pour rester visible)
-  const i=Math.floor(T/4)%TSQ_ADS.length,[a1,a2,c1,c2]=TSQ_ADS[i],ph=(T%4)/4;cx.save();glow(c1,22);rr(x+16,40,258,96,6);fs('#14141f');cx.restore();
+  const i=((Math.floor(T/4)%TSQ_ADS.length)+TSQ_ADS.length)%TSQ_ADS.length,[a1,a2,c1,c2]=TSQ_ADS[i],ph=(T%4)/4;cx.save();glow(c1,22);rr(x+16,40,258,96,6);fs('#14141f');cx.restore();
   cx.save();rr(x+20,44,250,88,4);cx.clip();const g=cx.createLinearGradient(x+20,0,x+270,0);g.addColorStop(0,mix(c1,'#14141f',.55));g.addColorStop(1,mix(c2,'#14141f',.7));cx.fillStyle=g;cx.fillRect(x+20,44,250,88);
   const sl=ph<.12?(1-ph/.12)*250:0;txt(a1,x+145+sl,78,a1.length>12?24:30,c1,true);txt(a2,x+145+sl,110,13,'#fff');cx.restore();
   // néon vertical
@@ -4690,7 +4696,7 @@ function dailyGen(){const day=dayKey(),pool=['trash','pick','cdd','repair','eat'
   let h=0;for(const ch of day)h=(h*31+ch.charCodeAt(0))>>>0;const pk=[];while(pk.length<2){h=(h*1103515245+12345)>>>0;const k=pool[h%pool.length];if(!pk.includes(k))pk.push(k)}
   const D=S.meta.daily||{},ms=['earn',...pk].map(k=>({k,g:k==='earn'?nice(Math.max(C(1000),autoRate()*600)):DM[k][2],p:0,b:DM[k][1](),c:CURI(),cl:false}));
   S.meta.daily={day,ms,rw:dReward(),ci:CURI(),chest:false,streak:D.lastAll===dayKey(-1)||D.lastAll===day?D.streak||0:0,lastAll:D.lastAll||''}}
-function dailyTick(){if(BOOT||VISIT)return;if(S.meta.refund){toast('Bonus de prestige remaniés : '+S.meta.refund+' Pigeon'+(S.meta.refund>1?'s':'')+' d\'Or rendu'+(S.meta.refund>1?'s':'')+'. Place-les dans Sommeil rentable ou Pigeon porte-bonheur !');delete S.meta.refund;save()}if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
+function dailyTick(){if(BOOT||VISIT||window.DEMO)return;if(S.meta.refund){toast('Bonus de prestige remaniés : '+S.meta.refund+' Pigeon'+(S.meta.refund>1?'s':'')+' d\'Or rendu'+(S.meta.refund>1?'s':'')+'. Place-les dans Sommeil rentable ou Pigeon porte-bonheur !');delete S.meta.refund;save()}if(!S.meta.daily||S.meta.daily.day!==dayKey())dailyGen();const D=S.meta.daily;let ready=0;
   // changement de ville : récompenses et objectif « Gagner » recalculés selon les revenus de la nouvelle ville
   if(D.ci!==CURI()){D.ci=CURI();D.rw=dReward();for(const m of D.ms)if(m.k==='earn'&&!m.cl&&m.p<m.g){m.g=nice(Math.max(C(1000),autoRate()*600));m.p=0}}
   for(const m of D.ms){const cur=DM[m.k][1]();if(m.c!==CURI()||cur<m.b){m.c=CURI();m.b=cur}if(cur>m.b){const was=m.p>=m.g;m.p+=cur-m.b;m.b=cur;if(!was&&m.p>=m.g){missionFx(m)}}if(m.p>=m.g&&!m.cl)ready++}
@@ -4763,7 +4769,7 @@ function afkGainHTML(){const G=AFKG;if(!G)return '';const t=Math.round(G.el/60);
 function fireworks(){const c=document.createElement('canvas'),d=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;c.width=W*d;c.height=H*d;
   c.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';document.body.appendChild(c);const g=c.getContext('2d');g.scale(d,d);
   const COL=['#ffd23f','#f72585','#4cc9f0','#06d6a0','#ff9f1c','#c77dff','#ffffff'],R=[],P=[];let t0=performance.now(),last=t0,next=0;snd('legend');
-  const step=now=>{const dt=Math.min(.05,(now-last)/1000),el=(now-t0)/1000;last=now;
+  const step=now=>{const dt=Math.max(0,Math.min(.05,(now-last)/1000)),el=(now-t0)/1000;last=now;
     if(el<8&&now>=next){next=now+rnd(180,420);R.push({x:rnd(W*.12,W*.88),y:H+10,vy:-rnd(H*.9,H*1.25),ty:rnd(H*.12,H*.45),col:pick(COL)})}
     g.clearRect(0,0,W,H);
     for(let i=R.length-1;i>=0;i--){const r=R[i];r.y+=r.vy*dt;r.vy*=.985;g.fillStyle='#fff3b0';g.beginPath();g.arc(r.x,r.y,2.5,0,7);g.fill();
@@ -4819,12 +4825,12 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){hidT=Date.
   if(hidT&&!BOOT&&!VISIT){const paused=AFK&&afkT,el=(Date.now()-(paused?afkT:hidT))/1000;if(el>5){if(AFK){AFK=false;$('afk').hidden=true}afkT=0;catchUp(Math.min(paused?afkCap()-AFK_MAX:afkCap(),el),false);updHud();save()}}
   hidT=0;lastInput=Date.now();last=performance.now()});
 for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);
-function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+function loop(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(!AFK&&!BOOT&&!document.hidden&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;afkT=Date.now();$('afk').hidden=false;save()}
   if(!BOOT&&!AFK&&!ADP)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
 const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
-let SB=null;try{if(window.supabase)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
+let SB=null;try{if(window.supabase&&!window.DEMO)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
 const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:'',n:''},edit:false,rows:null,at:0,ready:false,busy:false,msg:'',err:false,sent:0};
 // pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit
 const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
@@ -5089,6 +5095,25 @@ if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.s
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
 setInterval(()=>{lbSend();cloudPush()},120000);setInterval(()=>{claimTips(false);claimHeists(false)},60000);// envois espacés pour tenir dans le plan gratuit Supabase
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){lbSend(true);cloudPush()}});
+// ===== Commandes de démo pour les pubs (window.__adCtl), seulement en mode démo =====
+if(window.DEMO){const ok=()=>{updHud();save();return true};
+  window.__adCtl={
+    argent:n=>{S.cash=+n;return ok()},
+    niveauVille:n=>{n=clamp(+n,0,10);S.local=n>0;S.distrib=Math.min(8,Math.ceil(n*.8));S.distUp=n;for(const x of SHOPS)S.shops[x.k]=n;for(const e of ESTATE)S.owned[e.k]=n>=10;
+      S.emp=Math.min(10,n);S.staff=Array.from({length:S.emp},(_,i)=>S.staff[i]||{n:pick(['Max','Lou','Zoé','Sam','Nina','Léo','Inès','Tom','Jade','Noé']),tr:'star',sh:i<6?'jour':'nuit'});S.manager=n>=3;S.frigo=n>=2;for(const u of UP)S.up[u.k]=Math.round(u.max*n/10);if(CK()==='ny')S.tower=n*5;return ok()},
+    tour:n=>{S.tower=clamp(+n,0,TW_MAX);return ok()},
+    tenue:k=>{if(!OUTFITS.some(o=>o.k===k))return 'tenues : '+OUTFITS.map(o=>o.k).join(', ');if(!S.meta.wardrobe.includes(k))S.meta.wardrobe.push(k);S.meta.outfit=k;return ok()},
+    vehicule:(k,modele)=>{if(k==='aucun'||!k){S.ride='';return ok()}if(!VEH.some(v=>v.k===k))return 'véhicules : '+VEH.map(v=>v.k).join(', ');S.veh[k]=1;S.ride=k;
+      if(modele){S.meta.vcust=1;(S.meta.vcm=S.meta.vcm||{})[modele]=1;S.meta.vc=S.meta.vc||{};(S.meta.vc[k]=S.meta.vc[k]||{}).s=modele}return ok()},
+    peinture:(couleur,stickers,neon,jantes)=>{const k=S.ride;if(!k)return 'monte d\'abord sur un véhicule';S.meta.vcust=1;S.meta.vc=S.meta.vc||{};const o=S.meta.vc[k]=S.meta.vc[k]||{};
+      if(couleur)o.c=couleur;if(stickers!=null)o.d=stickers;if(neon!=null)o.n=neon;if(jantes)o.w=jantes;return ok()},
+    arme:k=>{if(k==='aucune'||!k){S.weapon=null;return ok()}if(!ARMS.some(a=>a.k===k))return 'armes : '+ARMS.map(a=>a.k).join(', ');S.arms[k]=1;S.weapon=k;S.ammo=99;return ok()},
+    heure:h=>{S.clock=Math.floor(S.clock/DAY)*DAY+(h==='nuit'?190:70);return ok()},
+    interface:on=>{let st=$('adctl-ui');if(!st){st=document.createElement('style');st.id='adctl-ui';document.head.appendChild(st)}
+      st.textContent=on===false?'body>*:not(#game):not(#panel):not(#clouds),#game>*:not(#cv):not(#panel){visibility:hidden!important}#panel,#clouds{visibility:visible!important}#joy,#actl{display:none!important}':'';return true},
+    listes:()=>({tenues:OUTFITS.map(o=>o.k),vehicules:VEH.map(v=>v.k+' ('+v.n+')'),modeles:VC_STY,armes:ARMS.map(a=>a.k+' ('+a.n+')'),
+      couleurs:VC_COL,stickers:VC_OPT.d.map(x=>x[0]).filter(Boolean),neons:VC_OPT.n.map(x=>x[0]).filter(Boolean),jantes:VC_OPT.w.map(x=>x[0]),heures:['jour','nuit']})};
+  console.log('Mode démo : window.__adCtl.listes() pour voir les choix')}
 cgInit();
 bootLoading();
 updHud();

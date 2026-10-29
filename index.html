@@ -29,7 +29,7 @@ html.app body{min-height:calc(100% + env(safe-area-inset-top,0px))}
 /* écrans tactiles : joystick flottant à gauche, 3 boutons ronds fixes à droite (action, poches, tir) */
 #joy{position:fixed;left:96px;bottom:96px;width:128px;height:128px;margin:0 0 -64px -64px;border-radius:50%;background:rgba(255,246,223,.22);border:4px solid rgba(42,31,61,.45);z-index:6;pointer-events:none;display:none}
 #joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#ffd23f;border:4px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
-#joy.idle{opacity:.55}#joy.on{opacity:1}
+#joy.idle{display:none!important}#joy.on{opacity:1}
 #actl{position:absolute;display:none;z-index:6;pointer-events:none;background:#fff6df;border:3px solid var(--ink);border-radius:12px;padding:4px 10px;font-family:var(--display);font-size:13px;color:var(--ink);max-width:180px;text-align:center;line-height:1.15}
 body.touch #joy{display:block}
 body.touch #hint{display:none}
@@ -41,7 +41,9 @@ body.touch #steal{right:calc(max(20px,env(safe-area-inset-right,0px)) + 104px);b
 body.touch #shoot{right:calc(max(20px,env(safe-area-inset-right,0px)) + 104px);bottom:calc(100px + env(safe-area-inset-bottom,0px));width:70px;height:70px}
 body.touch #steal::before,body.touch #shoot::before{font-size:30px}
 body.touch #act,body.touch #steal,body.touch #shoot{z-index:5}body.touch #act kbd,body.touch #steal kbd,body.touch #shoot kbd{display:none}
-body.touch #act[hidden],body.touch #steal[hidden]{display:flex!important;opacity:.38;pointer-events:none;filter:grayscale(1)}
+body.touch #act:not([hidden]),body.touch #steal:not([hidden]),body.touch #shoot:not([hidden]){animation:btnin .22s cubic-bezier(.3,1.6,.6,1)}
+@keyframes btnin{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){body.touch #act,body.touch #steal,body.touch #shoot{animation:none!important}}
 body.touch #actl{display:block}body.touch #actl:empty{display:none}
 body.touch #goal{left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:min(420px,calc(100% - 430px));font-size:12px}
 body.touch #tuto{bottom:calc(110px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 430px))}
@@ -1347,25 +1349,26 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;const m={
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 cv.addEventListener('contextmenu',e=>{e.preventDefault();if(INSIDE||!armed())return;const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/scale+camX;if(Math.abs(x-P.x)>4)P.face=x>P.x?1:-1;shoot()});
 // ---- joystick tactile : il apparaît sous le pouce sur la moitié gauche de l'écran ; toucher la moitié droite = aller à cet endroit
-const JOY={on:false,id:null,ox:0,oy:0,x:0,y:0};
+const JOY={on:false,id:null,ox:0,oy:0,x:0,y:0,t0:0,max:0};
 const touchUI=on=>{document.body.classList.toggle('touch',on)};
 try{if(matchMedia('(pointer: coarse)').matches)touchUI(true)}catch(e){}
 addEventListener('pointerdown',e=>{if(e.pointerType==='touch')touchUI(true)},true);
 addEventListener('keydown',()=>touchUI(false),true);
 function joyPut(cx0,cy0){const j=$('joy');j.style.left=cx0+'px';j.style.top=cy0+'px';j.style.bottom='auto';j.style.margin='-64px 0 0 -64px'}
 function joyRest(){const j=$('joy');j.className='idle';j.style.left='';j.style.top='';j.style.bottom='';j.style.margin='';j.firstChild.style.transform='';JOY.on=false;JOY.id=null;JOY.x=JOY.y=0}
-function joyMove(e){if(!JOY.on||e.pointerId!==JOY.id)return;let dx=e.clientX-JOY.ox,dy=e.clientY-JOY.oy;const d=Math.hypot(dx,dy),R=48;if(d>R){dx*=R/d;dy*=R/d}
+function joyMove(e){if(!JOY.on||e.pointerId!==JOY.id)return;let dx=e.clientX-JOY.ox,dy=e.clientY-JOY.oy;const d=Math.hypot(dx,dy),R=48;JOY.max=Math.max(JOY.max,d);if(d>R){dx*=R/d;dy*=R/d}
   $('joy').firstChild.style.transform=`translate(${dx}px,${dy}px)`;const k=Math.min(1,d/R);JOY.x=d>6?dx/R/Math.max(k,1e-6)*k:0;JOY.y=d>6?dy/R/Math.max(k,1e-6)*k:0;if(k<.25)JOY.x=JOY.y=0}
 addEventListener('pointermove',joyMove,{passive:true});
-addEventListener('pointerup',e=>{if(JOY.on&&e.pointerId===JOY.id)joyRest()});addEventListener('pointercancel',e=>{if(JOY.on&&e.pointerId===JOY.id)joyRest()});
+addEventListener('pointerup',e=>{if(JOY.on&&e.pointerId===JOY.id){const tap=JOY.max<12&&performance.now()-JOY.t0<300,x=JOY.ox,y=JOY.oy;joyRest();if(tap)walkTo(x,y)}});addEventListener('pointercancel',e=>{if(JOY.on&&e.pointerId===JOY.id)joyRest()});
 cv.addEventListener('pointerdown',e=>{
   if(e.button===2)return;
-  if(e.pointerType==='touch'&&e.clientX<innerWidth*.5){e.preventDefault();JOY.on=true;JOY.id=e.pointerId;JOY.ox=e.clientX;JOY.oy=e.clientY;joyPut(e.clientX,e.clientY);$('joy').className='on';P.tx=null;if(INSIDE)RP.tx=null;return}
-  refocus();
-  const r=cv.getBoundingClientRect();
-  if(INSIDE){RP.tx=clamp((e.clientX-r.left)/scale+roomCam,40,RW-40);RP.ty=clamp((e.clientY-r.top)/scale,375,610);return}
-  P.tx=clamp((e.clientX-r.left)/scale+camX,20,W-20);P.ty=clamp((e.clientY-r.top)/scale,215,630);
+  // tactile : le joystick apparaît là où on pose le pouce, n'importe où sur l'écran
+  if(e.pointerType==='touch'){e.preventDefault();JOY.on=true;JOY.id=e.pointerId;JOY.ox=e.clientX;JOY.oy=e.clientY;JOY.t0=performance.now();JOY.max=0;joyPut(e.clientX,e.clientY);$('joy').className='on';P.tx=null;if(INSIDE)RP.tx=null;return}
+  refocus();walkTo(e.clientX,e.clientY);
 });
+function walkTo(x,y){const r=cv.getBoundingClientRect();
+  if(INSIDE){RP.tx=clamp((x-r.left)/scale+roomCam,40,RW-40);RP.ty=clamp((y-r.top)/scale,375,610);return}
+  P.tx=clamp((x-r.left)/scale+camX,20,W-20);P.ty=clamp((y-r.top)/scale,215,630)}
 function resize(){dpr=Math.min(2,devicePixelRatio||1);cssW=cv.clientWidth;cssH=cv.clientHeight;
   // interface à l'échelle de la fenêtre : tout tient sur une ligne dès 560 px de large (en dessous, la mise en page mobile prend le relais)
   document.documentElement.style.setProperty('--ui',cssW<560?1:Math.max(.62,Math.min(1,cssW/1260,cssH/700)).toFixed(3));cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);scale=Math.max(cssH/H,cssW/W)}
@@ -4548,7 +4551,7 @@ const tutoJobs=()=>SHOPS.filter(sh=>sh.job&&JOBS[sh.job]&&jobOk(sh.job)).map(sh=
 const tutoNextJob=()=>{let b=null,bd=1e9;for(const j of tutoJobs())if(!j.ok){const d=Math.abs(P.x-j.sh.door);if(d<bd){bd=d;b=j}}return b};
 const tutoJobBtn=()=>{for(const j of tutoJobs())if(!j.ok){const e=document.querySelector(`#pbody [data-act="job:${j.k}"]:not(:disabled),#pbody [data-act="jobgo:${j.k}"]`);if(e)return e}return null};
 const TUTO=[
- {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce à gauche de l\'écran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
+ {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce n\'importe où sur l\'écran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
  {t:()=>`Un objet cassé traîne près de toi (il fait des étincelles). <b>Reste juste à côté</b> : tu le répares tout seul, puis tu le revends !`,tg:()=>{const b=tutoBroken();return b&&[b.x,b.y-20]},bar:()=>{const b=tutoBroken();return b?b.prog:0}},

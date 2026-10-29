@@ -2379,7 +2379,7 @@ function updHud(){
   if(S.emp>0){
     if(S.pay.strike){pl.textContent='GRÈVE : paie due '+fmt(S.pay.due);pl.className='bad'}
     else if(S.pay.due>0){pl.textContent='Paie en retard : '+fmt(S.pay.due);pl.className='bad'}
-    else{pl.textContent='Paie de '+fmt(wages())+' dans '+Math.ceil(S.pay.timer)+' s'+(S.manager?' (manager)':'');pl.className=''}
+    else{pl.textContent=(window.HT_LANG==='en'?'Pay of '+fmt(wages())+' in ':'Paie de '+fmt(wages())+' dans ')+Math.ceil(S.pay.timer)+' s'+(S.manager?' (manager)':'');pl.className=''}
   }else pl.textContent='';
   const pb=$('pay');const show=S.pay.due>0&&!S.manager;if(pb.hidden===show)pb.hidden=!show;if(show)pb.textContent='Payer '+fmt(S.pay.due);
   $('hpb').style.width=Math.max(0,S.hp)+'%';$('fdb').style.width=S.food+'%';critHud();

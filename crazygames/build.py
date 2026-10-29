@@ -9,7 +9,7 @@ import pathlib, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'crazygames' / 'homeless-tycoon-crazygames.zip'
-FILES = ['lang-en.js', 'favicon.png', 'logo/icon.png', 'logo/icon.svg']
+FILES = ['lang-en.js', 'favicon.png', 'logo/icon.png', 'logo/icon.svg', 'logo/app-icon-180.png']
 
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
 assert '<head>' in html, 'balise <head> introuvable'

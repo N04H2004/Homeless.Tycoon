@@ -234,6 +234,24 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
 .sheet h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;flex:1;text-wrap:balance}
 .sheet .x{font-family:var(--display);font-size:18px;width:38px;height:38px;border:3px solid var(--ink);border-radius:50%;background:#fff;cursor:pointer;color:var(--ink);flex:none}
 #pbody{overflow-y:auto;padding:12px 14px 16px;display:flex;flex-direction:column;gap:10px}
+/* téléphone (portrait ou paysage) : les fenêtres et mini-jeux prennent tout l'écran, hors encoche et barre d'accueil */
+@media (max-width:600px),(max-height:500px){
+  #panel{padding:0;background:var(--paper)}
+  .sheet{width:100%;height:100%;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none}
+  .sheet header{padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px))}
+  #pbody{flex:1;padding:12px max(14px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+  #drcv{max-width:none!important}
+}
+/* course de drift, téléphone à l'horizontale : la route à gauche sur toute la hauteur, les commandes en colonne à droite */
+@media (max-height:500px){
+  #pbody:has(#drcv){display:grid;grid-template-columns:minmax(0,1fr) 230px;grid-template-rows:minmax(0,1fr);align-items:center;gap:14px}
+  #pbody:has(#drcv)>.jbar,#pbody:has(#drcv)>#drmsg{display:none}
+  #pbody>div:has(>#drcv){grid-column:1;height:100%;min-height:0;align-items:center}
+  #drcv{width:auto!important;height:100%!important;max-width:100%!important}
+  #pbody .drpad{grid-column:2;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+  .drpad [data-dk="l"]{order:1}.drpad [data-dk="r"]{order:2}.drpad [data-dk="h"]{order:3}.drpad [data-dk="b"]{order:4}.drpad #drnit{order:5;grid-column:span 2}
+  #pbody .drpad .chunky{min-height:62px;font-size:18px}
+}
 .lead{margin:0;font-size:14px;opacity:.85}
 .row{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:8px 10px}
 .row .info{flex:1;min-width:0}

@@ -67,6 +67,7 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
 #cash{font-family:var(--display);font-size:30px;line-height:1;color:var(--cash);font-variant-numeric:tabular-nums;-webkit-text-stroke:1px var(--ink)}
 #rate,#payline{font-size:12px;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
 #payline.bad{color:#d62839;opacity:1}
+#btnMore{display:none}
 .bars{display:grid;grid-template-columns:auto 120px auto;gap:3px 8px;align-items:center;font-size:12px;font-weight:700}
 .bar{height:12px;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
 .bar>i{display:block;height:100%;width:50%;border-radius:4px;transition:width .2s}
@@ -322,6 +323,37 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   #tuto .tx{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){.bar>i{transition:none}.chunky.danger,.cd.nw{animation:none}}
+/* téléphone : l'essentiel seulement (argent, barres, Business, ☰ qui ouvre le reste) */
+@media (max-width:600px){
+  #hud{gap:6px;padding:calc(6px + env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px))}
+  #hud .card{padding:4px 9px;border-radius:12px;box-shadow:0 3px 0 var(--ink)}
+  #hlvl{font-size:10px;padding:0 6px;margin-bottom:1px}
+  #cash{font-size:21px}
+  #rate,#payline{font-size:10.5px}
+  #payline{display:none}#payline.bad{display:block}
+  #dlist{display:none!important}
+  .bars{grid-template-columns:auto 46px;gap:2px 6px;font-size:10px}
+  .bars .num{display:none!important}
+  #bagn,#dn{grid-column:auto!important;font-size:10px;white-space:nowrap}#bagn .bv{display:none}
+  body.btnsopen #adx2{visibility:hidden}
+  .btns{flex-direction:column;align-items:flex-end;gap:6px}
+  .btns>.chunky{display:none}
+  .btns>#btnMore,.btns>#btnBiz,.btns>#back:not([hidden]),.btns>#pay:not([hidden]){display:inline-flex;align-items:center;justify-content:center}
+  #hud .btns #btnMore,#hud .btns #btnBiz{width:42px;height:42px;padding:0;border-radius:50%;font-size:20px;line-height:1;position:relative}
+  #hud .btns #btnBiz{font-size:0}#btnBiz::before{content:'💼';font-size:20px}
+  #btnMore.dot::after{content:'';position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:#ef476f;border:2px solid var(--ink)}
+  .btns.open>.chunky:not([hidden]){display:inline-flex;align-items:center;justify-content:center}
+  #hud .btns.open>.chunky:not(#btnMore){min-width:150px;font-size:14px;padding:7px 12px}
+  #hud .btns.open #btnBiz{width:auto;height:auto;border-radius:12px;font-size:14px}.btns.open #btnBiz::before{content:none}
+  .btns.open #btnMore{background:var(--ink);color:var(--sun)}
+  #adx2,body.touch #adx2{top:calc(108px + env(safe-area-inset-top,0px));bottom:auto;left:auto;right:max(8px,env(safe-area-inset-right,0px));transform:none;font-size:11px;padding:4px 8px}
+  #toast{top:calc(150px + env(safe-area-inset-top,0px));font-size:13px;padding:5px 12px;max-width:calc(100% - 40px)}
+  #goal,body.touch #goal{left:8px;right:8px;transform:none;max-width:none;padding:5px 10px;font-size:11.5px;bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+  #goal b{font-size:10px}
+  #goalt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #goal small{display:none}
+  #goal .gp{height:5px;margin-top:4px}
+}
 #boot>:first-child{margin-top:auto}#boot>:last-child{margin-bottom:auto}
 #boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:20px 16px;overflow:auto;
   background:radial-gradient(circle at 50% 30%,#4a2f7a,#1b1230 75%);color:#fff6df;font-family:var(--body)}
@@ -465,6 +497,7 @@ if(window.HT_LANG==='en'){document.documentElement.lang='en';document.write('<sc
       <span>Sac</span><span id="bagn" style="grid-column:span 2;display:block">0 / 4</span>
     </div>
     <div class="btns">
+      <button class="chunky alt" id="btnMore" type="button" aria-label="Plus de boutons" aria-expanded="false">☰</button>
       <button class="chunky danger" id="pay" type="button" hidden>Payer</button>
       <button class="chunky alt" id="snd" type="button">Son</button>
       <button class="chunky alt" id="btnObj" type="button">Objectifs</button>
@@ -2353,6 +2386,11 @@ $('btnObj').addEventListener('click',()=>openPanel('obj'));
 $('btnDay').addEventListener('click',()=>VISIT?visitMsg():openPanel('daily'));
 $('dlist').addEventListener('click',()=>VISIT?visitMsg():openPanel('daily'));
 $('btnMenu').addEventListener('click',()=>openPanel('plus'));
+// téléphone : ☰ déplie les boutons, un choix ou un toucher dans la rue les replie
+{const bt=document.querySelector('#hud .btns'),more=$('btnMore'),set=o=>{bt.classList.toggle('open',o);document.body.classList.toggle('btnsopen',o);more.setAttribute('aria-expanded',o);more.textContent=o?'✕':'☰'};
+  more.addEventListener('click',()=>set(!bt.classList.contains('open')));
+  bt.addEventListener('click',e=>{if(e.target.closest('.chunky')&&e.target.closest('.chunky')!==more)set(false)});
+  cv.addEventListener('pointerdown',()=>set(false))}
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
 for(const id of ['btnBiz','btnSk','btnLb','btnFb','btnObj','btnDay','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});
@@ -2387,7 +2425,7 @@ function updHud(){
   {const hs=S.band>0||S.heat>0.5;for(const id of ['hl','hbar','htn'])if($(id).hidden===hs)$(id).hidden=!hs;
    {const ds=(S.dirty||0)>=1||S.band>0;for(const id of ['dl','dn'])if($(id).hidden===ds)$(id).hidden=!ds;const t=fmt(S.dirty||0)+(launderR()>0&&S.dirty>=1?' · lavage':'');if($('dn').textContent!==t)$('dn').textContent=t}
    $('htb').style.width=S.heat+'%';$('htb').classList.toggle('hot',S.heat>75);$('htn').textContent=Math.ceil(S.heat)}
-  $('bagn').textContent=S.bag+' / '+cap()+(S.bag?' · '+fmt((S.bagVal+S.bag*autoSec(TRASH_SEC))*gm()):'');
+  {const el=$('bagn'),h=S.bag+' / '+cap()+(S.bag?'<span class="bv"> · '+fmt((S.bagVal+S.bag*autoSec(TRASH_SEC))*gm())+'</span>':'');if(el._h!==h){el._h=h;el.innerHTML=h}}
   const parts=[];
   if(frenzy>0)parts.push('Frénésie dorée x3 · '+Math.ceil(frenzy)+' s');
   if(ev)parts.push(EVENTS[ev.k].n+' : '+EVENTS[ev.k].d+' · '+Math.ceil(ev.t)+' s');
@@ -4324,7 +4362,7 @@ function drawWeatherAndNight(){
   if(LP)glow(LP.x,LP.y-12,60,'rgba(255,210,60,.5)');
   cx.restore();
 }
-function drawMini(){
+function drawMini(){if(cssW<=600)return;
   const hb=document.querySelector('#hud .btns').getBoundingClientRect(),mw=Math.min(320,cssW*.55),mh=34,mx=cssW-mw-12,my=hb.bottom+8;// la carte sous les boutons
   cx.setTransform(dpr,0,0,dpr,0,0);
   cx.globalAlpha=.94;cx.lineWidth=2.5;rr(mx,my,mw,mh,8);fs('#fff6df');cx.globalAlpha=1;
@@ -4704,7 +4742,7 @@ function dailyTick(){if(BOOT||VISIT||window.DEMO)return;if(S.meta.refund){toast(
   {const el=$('dlist'),off=tutoOn()||D.chest;if(el.hidden!==off)el.hidden=off;
     if(!off){const sh=t=>t.length>26?t.slice(0,25)+'…':t,hm=`<b>Missions du jour</b>`+D.ms.map(m=>{const ok=m.p>=m.g;return `<div class="${m.cl?'ok':ok?'rd':''}">${m.cl||ok?'☑':'☐'} ${sh(dTxt(m))}${ok||m.cl?'':' · '+(m.k==='earn'?Math.floor(m.p/m.g*100)+' %':Math.min(m.p,m.g)+'/'+m.g)}${ok&&!m.cl?' · à récupérer':''}</div>`}).join('')+(D.ms.every(m=>m.cl)?'<div class="rd">🎁 Coffre à ouvrir !</div>':'');
       if(el._h!==hm){el._h=hm;el.innerHTML=hm}}}
-  const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
+  const b=$('btnDay'),hid=tutoOn(),lb=ready?'Missions · '+ready:'Missions';$('btnMore').classList.toggle('dot',!!ready&&!hid);if(b.hidden!==hid)b.hidden=hid;if(b.textContent!==lb)b.textContent=lb;b.classList.toggle('alt',!ready);
   if(!hid&&L.last!==dayKey()&&L.seen!==dayKey()&&$('panel').hidden&&!JOB&&!INSIDE){S.meta.login=Object.assign(L,{seen:dayKey()});openPanel('login');return}
   if(!hid&&!dailyShown&&!D.chest&&$('panel').hidden&&!JOB&&!INSIDE){dailyShown=true;openPanel('daily')}}
 // animations : bannière + confettis à la réussite, pièces qui filent vers l'argent quand on récupère

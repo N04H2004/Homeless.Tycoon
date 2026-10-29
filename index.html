@@ -242,15 +242,16 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   #pbody{flex:1;padding:12px max(14px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
   #drcv{max-width:none!important}
 }
-/* course de drift, téléphone à l'horizontale : la route à gauche sur toute la hauteur, les commandes en colonne à droite */
+/* course de drift, téléphone à l'horizontale : la route au milieu, ◀ (et Drift) sous le pouce gauche, ▶ (Frein, NITRO) sous le pouce droit */
 @media (max-height:500px){
-  #pbody:has(#drcv){display:grid;grid-template-columns:minmax(0,1fr) 230px;grid-template-rows:minmax(0,1fr);align-items:center;gap:14px}
+  #pbody:has(#drcv){display:grid;grid-template-columns:150px minmax(0,1fr) 150px;grid-template-rows:2fr 1fr 1fr;grid-template-areas:"l cv r" "d cv b" "d cv n";gap:10px}
   #pbody:has(#drcv)>.jbar,#pbody:has(#drcv)>#drmsg{display:none}
-  #pbody>div:has(>#drcv){grid-column:1;height:100%;min-height:0;align-items:center}
+  #pbody>div:has(>#drcv){grid-area:cv;height:100%;min-height:0;align-items:center}
   #drcv{width:auto!important;height:100%!important;max-width:100%!important}
-  #pbody .drpad{grid-column:2;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
-  .drpad [data-dk="l"]{order:1}.drpad [data-dk="r"]{order:2}.drpad [data-dk="h"]{order:3}.drpad [data-dk="b"]{order:4}.drpad #drnit{order:5;grid-column:span 2}
-  #pbody .drpad .chunky{min-height:62px;font-size:18px}
+  #pbody .drpad{display:contents}
+  .drpad [data-dk="l"]{grid-area:l}.drpad [data-dk="r"]{grid-area:r}.drpad [data-dk="h"]{grid-area:d}.drpad [data-dk="b"]{grid-area:b}.drpad #drnit{grid-area:n}
+  #pbody .drpad .chunky{min-height:0;font-size:17px}
+  #pbody .drpad [data-dk="l"],#pbody .drpad [data-dk="r"]{font-size:38px}
 }
 .lead{margin:0;font-size:14px;opacity:.85}
 .row{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:8px 10px}

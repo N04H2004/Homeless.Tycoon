@@ -459,6 +459,23 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
 #boot .aus button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 #boot .aus button.off{background:#e4dccb}
 #boot .aus button.off::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:4px;margin-top:-2px;background:#d62839;border-radius:2px;transform:rotate(-45deg)}
+/* téléphone : encadré profil de l'accueil plus compact (2 rangées) */
+@media (max-width:600px){
+  #boot .prof{gap:8px;padding:8px 10px;border-width:3px;border-radius:14px;box-shadow:0 4px 0 var(--ink)}
+  #boot .av{width:40px;height:40px;font-size:22px;border-width:2.5px}
+  #boot .pn{gap:2px;min-width:0;flex:1 1 calc(100% - 60px)}
+  #boot .pacc{gap:6px}#boot .pacc b{font-size:18px}#boot .pacc .chunky{font-size:11.5px;padding:2px 8px}
+  #boot .pn input{font-size:18px}
+  #boot .lv{font-size:10.5px;gap:6px}#boot .lv b{font-size:11.5px;padding:0 6px}
+  #boot .wal{gap:6px}#boot .wal div{padding:3px 8px;font-size:9.5px;border-width:2.5px;border-radius:10px}#boot .wal div b{font-size:14px}
+  #boot .aus{gap:6px;margin-left:auto}
+  #boot .aus button{width:34px;height:34px;font-size:16px;border-width:2.5px;box-shadow:0 3px 0 var(--ink)}
+  #boot .aus button.off::after{left:6px;right:6px;height:3px}
+}
+@media (max-width:380px){
+  #boot .wal{gap:5px}#boot .wal div{padding:3px 6px;font-size:9px}#boot .wal div b{font-size:13px}
+  #boot .aus{gap:5px}#boot .aus button{width:30px;height:30px;font-size:14px}
+}
 #boot:not([hidden])~#toast{z-index:70}
 #boot:not(.map){background:linear-gradient(#5ec8ff,#bfeaff 70%);color:var(--ink);overflow:hidden}
 #boot .bl-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}

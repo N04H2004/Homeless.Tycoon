@@ -335,7 +335,7 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   .bars{grid-template-columns:auto 46px;gap:2px 6px;font-size:10px}
   .bars .num{display:none!important}
   #bagn,#dn{grid-column:auto!important;font-size:10px;white-space:nowrap}#bagn .bv{display:none}
-  body.btnsopen #adx2{visibility:hidden}
+  body.btnsopen #adx2,body.btnsopen #goal{visibility:hidden}
   .btns{flex-direction:column;align-items:flex-end;gap:6px}
   .btns>.chunky{display:none}
   .btns>#btnMore,.btns>#btnBiz,.btns>#back:not([hidden]),.btns>#pay:not([hidden]){display:inline-flex;align-items:center;justify-content:center}
@@ -346,9 +346,9 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   #hud .btns.open>.chunky:not(#btnMore){min-width:150px;font-size:14px;padding:7px 12px}
   #hud .btns.open #btnBiz{width:auto;height:auto;border-radius:12px;font-size:14px}.btns.open #btnBiz::before{content:none}
   .btns.open #btnMore{background:var(--ink);color:var(--sun)}
-  #adx2,body.touch #adx2{top:calc(108px + env(safe-area-inset-top,0px));bottom:auto;left:auto;right:max(8px,env(safe-area-inset-right,0px));transform:none;font-size:11px;padding:4px 8px}
-  #toast{top:calc(150px + env(safe-area-inset-top,0px));font-size:13px;padding:5px 12px;max-width:calc(100% - 40px)}
-  #goal,body.touch #goal{left:8px;right:8px;transform:none;max-width:none;padding:5px 10px;font-size:11.5px;bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+  #adx2,body.touch #adx2{top:var(--atop,108px);bottom:auto;left:auto;right:max(8px,env(safe-area-inset-right,0px));transform:none;font-size:11px;padding:4px 8px}
+  #toast{top:42%;font-size:13px;padding:5px 12px;max-width:calc(100% - 40px)}
+  #goal,body.touch #goal{left:8px;right:8px;transform:none;max-width:none;padding:5px 10px;font-size:11.5px;top:var(--gtop,118px);bottom:auto}
   #goal b{font-size:10px}
   #goalt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   #goal small{display:none}
@@ -2391,6 +2391,9 @@ $('btnMenu').addEventListener('click',()=>openPanel('plus'));
   more.addEventListener('click',()=>set(!bt.classList.contains('open')));
   bt.addEventListener('click',e=>{if(e.target.closest('.chunky')&&e.target.closest('.chunky')!==more)set(false)});
   cv.addEventListener('pointerdown',()=>set(false))}
+// téléphone : la carte d'étape passe sous l'argent et les barres (le bas est pris par le joystick), « Revenus x2 » juste en dessous
+setInterval(()=>{if(cssW>600||document.body.classList.contains('btnsopen'))return;const R=document.documentElement.style,low=[...document.querySelectorAll('#hud .money,#hud .bars,#btnBiz')].reduce((m,e)=>Math.max(m,e.getBoundingClientRect().bottom),0),g=$('goal');
+  R.setProperty('--gtop',Math.round(low+10)+'px');const gb=getComputedStyle(g).display!=='none'&&!g.hidden?g.getBoundingClientRect().bottom:low;R.setProperty('--atop',Math.round(gb+8)+'px')},250);
 $('snd').addEventListener('click',()=>{auInit();S.meta.snd=!S.meta.snd;updSnd();if(S.meta.snd)snd('buy');save();refocus()});
 $('pay').addEventListener('click',()=>{payNow();refocus()});
 for(const id of ['btnBiz','btnSk','btnLb','btnFb','btnObj','btnDay','btnMenu','snd'])$(id).addEventListener('keydown',e=>{if(e.key.startsWith('Arrow'))e.target.blur()});

@@ -14,6 +14,8 @@ FILES = ['lang-en.js', 'favicon.png', 'logo/icon.png', 'logo/icon.svg']
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
 assert '<head>' in html, 'balise <head> introuvable'
 html = html.replace('<head>', '<head>\n<script>window.CG_BUILD=1</script>', 1)
+# sur CrazyGames, pas d'appli à installer : le manifeste (absent du zip) est retiré
+html = html.replace('<link rel="manifest" href="/manifest.webmanifest">', '', 1)
 
 with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
     z.writestr('index.html', html)

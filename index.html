@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Homeless Tycoon</title><link rel="icon" type="image/png" sizes="64x64" href="/favicon.png"><link rel="icon" type="image/svg+xml" href="/logo/icon.svg"><link rel="apple-touch-icon" href="/logo/icon.png"></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Homeless Tycoon</title><link rel="icon" type="image/png" sizes="64x64" href="/favicon.png"><link rel="icon" type="image/svg+xml" href="/logo/icon.svg"><link rel="apple-touch-icon" href="/logo/icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Homeless Tycoon"><meta name="theme-color" content="#2a1f3d"></head><body>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@400;600;700&display=swap">
@@ -41,7 +41,7 @@ body.touch #goal{left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe
 body.touch #tuto{bottom:calc(110px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 430px))}
 body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));font-size:13px;padding:6px 10px}
 @media (max-width:760px){
-  body.touch #goal{left:12px;right:12px;transform:none;max-width:none;bottom:calc(212px + env(safe-area-inset-bottom,0px))}
+  body.touch #goal{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));transform:none;max-width:none;bottom:calc(212px + env(safe-area-inset-bottom,0px))}
   body.touch #tuto{width:calc(100% - 24px);bottom:calc(212px + env(safe-area-inset-bottom,0px))}
   body.touch #adx2{bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));right:auto;left:50%;transform:translateX(-50%)}
   body.touch.tuto-on #goal{display:none}
@@ -222,7 +222,7 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
 .guide .lock{opacity:.55;font-size:13px;padding:6px 10px;border:2px dashed var(--ink);border-radius:12px}
 #toast{position:absolute;left:50%;top:calc(185px + env(safe-area-inset-top,0px));transform:translateX(-50%) rotate(-1deg);font-family:var(--display);font-size:18px;
   background:var(--sun);text-align:center;max-width:calc(100% - 32px);transition:opacity .3s;pointer-events:none}
-#panel{position:absolute;inset:0;z-index:60;background:rgba(42,31,61,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#panel{position:absolute;inset:0;z-index:60;background:rgba(42,31,61,.55);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .sheet{background:var(--paper);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);width:100%;max-width:500px;max-height:90%;display:flex;flex-direction:column;overflow:hidden}
 .sheet header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:3px solid var(--ink);background:var(--hd,#ffd23f)}
 .sheet h2{font-family:var(--display);font-weight:400;font-size:24px;margin:0;flex:1;text-wrap:balance}
@@ -323,6 +323,14 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   #tuto .tx{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){.bar>i{transition:none}.chunky.danger,.cd.nw{animation:none}}
+/* téléphone à l'horizontale : écran bas, on réduit pastilles, bulles et carte d'étape */
+@media (max-height:500px) and (min-width:601px){
+  #adx2,body.touch #adx2{font-size:11px;padding:4px 9px}
+  #toast{font-size:14px;top:46%;padding:5px 12px}
+  #goal,body.touch #goal{font-size:11px;padding:4px 10px;max-width:min(400px,calc(100% - 420px))}
+  #goal b{font-size:10px}#goal small{display:none}#goal .gp{height:5px;margin-top:3px}
+  #evb{font-size:12px}
+}
 /* téléphone : l'essentiel seulement (argent, barres, Business, ☰ qui ouvre le reste) */
 @media (max-width:600px){
   #hud{gap:6px;padding:calc(6px + env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) 0 max(8px,env(safe-area-inset-left,0px))}
@@ -355,7 +363,7 @@ body.touch #adx2{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));f
   #goal .gp{height:5px;margin-top:4px}
 }
 #boot>:first-child{margin-top:auto}#boot>:last-child{margin-bottom:auto}
-#boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:20px 16px;overflow:auto;
+#boot{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:max(20px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto;
   background:radial-gradient(circle at 50% 30%,#4a2f7a,#1b1230 75%);color:#fff6df;font-family:var(--body)}
 #boot .logo{font-family:var(--display);font-size:clamp(38px,8vw,72px);line-height:1;text-align:center;color:#ffd23f;text-shadow:0 5px 0 var(--ink),0 0 30px rgba(255,210,63,.35);-webkit-text-stroke:2px var(--ink)}
 #boot .sub{font-size:15px;opacity:.85;text-align:center}
@@ -1320,6 +1328,10 @@ function resize(){dpr=Math.min(2,devicePixelRatio||1);cssW=cv.clientWidth;cssH=c
   // interface à l'échelle de la fenêtre : tout tient sur une ligne dès 560 px de large (en dessous, la mise en page mobile prend le relais)
   document.documentElement.style.setProperty('--ui',cssW<560?1:Math.max(.62,Math.min(1,cssW/1260,cssH/700)).toFixed(3));cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);scale=Math.max(cssH/H,cssW/W)}
 addEventListener('resize',resize);resize();
+// rotation du téléphone : iOS annonce le changement avant la nouvelle taille, on revérifie ensuite (sinon l'image reste étirée)
+addEventListener('orientationchange',()=>{resize();setTimeout(resize,250);setTimeout(resize,700)});
+if(window.visualViewport)visualViewport.addEventListener('resize',resize);
+if(window.ResizeObserver)new ResizeObserver(()=>resize()).observe(cv);
 function refocus(){try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();cv.focus({preventScroll:true})}catch(e){}}
 
 // ================= Objectifs & succès =================
@@ -2391,6 +2403,11 @@ $('btnMenu').addEventListener('click',()=>openPanel('plus'));
   more.addEventListener('click',()=>set(!bt.classList.contains('open')));
   bt.addEventListener('click',e=>{if(e.target.closest('.chunky')&&e.target.closest('.chunky')!==more)set(false)});
   cv.addEventListener('pointerdown',()=>set(false))}
+// iPhone dans Safari : une seule fois, comment avoir le jeu en plein écran (Safari ne laisse pas une page cacher ses barres)
+setTimeout(function iosTip(){if(BOOT){setTimeout(iosTip,4000);return}
+  const ios=/iP(hone|od)/.test(navigator.userAgent),app=navigator.standalone||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches;
+  if(!ios||app||CG_MODE||window.DEMO||window.top!==window.self)return;try{if(localStorage.getItem('ht-iostip'))return;localStorage.setItem('ht-iostip','1')}catch(e){return}
+  const m=HT_LANG==='en'?'📲 Full screen: tap Share, then “Add to Home Screen”':'📲 Plein écran : touche Partager, puis « Sur l’écran d’accueil »';toast(m);setTimeout(()=>toast(m),3200)},6000);
 // téléphone : la carte d'étape passe sous l'argent et les barres (le bas est pris par le joystick), « Revenus x2 » juste en dessous
 setInterval(()=>{if(cssW>600||document.body.classList.contains('btnsopen'))return;const R=document.documentElement.style,low=[...document.querySelectorAll('#hud .money,#hud .bars,#btnBiz')].reduce((m,e)=>Math.max(m,e.getBoundingClientRect().bottom),0),g=$('goal');
   R.setProperty('--gtop',Math.round(low+10)+'px');const gb=getComputedStyle(g).display!=='none'&&!g.hidden?g.getBoundingClientRect().bottom:low;R.setProperty('--atop',Math.round(gb+8)+'px')},250);
@@ -4866,7 +4883,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden){hidT=Date.
   if(hidT&&!BOOT&&!VISIT){const paused=AFK&&afkT,el=(Date.now()-(paused?afkT:hidT))/1000;if(el>5){if(AFK){AFK=false;$('afk').hidden=true}afkT=0;catchUp(Math.min(paused?afkCap()-AFK_MAX:afkCap(),el),false);updHud();save()}}
   hidT=0;lastInput=Date.now();last=performance.now()});
 for(const ev of ['pointerdown','keydown','wheel','touchstart'])addEventListener(ev,afkWake,true);
-function loop(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
+function loop(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;if(cv.clientWidth!==cssW||cv.clientHeight!==cssH)resize();
   if(!AFK&&!BOOT&&!document.hidden&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;afkT=Date.now();$('afk').hidden=false;save()}
   if(!BOOT&&!AFK&&!ADP)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================

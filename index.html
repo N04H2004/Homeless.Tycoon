@@ -21,6 +21,10 @@ body{background:var(--ink);color:var(--ink);font-family:var(--body);overflow:hid
 #game{position:fixed;inset:0}
 /* appli lancée depuis l'écran d'accueil (iPhone) : le jeu descend jusqu'en bas, sous la barre d'accueil */
 html.app #game{inset:auto;top:0;left:0;width:100vw;height:100lvh}
+/* défaut connu d'iOS (barre d'état transparente) : la page s'arrête trop tôt et laisse une bande vide en bas ;
+   une page plus haute que l'écran de la hauteur de l'encoche force l'iPhone à l'étendre jusqu'en bas */
+html.app{padding:0!important;min-height:calc(100% + env(safe-area-inset-top,0px))}
+html.app body{min-height:calc(100% + env(safe-area-inset-top,0px))}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;outline:none;touch-action:none}
 /* écrans tactiles : joystick flottant à gauche, 3 boutons ronds fixes à droite (action, poches, tir) */
 #joy{position:fixed;left:96px;bottom:96px;width:128px;height:128px;margin:0 0 -64px -64px;border-radius:50%;background:rgba(255,246,223,.22);border:4px solid rgba(42,31,61,.45);z-index:6;pointer-events:none;display:none}
@@ -2415,6 +2419,13 @@ setTimeout(function iosTip(){if(BOOT){setTimeout(iosTip,4000);return}
   const ios=/iP(hone|od)/.test(navigator.userAgent),app=navigator.standalone||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches;
   if(!ios||app||CG_MODE||window.DEMO||window.top!==window.self)return;try{if(localStorage.getItem('ht-iostip'))return;localStorage.setItem('ht-iostip','1')}catch(e){return}
   const m=HT_LANG==='en'?'📲 Full screen: tap Share, then “Add to Home Screen”':'📲 Plein écran : touche Partager, puis « Sur l’écran d’accueil »';toast(m);setTimeout(()=>toast(m),3200)},6000);
+// diagnostic écran : appui long sur l'encadré d'argent (mesures réelles, pour régler l'iPhone)
+{let lp=null;const m=document.querySelector('#hud .money');
+  m.addEventListener('pointerdown',()=>{clearTimeout(lp);lp=setTimeout(()=>{const pr=document.createElement('div');pr.style.cssText='position:fixed;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';document.body.appendChild(pr);
+    const c=getComputedStyle(pr),g=document.getElementById('game').getBoundingClientRect(),v=window.visualViewport;
+    const t='écran '+screen.width+'×'+screen.height+' · fenêtre '+innerWidth+'×'+innerHeight+(v?' · visible '+Math.round(v.width)+'×'+Math.round(v.height):'')+' · jeu '+Math.round(g.width)+'×'+Math.round(g.height)+' (haut '+Math.round(g.top)+') · encoche '+parseInt(c.paddingTop)+'/'+parseInt(c.paddingBottom)+' · page '+document.documentElement.clientHeight+' · appli '+(document.documentElement.classList.contains('app')?'oui':'non');
+    pr.remove();toast(t);clearTimeout(toastT);toastT=setTimeout(()=>$('toast').style.opacity=0,10000)},1000)});
+  for(const ev of ['pointerup','pointercancel','pointerleave'])m.addEventListener(ev,()=>clearTimeout(lp))}
 // téléphone : la carte d'étape passe sous l'argent et les barres (le bas est pris par le joystick), « Revenus x2 » juste en dessous
 setInterval(()=>{if(cssW>600||document.body.classList.contains('btnsopen'))return;const R=document.documentElement.style,low=[...document.querySelectorAll('#hud .money,#hud .bars,#btnBiz')].reduce((m,e)=>Math.max(m,e.getBoundingClientRect().bottom),0),g=$('goal');
   R.setProperty('--gtop',Math.round(low+10)+'px');const gb=getComputedStyle(g).display!=='none'&&!g.hidden?g.getBoundingClientRect().bottom:low;R.setProperty('--atop',Math.round(gb+8)+'px')},250);

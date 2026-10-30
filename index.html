@@ -4799,9 +4799,10 @@ function worldSelect(){BOOT=true;gerSeed();const m=S.meta,cur=CURI(),el=$('boot'
 }
 function wsMove(d){WSEL=(WSEL+d+CITIES.length)%CITIES.length;snd('tick');worldSelect()}
 function plLevel(){gerSeed();const a=ACH.filter(x=>S.meta.ach[x[0]]).length,g=Object.keys(S.meta.gerOn||{}).length;return {l:1+a+3*g,a,g}}
-function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready&&(!CG_MODE||LB.user)){// sur CrazyGames on joue en invité, sans écran de connexion
+function enterWorld(i){auInit();if(VISIT||JOB)return;if(SB&&!LB.ready&&!LB.down&&(!CG_MODE||LB.user)){// sur CrazyGames on joue en invité, sans écran de connexion
   LB.msg=LB.user?'Synchronisation de ta sauvegarde...':'Connecte-toi pour jouer : ta progression sera sauvegardée dans ton compte';LB.err=false;openPanel('lb');return}const m=S.meta;if(i!==CURI()){if(!cityOpen(i))return;const k=m.worlds.findIndex(w=>w.i===i);if(k<0)return;travelTo(k)}WSEL=null;
-  BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event')}
+  BOOT=false;$('boot').hidden=true;last=performance.now();refocus();snd('event');
+  if(LB.down&&!LB.ready&&!CG_MODE)setTimeout(()=>toast('Serveur indisponible : tu joues hors ligne, ta partie est sauvegardée sur cet appareil'),600)}
 // ===== missions du jour (3 par jour, mêmes pour tout le monde) et récompenses de connexion =====
 const dayKey=(o=0)=>new Date(Date.now()+o*864e5).toLocaleDateString('fr-CA');
 const DM={trash:['Ramasser {g} déchets',()=>S.stats.trash,25],pick:['Faire les poches de {g} passants',()=>S.stats.pick,5],cdd:['Signer {g} CDD',()=>S.stats.cdd,2],repair:['Réparer {g} objets',()=>S.stats.repairs,3],
@@ -4956,7 +4957,7 @@ const lbLife=()=>Math.floor(((VISIT?VISIT.saved:S).meta||S.meta).life||0);
 const lbf=n=>{n=Math.floor(n);const d=(v,u)=>v.toFixed(2).replace('.',',')+' '+u;if(n>=1e12)return d(n/1e12,'T');if(n>=1e9)return d(n/1e9,'Md');if(n>=1e6)return d(n/1e6,'M');if(n>=1e4)return (n/1e3).toFixed(1).replace('.',',')+' k';return n.toLocaleString('fr-FR')};
 // une requête Supabase qui ne répond pas ne doit jamais bloquer l'écran (« Patiente… » sans fin)
 const sbT=(pr,ms=12000)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
-function lbErr(e){const m=String(e&&e.message||e||'');
+function lbErr(e){const m=String(e&&e.message||e||'');if(/timeout|fetch|network|Failed to|Load failed/i.test(m))LB.down=true;
   if(/timeout/i.test(m))return 'Le serveur ne répond pas (Supabase). Réessaie dans un moment.';
   if(/fetch|network|Failed to|Load failed/i.test(m))return 'Pas de connexion au serveur. Vérifie ta connexion internet.';
   if(/already registered|already exists|Database error saving/i.test(m))return 'Ce pseudo est déjà pris';
@@ -5144,6 +5145,7 @@ async function lbAct(v,w){
   if(v==='refresh'){LB.msg='';if(LB.user&&!LB.ready)await cloudSync();await lbSend();return lbLoad()}
   if(v==='edit'){LB.edit=w==='1';LB.f.n=LB.edit?LB.pseudo:'';LB.msg='';return lbRedraw()}
   if(v==='ren')return lbRename();
+  if(v==='offline'){closePanel();if(BOOT)enterWorld(WSEL!=null?WSEL:CURI());return}
   if(v==='priv'){const me=(LB.rows||[]).find(r=>r.is_me),on=!(me&&me.private);let r;try{r=await SB.rpc('set_private',{p_private:on})}catch(e){r={error:e}}
     if(r.error||r.data!=='ok'){LB.msg=r.error?(/set_private|function/i.test(r.error.message||'')?'Base Supabase pas à jour : relance le script supabase/leaderboard.sql':lbErr(r.error)):r.data;LB.err=true;return lbRedraw()}
     LB.msg=on?'Ta rue est privée : personne ne peut la visiter.':'Ta rue est ouverte aux visites.';LB.err=false;return lbLoad()}
@@ -5172,7 +5174,8 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
     `<div class="row lbf"><label>Pseudo<input class="lbin" data-f="p" maxlength="16" autocomplete="username" autocapitalize="off" spellcheck="false" value="${lbEsc(LB.f.p)}"></label>`+
     `<label>Mot de passe<input class="lbin" data-f="m" type="password" autocomplete="${up?'new-password':'current-password'}" value="${lbEsc(LB.f.m)}"></label>`+
     `<small>${up?"Pas besoin d'e-mail. Note bien ton mot de passe : sans e-mail, il ne peut pas être récupéré.":'Connecte-toi pour jouer, sauvegarder ta partie et apparaître dans le classement.'}</small></div>`+
-    `<button class="chunky" type="button" data-act="lb:go" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':up?'Créer mon compte':'Me connecter'}</button>`}
+    `<button class="chunky" type="button" data-act="lb:go" ${LB.busy?'disabled':''}>${LB.busy?'Patiente...':up?'Créer mon compte':'Me connecter'}</button>`+
+    (LB.down&&BOOT?`<div class="msg ko">Le serveur de comptes ne répond pas pour l'instant. Tu peux jouer hors ligne : ta partie est sauvegardée sur cet appareil et sera envoyée dans ton compte quand le serveur reviendra.</div><button class="chunky alt" type="button" data-act="lb:offline">Jouer hors ligne</button>`:'')}
   if(LB.msg)h+=`<div class="jmsg ${LB.err?'ko':'ok'}">${lbEsc(LB.msg)}</div>`;
   h+='<div class="sec">Top 50 · total gagné à vie</div>';
   if(!LB.rows)h+='<p class="lead">Chargement...</p>';
@@ -5212,6 +5215,8 @@ $('btnFb').addEventListener('click',()=>{FB.res='';openPanel('fb')});
 function updLvl(){const e=$('hlvl');if(e)e.textContent='Niv. '+plLevel().l}
 $('hlvl').addEventListener('click',()=>{if(VISIT||JOB)return;ptab='succes';openPanel('plus')});
 setInterval(updLvl,1000);updLvl();
+// serveur Supabase en panne : on laisse jouer hors ligne au lieu de bloquer sur l'écran de connexion
+if(SB)sbT(fetch(SB_URL+'/auth/v1/health',{headers:{apikey:SB_KEY}}),8000).then(r=>{LB.down=!r.ok;if(LB.down)lbRedraw()}).catch(()=>{LB.down=true;lbRedraw()});
 if(SB){SB.auth.getSession().then(({data})=>{lbSetUser(data&&data.session&&data.session.user);if(LB.user)cloudSync();else if(CG_MODE)lbAnon();else lbRedraw()}).catch(()=>{if(CG_MODE)lbAnon()});
   SB.auth.onAuthStateChange((ev,se)=>{lbSetUser(se&&se.user);if(!LB.user)LB.ready=false;lbRedraw()})}
 // envois espacés pour tenir dans le plan gratuit Supabase (rien quand l'onglet est caché : la sauvegarde part déjà à la fermeture)

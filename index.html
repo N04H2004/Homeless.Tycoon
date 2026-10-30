@@ -4946,7 +4946,7 @@ function loop(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;i
   if(!AFK&&!BOOT&&!document.hidden&&Date.now()-lastInput>AFK_MAX*1000){AFK=true;afkT=Date.now();$('afk').hidden=false;save()}
   if(!BOOT&&!AFK&&!ADP)update(dt);draw();requestAnimationFrame(loop)}
 // ================= Classement en ligne (Supabase) =================
-const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_U39I0Qx7kX4a_5rF9udW2w_i-ASYQ8s';
+const SB_URL='https://wbsssdageyokadexqolb.supabase.co',SB_KEY='sb_publishable_NkT4odmWMNbjdZhAtqVnxw_Rizpguq5';
 let SB=null;try{if(window.supabase&&!window.DEMO)SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{storageKey:'poubelle-tycoon-auth'}})}catch(e){}
 const LB={user:null,pseudo:'',mode:'login',f:{p:'',m:'',n:''},edit:false,rows:null,at:0,ready:false,busy:false,msg:'',err:false,sent:0};
 // pas d'e-mail côté joueur : le pseudo devient une adresse factice, jamais utilisée pour envoyer quoi que ce soit

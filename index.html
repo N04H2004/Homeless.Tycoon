@@ -922,7 +922,9 @@ function presLook(){const L=playerLook(),o={};for(const k in L)if(!['t','moving'
 function presTick(dt){const now=performance.now();rtTick();mpTick();
   for(const k in PRES.others){const o=PRES.others[k];if(now-(o.rt||0)>6000&&now-(o.rpc||0)>8000)delete PRES.others[k]}// parti sans prévenir
   for(const o of Object.values(PRES.others)){const d=dist(o.x,o.y,o.tx,o.ty);if(d>1){const st=Math.min(d,Math.max(300,d*(o.rt&&now-o.rt<1500?10:1.5))*dt);o.x+=(o.tx-o.x)/d*st;o.y+=(o.ty-o.y)/d*st;o.mv=true;if(Math.abs(o.tx-o.x)>2)o.face=o.tx>o.x?1:-1}else o.mv=o.moving}
-  if(PRES.off||!SB||!LB.ready||BOOT||(typeof AFK!=='undefined'&&AFK)||document.hidden||PRES.busy||now-PRES.hb<(VISIT||Object.keys(PRES.others).length?3000:15000))return;// seul dans sa rue : un signal toutes les 15 s seulement (économise le quota Supabase)PRES.hb=now;PRES.busy=true;
+  if(PRES.off||!SB||!LB.ready||BOOT||(typeof AFK!=='undefined'&&AFK)||document.hidden||PRES.busy||now-PRES.hb<(VISIT||Object.keys(PRES.others).length?3000:15000))return;
+  // seul dans sa rue : un signal toutes les 15 s seulement (économise le quota Supabase)
+  PRES.hb=now;PRES.busy=true;
   const street=VISIT&&VISIT.other?VISIT.other.pseudo:null,ci=VISIT?VISIT.i:CURI();let look=null;
   if(!VISIT){const j=JSON.stringify(presLook());if(j!==PRES.look||now-PRES.lookAt>60000){PRES.look=j;PRES.lookAt=now;look=JSON.parse(j)}}
   (async()=>{try{const r=await SB.rpc('heartbeat',{p_street:street,p_ci:ci,p_x:Math.round(P.x),p_y:Math.round(P.y),p_face:P.face,p_moving:!!P.moving,p_room:INSIDE?INSIDE.k:null,p_look:look});

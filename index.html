@@ -4954,7 +4954,11 @@ const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
 const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const lbLife=()=>Math.floor(((VISIT?VISIT.saved:S).meta||S.meta).life||0);
 const lbf=n=>{n=Math.floor(n);const d=(v,u)=>v.toFixed(2).replace('.',',')+' '+u;if(n>=1e12)return d(n/1e12,'T');if(n>=1e9)return d(n/1e9,'Md');if(n>=1e6)return d(n/1e6,'M');if(n>=1e4)return (n/1e3).toFixed(1).replace('.',',')+' k';return n.toLocaleString('fr-FR')};
+// une requête Supabase qui ne répond pas ne doit jamais bloquer l'écran (« Patiente… » sans fin)
+const sbT=(pr,ms=12000)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
 function lbErr(e){const m=String(e&&e.message||e||'');
+  if(/timeout/i.test(m))return 'Le serveur ne répond pas (Supabase). Réessaie dans un moment.';
+  if(/fetch|network|Failed to|Load failed/i.test(m))return 'Pas de connexion au serveur. Vérifie ta connexion internet.';
   if(/already registered|already exists|Database error saving/i.test(m))return 'Ce pseudo est déjà pris';
   if(/Invalid login/i.test(m))return 'Pseudo ou mot de passe incorrect';
   if(/not confirmed/i.test(m))return 'Compte bloqué : le propriétaire du jeu doit désactiver « Confirm email » dans Supabase';
@@ -5119,7 +5123,7 @@ async function lbAnon(){if(!SB||LB.user||LB.anon==='busy')return;LB.anon='busy';
     if(r.error&&!/duplicate|unique|database/i.test(r.error.message||''))break}
   LB.anon='off';lbRedraw()}
 function lbSetUser(u){LB.user=u||null;LB.pseudo=u&&u.user_metadata&&u.user_metadata.pseudo||''}
-async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await SB.rpc('get_leaderboard',{p_limit:50});if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
+async function lbLoad(){if(!SB)return;try{LB.at=Date.now();const {data,error}=await sbT(SB.rpc('get_leaderboard',{p_limit:50}));if(error)throw error;LB.rows=data||[]}catch(e){if(!LB.rows)LB.rows=[];LB.msg=lbErr(e);LB.err=true}lbRedraw()}
 async function lbSend(force){if(!SB||!LB.ready||(typeof AFK!=='undefined'&&AFK))return;const now=Date.now();if(!force&&now-LB.sent<60000)return;LB.sent=now;try{await SB.rpc('submit_score',{p_score:lbLife()})}catch(e){}}
 async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up=LB.mode==='signup';
   const bad=t=>{LB.msg=t;LB.err=true;snd('err');lbRedraw()};
@@ -5127,7 +5131,7 @@ async function lbAuth(){if(!SB||LB.busy)return;const p=LB.f.p.trim(),m=LB.f.m,up
   if(up&&pseudoBad(p))return bad('Ce pseudo n\'est pas autorisé');
   if(m.length<6)return bad('Mot de passe : 6 caractères minimum');
   LB.busy=true;LB.msg='';lbRedraw();let r;
-  try{r=up?await SB.auth.signUp({email:lbMail(p),password:m,options:{data:{pseudo:p}}}):await SB.auth.signInWithPassword({email:lbMail(p),password:m})}catch(e){r={error:e}}
+  try{r=await sbT(up?SB.auth.signUp({email:lbMail(p),password:m,options:{data:{pseudo:p}}}):SB.auth.signInWithPassword({email:lbMail(p),password:m}))}catch(e){r={error:e}}
   LB.busy=false;
   if(r.error)return bad(lbErr(r.error));
   if(!r.data||!r.data.session)return bad(lbErr('not confirmed'));

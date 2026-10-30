@@ -2568,7 +2568,7 @@ function bjRender(){if(mpOn('bj'))return mpBjHTML();const hide=BJ.phase==='play'
       setTimeout(()=>{if(BJ.gid!==gid)return;BJ.p=[];BJ.d=[];BJ.phase='bet';BJ.bet=0;BJ.seen={p:0,d:0};BJ.flip=false;if(pid==='casino'&&casTab==='bj')renderPanel()},460)},md*1000+2300)}
   if(BJ.phase==='play')h+='<div class="bets"><button class="chunky" type="button" data-act="bj:hit">Tirer</button><button class="chunky alt" type="button" data-act="bj:stand">Rester</button></div>';
   else h+='<div class="bets">'+[[.1,'Miser 10 %'],[.25,'Miser 25 %'],[.5,'Miser 50 %'],[1,'Tapis !']].map(([p,l])=>`<button class="buy" type="button" data-act="bjdeal:${p}" data-cost="1">${l} · ${fmt(Math.floor(S.cash*p))}</button>`).join('')+'</div>';
-  return h+"<p class=\"foot\">Le croupier tire jusqu'à 17. 21 en 2 cartes (blackjack naturel) : mise x2,5. 21 en 3 cartes ou plus : mise x2. Croupier aussi à 21 : égalité possible. Argent fictif du jeu, aucune vraie mise.</p>"}
+  return h+"<p class=\"foot\">Le croupier tire jusqu'�� 17. 21 en 2 cartes (blackjack naturel) : mise x2,5. 21 en 3 cartes ou plus : mise x2. Croupier aussi à 21 : égalité possible. Argent fictif du jeu, aucune vraie mise.</p>"}
 // roulette : 24 cases, 1 dorée (x5), 14 vertes (x1,5), 9 rouges (mise perdue) : 15 chances sur 24 de gagner, un peu à l'avantage du joueur
 const SEG=[],SEGL=[];{SEG.push('or');SEGL.push('★');for(let j=0;j<23;j++){SEG.push(Math.floor((j+1)*14/23)>Math.floor(j*14/23)?'vert':'rouge');SEGL.push(String(j+1))}}
 const SEGC={or:'#ffd23f',vert:'#1f9d5c',rouge:'#d62839'};
@@ -4553,7 +4553,7 @@ const tutoJobs=()=>SHOPS.filter(sh=>sh.job&&JOBS[sh.job]&&jobOk(sh.job)).map(sh=
 const tutoNextJob=()=>{let b=null,bd=1e9;for(const j of tutoJobs())if(!j.ok){const d=Math.abs(P.x-j.sh.door);if(d<bd){bd=d;b=j}}return b};
 const tutoJobBtn=()=>{for(const j of tutoJobs())if(!j.ok){const e=document.querySelector(`#pbody [data-act="job:${j.k}"]:not(:disabled),#pbody [data-act="jobgo:${j.k}"]`);if(e)return e}return null};
 const TUTO=[
- {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce n\'importe où sur l\'écran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
+ {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce n\'importe où sur l\'��cran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
  {t:()=>`Un objet cassé traîne près de toi (il fait des étincelles). <b>Reste juste à côté</b> : tu le répares tout seul, puis tu le revends !`,tg:()=>{const b=tutoBroken();return b&&[b.x,b.y-20]},bar:()=>{const b=tutoBroken();return b?b.prog:0}},
@@ -4954,7 +4954,7 @@ const lbMail=p=>p.toLowerCase()+'@joueurs.poubelletycoon.app';
 const lbEsc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const lbLife=()=>Math.floor(((VISIT?VISIT.saved:S).meta||S.meta).life||0);
 const lbf=n=>{n=Math.floor(n);const d=(v,u)=>v.toFixed(2).replace('.',',')+' '+u;if(n>=1e12)return d(n/1e12,'T');if(n>=1e9)return d(n/1e9,'Md');if(n>=1e6)return d(n/1e6,'M');if(n>=1e4)return (n/1e3).toFixed(1).replace('.',',')+' k';return n.toLocaleString('fr-FR')};
-// une requête Supabase qui ne répond pas ne doit jamais bloquer l'écran (« Patiente… » sans fin)
+// une requête Supabase qui ne répond pas ne doit jamais bloquer l'écran (�� Patiente… » sans fin)
 const sbT=(pr,ms=12000)=>Promise.race([pr,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
 function lbErr(e){const m=String(e&&e.message||e||'');
   if(/timeout/i.test(m))return 'Le serveur ne répond pas (Supabase). Réessaie dans un moment.';
@@ -5182,7 +5182,7 @@ function lbHTML(){if(!SB)return '<p class="lead">Le classement en ligne ne répo
 $('pbody').addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.f;if(k)LB.f[k]=e.target.value});
 $('pbody').addEventListener('keydown',e=>{if(!e.target.classList.contains('lbin')||e.key==='Escape')return;e.stopPropagation();if(e.key==='Enter'){e.preventDefault();if(e.target.dataset.gr){const b=$('grbuy');if(b&&!b.disabled)b.click()}else e.target.dataset.f==='n'?lbRename():lbAuth()}});
 $('btnLb').addEventListener('click',()=>{openPanel('lb');lbSend().finally(lbLoad)});
-// ---- Remarques des joueurs : envoyées dans la table feedback de Supabase
+// ---- Remarques des joueurs : envoy��es dans la table feedback de Supabase
 const FB={kind:'bug',msg:'',busy:false,res:'',err:false};
 const FBPH={bug:"Qu'est-ce qui s'est passé ? Qu'est-ce que tu faisais juste avant ?",idee:"Ton idée pour améliorer le jeu...",autre:"Ce que tu veux me dire..."};
 function fbHTML(){const who=LB.user?'Envoyé au nom de <b>'+lbEsc(LB.pseudo)+'</b>':'Envoyé anonymement';
@@ -5243,5 +5243,10 @@ if(!S.total&&!tutoOn())setTimeout(()=>toast('Bienvenue dans la rue ! Ramasse les
 requestAnimationFrame(loop);
 })();
 </script>
+
+<script>
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 
 </body></html>

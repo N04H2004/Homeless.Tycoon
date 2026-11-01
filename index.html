@@ -895,7 +895,7 @@ const freshMeta=()=>({gold:0,prestige:0,perk:{cash:0,dodo:0,lucky:0,emp:0},wardr
 const CMS=[1,5,10,18];// prix par ville : bien plus que les gains (x1,6 / x2,6 / x4) pour rester longtemps dans chaque ville
 function fresh(m){const o=fresh0(m);const h=(m||o.meta).her||{};if(h.frigo)o.frigo=true;if(h.manager)o.manager=true;if(h.trott){o.veh.trott=1;o.ride='trott'}return o}
 function fresh0(m){m=m||freshMeta();const ci=m.cur??Math.min(m.prestige,3);
-  return {cash:Math.round(20*CMS[ci]),total:0,hp:100,food:80,bag:0,bagVal:0,up:{pince:0,sac:0,basket:0,cle:0,oeil:0,tri:0},
+  return {cash:Math.round(200*CMS[ci]),total:0,hp:100,food:80,bag:0,bagVal:0,up:{pince:0,sac:0,basket:0,cle:0,oeil:0,tri:0},
   distrib:0,distUp:0,local:false,emp:0,staff:[],emUp:{form:0,chariot:0},manager:false,frigo:false,secu:false,shops:{},band:0,bandUp:{nez:0,pigeon:0},avocat:false,heat:0,
   owned:{},veh:{},ride:'',rivalBought:false,stk:{},mkt:null,hist:[],clock:0,
   pay:{timer:60,due:0,late:0,strike:false},stats:{trash:0,repairs:0,ate:0,casino:0,pick:0,fines:0,bpick:0,raids:0,cdd:0},cdd:{},arms:{},heistDay:-1,heist:null,capBought:0,done:0,last:Date.now(),meta:m}}
@@ -1484,8 +1484,8 @@ const ACH_CITY={pilote:3,roidrift:3,casse:2,manhattan:2,trader:2,barman:1,parrai
 // étapes de la ville, dans l'ordre : chacune reste verrouillée tant que la précédente n'est pas faite,
 // et sa fiche s'ouvre quand elle se débloque ; toutes faites = condition pour mettre la ville en gérance
 const STEPS=[
- {k:'cdd',h:"Entre dans chaque boutique (E) et signe son CDD.",n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
  {k:'distrib',h:"Business › Distributeur.",cost:()=>distCost(),n:'Installer un distributeur de boissons',ok:()=>S.distrib>=1,tip:'distrib',w:'Menu Business › Distributeur de boissons.',acts:['biz:distrib']},
+ {k:'cdd',h:"Entre dans chaque boutique (E) et signe son CDD.",n:'Faire chaque CDD de la rue',ok:()=>tutoJobs().every(j=>j.ok),tip:'cdd',w:'Entre dans chaque boutique (E) et signe son CDD.'},
  {k:'outil',h:"Chez Brico Dédé (E).",need:'brico',cost:()=>Math.min(...UP.map(upCost)),n:'Acheter un outil chez Brico Dédé',ok:()=>Object.values(S.up).some(v=>v>0),tip:'tools',w:'Entre chez Brico Dédé (E) et choisis un outil.',acts:['up:']},
  {k:'veh',h:"Chez Pigeon Motors (E).",need:'motors',cost:()=>vehP(VEH[0]),n:'Acheter un véhicule chez Pigeon Motors',ok:()=>Object.values(S.veh).some(v=>v),tip:'motors',w:'Entre chez Pigeon Motors (E) : le skate est le moins cher.',acts:['veh:']},
  {k:'local',h:"Business › Petit local.",cost:()=>C(1000),n:'Acheter le petit local (QG)',ok:()=>S.local,tip:'local',w:'Menu Business › Petit local à vendre.',acts:['biz:local']},
@@ -2302,7 +2302,7 @@ const RSPOTS={exit:[95,'Sortir dans la rue'],counter:[390,null],armory:[710,'Arm
   NSPOTS={exit:[95,'Sortir dans la rue'],trade:[470,'Ordinateur de trading'],guard:[680,'Parler au vigile'],anadesk:[880,'Bureau des analystes']},curSpots=()=>INSIDE&&INSIDE.k==='nyse'?NSPOTS:RSPOTS;
 function roomSpot(){if(RP.y>470)return null;let best=null,bd=95;const SP=curSpots();for(const k in SP){const d=Math.abs(RP.x-SP[k][0]);if(d<bd){bd=d;best=k}}return best}
 function pickpocket(p){
-  if(pickCD>0)return;pickCD=1.2;const tutoPick=tutoOn()&&S.meta.tuto===4;
+  if(pickCD>0)return;pickCD=1.2;const tutoPick=tutoOn()&&S.meta.tuto===6;
   if(p.undercover&&!tutoPick){p.robbed=true;p.revealed=true;p.v=0;p.say='Police ! Pas un geste !';p.sayT=3;
     const f=Math.max(20,Math.round(S.cash*.15*fineM()));S.cash=Math.max(0,S.cash-f);S.hp-=20;S.stats.fines++;S.heat=Math.min(100,S.heat+HEATX*(10));
     float(P.x,P.y-95,'AMENDE -'+fmt(f),'#ef476f');say('Un flic en civil ?!');snd('siren');setTimeout(()=>snd('fail'),300);
@@ -4553,6 +4553,8 @@ const tutoJobs=()=>SHOPS.filter(sh=>sh.job&&JOBS[sh.job]&&jobOk(sh.job)).map(sh=
 const tutoNextJob=()=>{let b=null,bd=1e9;for(const j of tutoJobs())if(!j.ok){const d=Math.abs(P.x-j.sh.door);if(d<bd){bd=d;b=j}}return b};
 const tutoJobBtn=()=>{for(const j of tutoJobs())if(!j.ok){const e=document.querySelector(`#pbody [data-act="job:${j.k}"]:not(:disabled),#pbody [data-act="jobgo:${j.k}"]`);if(e)return e}return null};
 const TUTO=[
+ {t:()=>`Bienvenue ! Tu as <b>${fmt(S.cash)}</b> en poche. Lance ton premier business : ouvre le menu <b>Business</b>.`,ui:()=>$('btnBiz')},
+ {t:()=>'Achète ton <b>distributeur de boissons</b> : clique sur le bouton vert. Il te rapportera de l\'argent tout seul, même quand tu ne fais rien !',ui:()=>document.querySelector('#pbody [data-act="biz:distrib"]')},
  {t:()=>document.body.classList.contains('touch')?'Déplace-toi avec le joystick : pose ton pouce n\'importe où sur l\'écran et glisse. Tu peux aussi toucher l\'endroit où aller. Va vers la flèche jaune !':'Déplace-toi avec ZQSD ou les flèches, ou clique là où tu veux aller. Va vers la flèche jaune !',tg:nearTrash},
  {t:()=>`Ramasse des déchets : passe simplement dessus. <b>${Math.min(3,TUT.n)} / 3</b>`,tg:nearTrash},
  {t:()=>'Ton sac est plein de trésors ! Approche-toi d\'une <b>poubelle verte</b> : il se vide tout seul et tu es payé.',tg:nearBin,ui:()=>$('bagn')},
@@ -4564,9 +4566,6 @@ const TUTO=[
    const btn=tutoJobBtn(),k=btn?btn.dataset.act.split(':')[1]:nx&&nx.k;
    return `Teste les mini-jeux de la rue : <b>${n} / ${L.length}</b>.`+(btn?` Ici : <b>${JOBS[k].n}</b>. Clique sur le bouton qui clignote !`:k?` Prochain : <b>${JOBS[k].n}</b>. Entre dans la boutique (<b>E</b>) puis clique sur <b>Signer</b>.`:'')},
    tg:()=>{const j=tutoNextJob();return j&&[j.sh.door,150]},ui:tutoJobBtn,bar:()=>{const L=tutoJobs();return L.length?L.filter(j=>j.ok).length/L.length:1}},
- {t:()=>`Objectif : ton <b>premier distributeur de boissons</b>, il te rapportera de l'argent tout seul. <b>Ramasse des déchets ou fais un CDD</b> (chacun se refait le lendemain dans le jeu) jusqu'à <b>${fmt(distCost())}</b>.`,tg:tutoGoal,bar:()=>Math.min(1,S.cash/distCost())},
- {t:()=>'Tu as assez ! Ouvre le menu <b>Business</b>.',ui:()=>$('btnBiz')},
- {t:()=>'Achète ton <b>distributeur de boissons</b> : clique sur le bouton vert.',ui:()=>document.querySelector('#pbody [data-act="biz:distrib"]')},
 ];
 const TUT={sx:0,sy:0,n:0,tx:'',rep:0};
 // l'étape réparation fait apparaître un objet cassé près du joueur s'il n'y en a aucun à l'écran
@@ -4574,27 +4573,25 @@ function tutoBroken(){let b=null,bd=1e9;for(const o of broken){const d=dist(P.x,
   if(b&&bd<viewW*.6)return b;const k=Math.floor(Math.random()*BROKEN.length),o=Math.min(180,viewW*.3),x=Math.max(80,Math.min(W-80,P.x+(P.x+200<W?o:-o)));
   b={x,y:P.y<380?262:540,b:BROKEN[k],prog:0,k};broken.push(b);return b}
 function tutoOn(){return S.meta.tutoDone===false&&!VISIT}
-function tutoSet(i){if(S.meta.tuto===i&&!$('tuto').hidden)return;S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;if(i<=1)TUT.n=0;snd('tick');renderTuto()}
+function tutoSet(i){if(S.meta.tuto===i&&!$('tuto').hidden)return;S.meta.tuto=i;TUT.sx=P.x;TUT.sy=P.y;if(i<=3)TUT.n=0;snd('tick');renderTuto()}
 function tutoEnd(done){S.meta.tutoDone=true;$('tuto').hidden=true;tutoUI();save();setTimeout(()=>{if(!S.meta.tips.welcome){S.meta.tips.welcome=Date.now()}},10);
-  if(done){snd('ach');toast('Tutoriel terminé ! Ton distributeur rapporte maintenant de l\'argent tout seul. Suis tes objectifs en bas à gauche.')}}
-function renderTuto(){const el=$('tuto');document.body.classList.toggle('tuto-on',tutoOn());if(!tutoOn()){el.hidden=true;tutoUI();return}const i=Math.min(S.meta.tuto||0,TUTO.length-1),st=TUTO[i];el.hidden=false;el.classList.toggle('top',i===TUTO.length-1);TUT.tx='';
+  if(done){snd('ach');toast('Tutoriel terminé ! Achète d\'autres distributeurs pour gagner encore plus. Suis tes étapes à l\'écran.')}}
+function renderTuto(){const el=$('tuto');document.body.classList.toggle('tuto-on',tutoOn());if(!tutoOn()){el.hidden=true;tutoUI();return}const i=Math.min(S.meta.tuto||0,TUTO.length-1),st=TUTO[i];el.hidden=false;el.classList.toggle('top',i===1);TUT.tx='';
   el.innerHTML=`<div class="tt"><span>Tutoriel · ${i+1} / ${TUTO.length}</span><span class="dots">${TUTO.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</span><button type="button" id="tskip">Passer</button></div><div class="tx" id="ttx"></div>`+(st.bar?'<div class="gp tbar"><i id="tbar"></i></div>':'');
   $('tskip').onclick=()=>{tutoEnd();refocus()};tutoText()}
 function tutoText(){const st=TUTO[Math.min(S.meta.tuto||0,TUTO.length-1)],t=st.t(),el=$('ttx');if(el&&t!==TUT.tx){TUT.tx=t;el.innerHTML=t}
   const b=$('tbar');if(b&&st.bar)b.style.width=Math.round(st.bar()*100)+'%'}
-function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,ok=S.cash>=distCost(),biz=!$('panel').hidden&&pid==='biz';
-  if(S.distrib>=1)return tutoEnd(true);
-  if(i===0&&(dist(P.x,P.y,TUT.sx,TUT.sy)>80||TUT.n>0))tutoSet(1);
-  else if(i===1&&(TUT.n>=3||S.bag>=cap()))tutoSet(2);
-  else if(i===2&&S.bag===0&&S.stats.trash>0){TUT.rep=S.stats.repairs;tutoSet(3)}
-  else if(i===3&&S.stats.repairs>TUT.rep){TUT.pk=S.stats.pick;tutoSet(4)}
-  else if(i===4&&S.stats.pick>(TUT.pk||0))tutoSet(S.stats.ate>=1?6:5);
-  else if(i===5&&S.stats.ate>=1)tutoSet(6);
-  else if(i===6&&!JOB&&$('panel').hidden&&!tutoNextJob())tutoSet(ok?8:7);
-  else if(i===7&&ok)tutoSet(biz?9:8);
-  else if(i===8&&biz)tutoSet(9);
-  else if(i===9&&!biz)tutoSet(ok?8:7);
-  else if(i===8&&!ok)tutoSet(7);
+function tutoUpdate(){if(!tutoOn())return;const i=S.meta.tuto||0,biz=!$('panel').hidden&&pid==='biz';
+  if(i<=1&&S.distrib>=1){if(!TUT.cheer){TUT.cheer=1;setTimeout(()=>toast('Ton distributeur tourne : regarde ton argent monter tout seul ! Maintenant, apprends à gagner plus.'),400)}return tutoSet(2)}
+  if(i===0&&biz)tutoSet(1);
+  else if(i===1&&!biz)tutoSet(0);
+  else if(i===2&&(dist(P.x,P.y,TUT.sx,TUT.sy)>80||TUT.n>0))tutoSet(3);
+  else if(i===3&&(TUT.n>=3||S.bag>=cap()))tutoSet(4);
+  else if(i===4&&S.bag===0&&S.stats.trash>0){TUT.rep=S.stats.repairs;tutoSet(5)}
+  else if(i===5&&S.stats.repairs>TUT.rep){TUT.pk=S.stats.pick;tutoSet(6)}
+  else if(i===6&&S.stats.pick>(TUT.pk||0))tutoSet(S.stats.ate>=1?8:7);
+  else if(i===7&&S.stats.ate>=1)tutoSet(8);
+  else if(i===8&&!JOB&&$('panel').hidden&&!tutoNextJob())return tutoEnd(true);
   tutoText()}
 // flèche HTML au-dessus des boutons (Business, achat...) avec un halo sur la cible
 let tutoTgt=null;
